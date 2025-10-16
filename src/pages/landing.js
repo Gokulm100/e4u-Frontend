@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState ,useEffect} from 'react';
 import { Search, Plus, MapPin, Heart, User, Menu, X } from 'lucide-react';
+import {jwtDecode} from "jwt-decode";
 
 const Landing = () => {
   const [listings, setListings] = useState([
@@ -77,7 +78,8 @@ const Landing = () => {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [favorites, setFavorites] = useState([]);
   const [menuOpen, setMenuOpen] = useState(false);
-
+  const [user, setUser] = useState(null);
+  const [showDropdown, setShowDropdown] = useState(false);
   const categories = ['All', 'Electronics', 'Vehicles', 'Real Estate', 'Furniture', 'Sports'];
 
   const [newListing, setNewListing] = useState({
@@ -96,6 +98,47 @@ const Landing = () => {
     const matchesCategory = selectedCategory === 'All' || listing.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
+
+   useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) setUser(JSON.parse(storedUser));
+    /* global google */
+    google.accounts.id.initialize({
+      client_id: "556452370430-fd5caae668lq9468hbseas0kr3o1a01g.apps.googleusercontent.com",
+      callback: handleCredentialResponse,
+    });
+   if(!storedUser){
+    google.accounts.id.renderButton(
+      document.getElementById("googleSignInDiv"),
+      { theme: "outline", size: "large" }
+    );
+  }
+  }, [user]);
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    localStorage.removeItem("authToken");
+    setUser(null);
+    // Optionally, redirect to login
+
+  };
+
+  const handleCredentialResponse = (response) => {
+    const token = response.credential;
+    const userInfo = jwtDecode(token);
+    console.log("Google user:", userInfo);
+
+    fetch("https://e4u-backend.onrender.com/api/users/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        localStorage.setItem("authToken", data.token);
+        localStorage.setItem("user", JSON.stringify(data.user));
+        window.location.href = "/";
+      });
+  };
 
   const handlePostAd = () => {
     if (!newListing.title || !newListing.price || !newListing.location || !newListing.description || !newListing.seller) {
@@ -530,6 +573,49 @@ const Landing = () => {
                   <Heart style={{width: '16px', height: '16px'}} />
                   Favorites ({favorites.length})
                 </button>
+{user ? (
+        <div style={{ position: "relative" }}>
+          {/* Profile Avatar */}
+          <img
+            src={user.profilePic}
+            alt={user.name}
+            style={{ width: "40px", height: "40px", borderRadius: "50%", cursor: "pointer" }}
+            onClick={() => setShowDropdown(!showDropdown)}
+          />
+
+          {/* Dropdown */}
+          {showDropdown && (
+            <div
+              style={{
+                position: "absolute",
+                top: "50px",
+                right: 0,
+                background: "#fff",
+                boxShadow: "0 2px 5px rgba(0,0,0,0.2)",
+                borderRadius: "5px",
+                overflow: "hidden",
+              }}
+            >
+              <button
+                style={{
+                  padding: "10px 20px",
+                  width: "100%",
+                  border: "none",
+                  background: "white",
+                  textAlign: "left",
+                  cursor: "pointer",
+                }}
+                onClick={handleLogout}
+              >
+                Logout
+              </button>
+            </div>
+          )}
+        </div>
+      ) : (
+   <div id="googleSignInDiv"></div>  // Google Sign-In button
+
+      )}
               </nav>
 
               <div style={{display: 'flex', alignItems: 'center', gap: '16px'}}>
