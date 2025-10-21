@@ -744,6 +744,33 @@ const Landing = () => {
                 <Heart style={{width: '16px', height: '16px'}} />
                 Favorites ({favorites.length})
               </button>
+              <button
+                style={styles.mobileMenuItem}
+                onClick={() => {
+                  if (user && user._id) {
+                    fetchMyAds(user._id);
+                  }
+                  setView('myads');
+                  setMenuOpen(false);
+                }}
+              >
+                My Ads
+              </button>
+              {user ? (
+                <button
+                  style={styles.mobileMenuItem}
+                  onClick={() => {
+                    handleLogout();
+                    setMenuOpen(false);
+                  }}
+                >
+                  Logout
+                </button>
+              ) : (
+                <div style={{padding: '12px 16px', width: '100%'}}>
+                  <div id="googleSignInDiv"></div>
+                </div>
+              )}
             </div>
           )}
         </div>
