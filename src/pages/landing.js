@@ -128,13 +128,13 @@ const Landing = () => {
       client_id: "556452370430-fd5caae668lq9468hbseas0kr3o1a01g.apps.googleusercontent.com",
       callback: handleCredentialResponse,
     });
-   if(!storedUser){
-    google.accounts.id.renderButton(
-      document.getElementById("googleSignInDiv"),
-      { theme: "outline", size: "large" }
-    );
-  }
-  }, [user]);
+    if (!storedUser) {
+      google.accounts.id.renderButton(
+        document.getElementById("googleSignInDiv"),
+        { theme: "outline", size: "large" }
+      );
+    }
+  }, []);
   const handleLogout = () => {
     localStorage.removeItem("user");
     localStorage.removeItem("authToken");
@@ -170,8 +170,7 @@ const Landing = () => {
     const formData = new FormData();
     formData.append('title', newListing.title);
     formData.append('price', newListing.price);
-  formData.append('location', newListing.location);
-  formData.append('locationName', newListing.locationName);
+  formData.append('location', newListing.locationName);
     formData.append('category', newListing.category);
     formData.append('description', newListing.description);
     if (newListing.image) {
@@ -697,9 +696,9 @@ const Landing = () => {
           </div>
 
           <div style={styles.categories}>
-              {categories.map(cat => (
+              {categories.map((cat, idx) => (
                 <button
-                  key={cat.id}
+                  key={cat.id || idx}
                   onClick={() => setSelectedCategory(cat.name)}
                   style={{
                     ...styles.categoryButton,
@@ -712,9 +711,9 @@ const Landing = () => {
           </div>
 
           <div style={styles.grid}>
-            {filteredListings.map(listing => (
+            {filteredListings.map((listing, idx) => (
               <div
-                key={listing.id}
+                key={listing.id || idx}
                 style={styles.card}
                 onClick={() => {
                   setSelectedListing(listing);
@@ -908,9 +907,9 @@ const Landing = () => {
                     }}>
                       {locations
                         .filter(loc => loc.name.toLowerCase().includes(locationSearch.toLowerCase()))
-                        .map(loc => (
+                        .map((loc, idx) => (
                           <div
-                            key={loc.id}
+                            key={loc.id || idx}
                             style={{ padding: '10px 16px', cursor: 'pointer', borderBottom: '1px solid #eee' }}
                             onClick={() => {
                               setNewListing({ ...newListing, location: loc.id, locationName: loc.name });
@@ -989,9 +988,9 @@ const Landing = () => {
             <div style={styles.grid}>
               {listings
                 .filter(listing => favorites.includes(listing.id))
-                .map(listing => (
+                .map((listing, idx) => (
                   <div
-                    key={listing.id}
+                    key={listing.id || idx}
                     style={styles.card}
                     onClick={() => {
                       setSelectedListing(listing);
