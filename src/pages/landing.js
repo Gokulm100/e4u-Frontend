@@ -4,6 +4,7 @@ import {jwtDecode} from "jwt-decode";
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:3001';
 const Landing = () => {
   const [listings, setListings] = useState([]);
+  const [myAds, setMyAds] = useState([]);
   const [locations, setLocations] = useState([]);
   const [locationSearch, setLocationSearch] = useState('');
   const [showLocationDropdown, setShowLocationDropdown] = useState(false);
@@ -49,7 +50,12 @@ const Landing = () => {
       .catch(() => {
         throw new Error('Failed to fetch categories');
       });
-      fetch(`${API_BASE_URL}/api/ads`)
+      fetch(`${API_BASE_URL}/api/ads`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data)) {
@@ -161,6 +167,61 @@ const Landing = () => {
       });
   };
 
+  // Fetch user's ads
+  const fetchMyAds = (userId) => {
+    fetch(`${API_BASE_URL}/api/ads/listUserAds`, {
+      method: 'POST',
+      headers: {
+      'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ id: userId })
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          const listingObjs = data.map(listing => {
+            let posted = 'Unknown';
+            if (listing.createdAt) {
+              const created = new Date(listing.createdAt);
+              const now = new Date();
+              const diffMs = now - created;
+              const diffSec = Math.floor(diffMs / 1000);
+              const diffMin = Math.floor(diffSec / 60);
+              const diffHr = Math.floor(diffMin / 60);
+              const diffDay = Math.floor(diffHr / 24);
+              if (diffMin < 1) {
+                posted = 'moments ago';
+              } else if (diffMin < 60) {
+                posted = `${diffMin} minute${diffMin === 1 ? '' : 's'} ago`;
+              } else if (diffHr < 24) {
+                posted = `${diffHr} hour${diffHr === 1 ? '' : 's'} ago`;
+              } else if (diffDay < 7) {
+                posted = `${diffDay} day${diffDay === 1 ? '' : 's'} ago`;
+              } else {
+                posted = created.toLocaleDateString();
+              }
+            }
+            return {
+              id: listing._id,
+              title: listing.title,
+              price: listing.price,
+              location: listing.location,
+              category: listing?.category?.name ? listing?.category?.name : 'Uncategorized',
+              description: listing.description,
+              seller: listing.seller ? listing.seller.name : 'Unknown',
+              posted,
+              image: Array.isArray(listing.images) && listing.images.length > 0
+                ? `${API_BASE_URL}/${listing.images[0]}`
+                : 'https://t4.ftcdn.net/jpg/06/71/92/37/360_F_671923740_x0zOL3OIuUAnSF6sr7PuznCI5bQFKhI0.jpg',
+            };
+          });
+          setMyAds(listingObjs);
+        }
+      })
+      .catch(() => {
+        setMyAds([]);
+      });
+  };
   const handlePostAd = () => {
     if (!newListing.title || !newListing.price || !newListing.location || !newListing.description || !newListing.seller) {
       alert('Please fill in all required fields');
@@ -170,7 +231,7 @@ const Landing = () => {
     const formData = new FormData();
     formData.append('title', newListing.title);
     formData.append('price', newListing.price);
-  formData.append('location', newListing.locationName);
+    formData.append('location', newListing.locationName);
     formData.append('category', newListing.category);
     formData.append('description', newListing.description);
     if (newListing.image) {
@@ -596,7 +657,7 @@ const Landing = () => {
         <div style={styles.headerContainer}>
           <div style={styles.headerTop}>
             <h1 style={styles.logo} onClick={() => setView('home')}>
-              MarketPlace
+              e4you.com
             </h1>
 
             <div style={{display: 'flex', alignItems: 'center', gap: '32px'}}>
@@ -604,6 +665,14 @@ const Landing = () => {
                 <button style={styles.navButton} onClick={() => setView('favorites')}>
                   <Heart style={{width: '16px', height: '16px'}} />
                   Favorites ({favorites.length})
+                </button>
+                <button style={styles.navButton} onClick={() => {
+                  if (user && user._id) {
+                    fetchMyAds(user._id);
+                  }
+                  setView('myads');
+                }}>
+                  My Ads
                 </button>
 {user ? (
         <div style={{ position: "relative" }}>
@@ -647,7 +716,7 @@ const Landing = () => {
       ) : (
    <div id="googleSignInDiv"></div>  // Google Sign-In button
 
-      )}
+  )}
               </nav>
 
               <div style={{display: 'flex', alignItems: 'center', gap: '16px'}}>
@@ -972,10 +1041,77 @@ const Landing = () => {
         </div>
       )}
 
+      {/* Move myads block inside main return's <div> */}
+      {view === 'myads' && (
+        <div style={styles.container}>
+          <h2 style={{fontSize: '24px', fontWeight: 'bold', marginBottom: '24px'}}>My Ads</h2>
+          {(!myAds || myAds.length === 0) ? (
+            <div style={styles.emptyState}>
+              <p style={styles.emptyText}>No ads posted yet</p>
+              <button style={{...styles.backButton, marginTop: '16px'}} onClick={() => setView('home')}>
+                Start browsing
+              </button>
+            </div>
+          ) : (
+            <div style={styles.grid}>
+              {myAds.map((listing, idx) => (
+                <div
+                  key={listing.id || idx}
+                  style={{ ...styles.card, position: 'relative' }}
+                  onClick={() => {
+                    setSelectedListing(listing);
+                    setView('detail');
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.boxShadow = '0 4px 6px rgba(0,0,0,0.1)'}
+                  onMouseLeave={(e) => e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)'}
+                >
+                  <div style={styles.cardImageWrapper}>
+                    <img
+                      src={listing.image}
+                      alt={listing.title}
+                      style={styles.cardImage}
+                    />
+                  </div>
+                  <button
+                    style={{
+                      position: 'absolute',
+                      bottom: '12px',
+                      right: '12px',
+                      background: '#fff',
+                      border: 'none',
+                      padding: '6px',
+                      borderRadius: '50%',
+                      cursor: 'pointer',
+                      boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                      zIndex: 2
+                    }}
+                    title="Edit Ad"
+                    onClick={e => {
+                      e.stopPropagation();
+                      // TODO: Hook up edit functionality here
+                      alert('Edit functionality coming soon!');
+                    }}
+                  >
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
+                  </button>
+                  <div style={styles.cardContent}>
+                    <h3 style={styles.cardTitle}>{listing.title}</h3>
+                    <p style={styles.cardPrice}>₹{listing.price.toLocaleString()}</p>
+                    <div style={styles.cardLocation}>
+                      <MapPin style={{width: '16px', height: '16px'}} />
+                      {listing.location}
+                    </div>
+                    <p style={styles.cardPosted}>{listing.posted}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
       {view === 'favorites' && (
         <div style={styles.container}>
           <h2 style={{fontSize: '24px', fontWeight: 'bold', marginBottom: '24px'}}>My Favorites</h2>
-          
           {favorites.length === 0 ? (
             <div style={styles.emptyState}>
               <Heart style={{width: '64px', height: '64px', color: '#d1d5db', margin: '0 auto 16px'}} />
@@ -1030,6 +1166,7 @@ const Landing = () => {
           )}
         </div>
       )}
+      {/* Add missing closing div for main app container */}
     </div>
   );
 };
