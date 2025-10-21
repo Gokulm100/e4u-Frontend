@@ -90,7 +90,7 @@ const Landing = () => {
               posted,
               image: Array.isArray(listing.images) && listing.images.length > 0
               ? `${API_BASE_URL}/${listing.images[0]}`
-              : 'https://via.placeholder.com/400x200?text=No+Image',
+              : 'https://t4.ftcdn.net/jpg/06/71/92/37/360_F_671923740_x0zOL3OIuUAnSF6sr7PuznCI5bQFKhI0.jpg',
             };
             });
           setListings(listingObjs);
