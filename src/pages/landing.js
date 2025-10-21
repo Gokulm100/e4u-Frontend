@@ -20,7 +20,6 @@ const Landing = () => {
   const [categories, setCategories] = useState(['All']);
 
   useEffect(() => {
-
     fetch(`https://api.countrystatecity.in/v1/countries/IN/states/KL/cities`, {
       headers: { 'X-CSCAPI-KEY': 'NTJPRVA2dFdZTWl6ZUhCSXRzVmdWem5BRk1tdE1VbE5KUlBubGVPQg==' }
     })
@@ -34,12 +33,10 @@ const Landing = () => {
         throw new Error('Failed to fetch locations');
       });
 
-
     fetch(`${API_BASE_URL}/api/ads/listCategories`)
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data)) {
-          // Store categories as objects with id and name
           const categoryObjs = data.map(cat => ({
             id: cat._id,
             name: cat.name
@@ -50,41 +47,36 @@ const Landing = () => {
       .catch(() => {
         throw new Error('Failed to fetch categories');
       });
-      fetch(`${API_BASE_URL}/api/ads`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      })
+    fetch(`${API_BASE_URL}/api/ads`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data)) {
-          // Store listings as objects with id and other relevant fields
-            const listingObjs = data.map(listing => {
-            // Calculate "posted" as "moments ago", "x days ago", or date
+          const listingObjs = data.map(listing => {
             let posted = 'Unknown';
             if (listing.createdAt) {
               const created = new Date(listing.createdAt);
               const now = new Date();
               const diffMs = now - created;
-              const diffSec = Math.floor(diffMs / 1000);
-              const diffMin = Math.floor(diffSec / 60);
+              const diffMin = Math.floor(diffMs / 1000 / 60);
               const diffHr = Math.floor(diffMin / 60);
               const diffDay = Math.floor(diffHr / 24);
-
               if (diffMin < 1) {
-              posted = 'moments ago';
+                posted = 'moments ago';
               } else if (diffMin < 60) {
-              posted = `${diffMin} minute${diffMin === 1 ? '' : 's'} ago`;
+                posted = `${diffMin} minute${diffMin === 1 ? '' : 's'} ago`;
               } else if (diffHr < 24) {
-              posted = `${diffHr} hour${diffHr === 1 ? '' : 's'} ago`;
+                posted = `${diffHr} hour${diffHr === 1 ? '' : 's'} ago`;
               } else if (diffDay < 7) {
-              posted = `${diffDay} day${diffDay === 1 ? '' : 's'} ago`;
+                posted = `${diffDay} day${diffDay === 1 ? '' : 's'} ago`;
               } else {
-              posted = created.toLocaleDateString();
+                posted = created.toLocaleDateString();
               }
             }
-
             return {
               id: listing._id,
               title: listing.title,
@@ -95,17 +87,16 @@ const Landing = () => {
               seller: listing.seller ? listing.seller.name : 'Unknown',
               posted,
               image: Array.isArray(listing.images) && listing.images.length > 0
-              ? `${API_BASE_URL}/${listing.images[0]}`
-              : 'https://t4.ftcdn.net/jpg/06/71/92/37/360_F_671923740_x0zOL3OIuUAnSF6sr7PuznCI5bQFKhI0.jpg',
+                ? `${API_BASE_URL}/${listing.images[0]}`
+                : 'https://t4.ftcdn.net/jpg/06/71/92/37/360_F_671923740_x0zOL3OIuUAnSF6sr7PuznCI5bQFKhI0.jpg',
             };
-            });
+          });
           setListings(listingObjs);
-          }
+        }
       })
       .catch(() => {
         throw new Error('Failed to fetch categories');
       });
-      
   }, []);
 
   const [newListing, setNewListing] = useState({
@@ -135,12 +126,24 @@ const Landing = () => {
       callback: handleCredentialResponse,
     });
     if (!storedUser) {
-      google.accounts.id.renderButton(
-        document.getElementById("googleSignInDiv"),
-        { theme: "outline", size: "large" }
-      );
+      // Desktop sign-in button
+      const desktopDiv = document.getElementById("googleSignInDiv");
+      if (desktopDiv) {
+        google.accounts.id.renderButton(
+          desktopDiv,
+          { theme: "outline", size: "large" }
+        );
+      }
+      // Mobile menu sign-in button
+      const mobileDiv = document.getElementById("googleSignInDivMobile");
+      if (mobileDiv) {
+        google.accounts.id.renderButton(
+          mobileDiv,
+          { theme: "outline", size: "large" }
+        );
+      }
     }
-  }, []);
+  }, [menuOpen]);
   const handleLogout = () => {
     localStorage.removeItem("user");
     localStorage.removeItem("authToken");
@@ -767,8 +770,8 @@ const Landing = () => {
                   Logout
                 </button>
               ) : (
-                <div style={{padding: '12px 16px', width: '100%'}}>
-                  <div id="googleSignInDiv"></div>
+                <div style={{padding: '12px 16px', width: '30%'}}>
+                  <div id="googleSignInDivMobile"></div>
                 </div>
               )}
             </div>
