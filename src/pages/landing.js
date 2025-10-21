@@ -1,76 +1,12 @@
 import React, { useState ,useEffect} from 'react';
 import { Search, Plus, MapPin, Heart, User, Menu, X } from 'lucide-react';
 import {jwtDecode} from "jwt-decode";
-
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:3001';
 const Landing = () => {
-  const [listings, setListings] = useState([
-    {
-      id: 1,
-      title: 'iPhone 13 Pro Max',
-      price: 45000,
-      location: 'Mumbai, Maharashtra',
-      category: 'Electronics',
-      image: 'https://images.unsplash.com/photo-1632661674596-df8be070a5c5?w=400&h=300&fit=crop',
-      description: 'Excellent condition, 256GB, with box and accessories',
-      seller: 'John Doe',
-      posted: '2 days ago'
-    },
-    {
-      id: 2,
-      title: 'Royal Enfield Classic 350',
-      price: 125000,
-      location: 'Delhi, NCR',
-      category: 'Vehicles',
-      image: 'https://images.unsplash.com/photo-1558981806-ec527fa84c39?w=400&h=300&fit=crop',
-      description: '2020 model, single owner, well maintained',
-      seller: 'Rajesh Kumar',
-      posted: '1 day ago'
-    },
-    {
-      id: 3,
-      title: '2BHK Apartment for Rent',
-      price: 18000,
-      location: 'Bangalore, Karnataka',
-      category: 'Real Estate',
-      image: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=400&h=300&fit=crop',
-      description: 'Spacious apartment with parking, near metro',
-      seller: 'Priya Sharma',
-      posted: '3 hours ago'
-    },
-    {
-      id: 4,
-      title: 'Gaming Laptop HP Omen',
-      price: 75000,
-      location: 'Pune, Maharashtra',
-      category: 'Electronics',
-      image: 'https://images.unsplash.com/photo-1603302576837-37561b2e2302?w=400&h=300&fit=crop',
-      description: 'RTX 3060, 16GB RAM, 512GB SSD',
-      seller: 'Amit Patel',
-      posted: '1 week ago'
-    },
-    {
-      id: 5,
-      title: 'Sofa Set 5 Seater',
-      price: 22000,
-      location: 'Chennai, Tamil Nadu',
-      category: 'Furniture',
-      image: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=400&h=300&fit=crop',
-      description: 'L-shaped sofa, leather finish, like new',
-      seller: 'Lakshmi Iyer',
-      posted: '4 days ago'
-    },
-    {
-      id: 6,
-      title: 'Mountain Bike Firefox',
-      price: 12000,
-      location: 'Hyderabad, Telangana',
-      category: 'Sports',
-      image: 'https://images.unsplash.com/photo-1576435728678-68d0fbf94e91?w=400&h=300&fit=crop',
-      description: '21 speed gears, barely used',
-      seller: 'Vikram Reddy',
-      posted: '5 days ago'
-    }
-  ]);
+  const [listings, setListings] = useState([]);
+  const [locations, setLocations] = useState([]);
+  const [locationSearch, setLocationSearch] = useState('');
+  const [showLocationDropdown, setShowLocationDropdown] = useState(false);
 
   const [view, setView] = useState('home');
   const [selectedListing, setSelectedListing] = useState(null);
@@ -80,16 +16,101 @@ const Landing = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [user, setUser] = useState(null);
   const [showDropdown, setShowDropdown] = useState(false);
-  const categories = ['All', 'Electronics', 'Vehicles', 'Real Estate', 'Furniture', 'Sports'];
+  const [categories, setCategories] = useState(['All']);
+
+  useEffect(() => {
+
+    fetch(`https://api.countrystatecity.in/v1/countries/IN/states/KL/cities`, {
+      headers: { 'X-CSCAPI-KEY': 'NTJPRVA2dFdZTWl6ZUhCSXRzVmdWem5BRk1tdE1VbE5KUlBubGVPQg==' }
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          setLocations(data.map(city => ({ id: city.id, name: city.name })));
+        }
+      })
+      .catch(() => {
+        throw new Error('Failed to fetch locations');
+      });
+
+
+    fetch(`${API_BASE_URL}/api/ads/listCategories`)
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          // Store categories as objects with id and name
+          const categoryObjs = data.map(cat => ({
+            id: cat._id,
+            name: cat.name
+          }));
+          setCategories([{ id: 'all', name: 'All' }, ...categoryObjs]);
+        }
+      })
+      .catch(() => {
+        throw new Error('Failed to fetch categories');
+      });
+      fetch(`${API_BASE_URL}/api/ads`)
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          // Store listings as objects with id and other relevant fields
+            const listingObjs = data.map(listing => {
+            // Calculate "posted" as "moments ago", "x days ago", or date
+            let posted = 'Unknown';
+            if (listing.createdAt) {
+              const created = new Date(listing.createdAt);
+              const now = new Date();
+              const diffMs = now - created;
+              const diffSec = Math.floor(diffMs / 1000);
+              const diffMin = Math.floor(diffSec / 60);
+              const diffHr = Math.floor(diffMin / 60);
+              const diffDay = Math.floor(diffHr / 24);
+
+              if (diffMin < 1) {
+              posted = 'moments ago';
+              } else if (diffMin < 60) {
+              posted = `${diffMin} minute${diffMin === 1 ? '' : 's'} ago`;
+              } else if (diffHr < 24) {
+              posted = `${diffHr} hour${diffHr === 1 ? '' : 's'} ago`;
+              } else if (diffDay < 7) {
+              posted = `${diffDay} day${diffDay === 1 ? '' : 's'} ago`;
+              } else {
+              posted = created.toLocaleDateString();
+              }
+            }
+
+            return {
+              id: listing._id,
+              title: listing.title,
+              price: listing.price,
+              location: listing.location,
+              category: listing?.category?.name ? listing?.category?.name : 'Uncategorized',
+              description: listing.description,
+              seller: listing.seller ? listing.seller.name : 'Unknown',
+              posted,
+              image: Array.isArray(listing.images) && listing.images.length > 0
+              ? `${API_BASE_URL}/${listing.images[0]}`
+              : 'https://via.placeholder.com/400x200?text=No+Image',
+            };
+            });
+          setListings(listingObjs);
+          }
+      })
+      .catch(() => {
+        throw new Error('Failed to fetch categories');
+      });
+      
+  }, []);
 
   const [newListing, setNewListing] = useState({
-    title: '',
-    price: '',
-    location: '',
-    category: 'Electronics',
-    description: '',
-    seller: '',
-    image: ''
+  title: '',
+  price: '',
+  location: '', // Will hold the location id
+  locationName: '', // Will hold the location name
+  category: '', // Will hold the category id
+  description: '',
+  seller: '',
+  image: null // Will hold the File object
   });
 
   const filteredListings = listings.filter(listing => {
@@ -127,7 +148,7 @@ const Landing = () => {
     const userInfo = jwtDecode(token);
     console.log("Google user:", userInfo);
 
-    fetch("https://e4u-backend.onrender.com/api/users/login", {
+    fetch(`${API_BASE_URL}/api/users/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ token }),
@@ -146,24 +167,39 @@ const Landing = () => {
       return;
     }
 
-    const newAd = {
-      id: listings.length + 1,
-      ...newListing,
-      price: parseInt(newListing.price),
-      posted: 'Just now',
-      image: newListing.image || 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=300&fit=crop'
-    };
-    setListings([newAd, ...listings]);
-    setNewListing({
-      title: '',
-      price: '',
-      location: '',
-      category: 'Electronics',
-      description: '',
-      seller: '',
-      image: ''
-    });
-    setView('home');
+    const formData = new FormData();
+    formData.append('title', newListing.title);
+    formData.append('price', newListing.price);
+  formData.append('location', newListing.location);
+  formData.append('locationName', newListing.locationName);
+    formData.append('category', newListing.category);
+    formData.append('description', newListing.description);
+    if (newListing.image) {
+      formData.append('image', newListing.image);
+    }
+
+    fetch(`${API_BASE_URL}/api/ads/postAdd`, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${localStorage.getItem("authToken")}`
+      },
+      body: formData,
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        setListings([data, ...listings]);
+        setNewListing({
+          title: '',
+          price: '',
+          location: '',
+          category: '',
+          description: '',
+          seller: '',
+          image: null
+        });
+        setView('home');
+        window.location.href = "/";
+      });
   };
 
   const toggleFavorite = (id) => {
@@ -566,9 +602,6 @@ const Landing = () => {
 
             <div style={{display: 'flex', alignItems: 'center', gap: '32px'}}>
               <nav style={{...styles.nav, display: window.innerWidth < 768 ? 'none' : 'flex'}}>
-                <button style={styles.navButton} onClick={() => setView('home')}>
-                  Browse
-                </button>
                 <button style={styles.navButton} onClick={() => setView('favorites')}>
                   <Heart style={{width: '16px', height: '16px'}} />
                   Favorites ({favorites.length})
@@ -638,12 +671,6 @@ const Landing = () => {
             <div style={styles.mobileMenu}>
               <button 
                 style={styles.mobileMenuItem}
-                onClick={() => { setView('home'); setMenuOpen(false); }}
-              >
-                Browse
-              </button>
-              <button 
-                style={styles.mobileMenuItem}
                 onClick={() => { setView('favorites'); setMenuOpen(false); }}
               >
                 <Heart style={{width: '16px', height: '16px'}} />
@@ -670,18 +697,18 @@ const Landing = () => {
           </div>
 
           <div style={styles.categories}>
-            {categories.map(cat => (
-              <button
-                key={cat}
-                onClick={() => setSelectedCategory(cat)}
-                style={{
-                  ...styles.categoryButton,
-                  ...(selectedCategory === cat ? styles.categoryButtonActive : styles.categoryButtonInactive)
-                }}
-              >
-                {cat}
-              </button>
-            ))}
+              {categories.map(cat => (
+                <button
+                  key={cat.id}
+                  onClick={() => setSelectedCategory(cat.name)}
+                  style={{
+                    ...styles.categoryButton,
+                    ...(selectedCategory === cat.name ? styles.categoryButtonActive : styles.categoryButtonInactive)
+                  }}
+                >
+                  {cat.name}
+                </button>
+              ))}
           </div>
 
           <div style={styles.grid}>
@@ -791,7 +818,7 @@ const Landing = () => {
                     <User style={{width: '24px', height: '24px'}} />
                   </div>
                   <div>
-                    <p style={styles.sellerName}>{selectedListing.seller}</p>
+                    <p style={styles.sellerName}>{typeof selectedListing.seller === 'object' && selectedListing.seller !== null ? selectedListing.seller.name : selectedListing.seller}</p>
                     <p style={{fontSize: '14px', color: '#6b7280'}}>Member since 2023</p>
                   </div>
                 </div>
@@ -832,8 +859,8 @@ const Landing = () => {
                   value={newListing.category}
                   onChange={(e) => setNewListing({...newListing, category: e.target.value})}
                 >
-                  {categories.filter(c => c !== 'All').map(cat => (
-                    <option key={cat} value={cat}>{cat}</option>
+                  {categories.filter(c => c.id !== 'all').map(cat => (
+                    <option key={cat.id} value={cat.id}>{cat.name}</option>
                   ))}
                 </select>
               </div>
@@ -851,13 +878,52 @@ const Landing = () => {
 
               <div style={styles.formGroup}>
                 <label style={styles.label}>Location *</label>
-                <input
-                  type="text"
-                  style={styles.input}
-                  value={newListing.location}
-                  onChange={(e) => setNewListing({...newListing, location: e.target.value})}
-                  placeholder="e.g., Mumbai, Maharashtra"
-                />
+                <div style={{ position: 'relative' }}>
+                  <input
+                    type="text"
+                    style={styles.input}
+                    placeholder="Search city..."
+                    value={locationSearch}
+                    onChange={e => {
+                      setLocationSearch(e.target.value);
+                      setNewListing({ ...newListing, location: '', locationName: '' });
+                      setShowLocationDropdown(true);
+                    }}
+                    autoComplete="off"
+                    onFocus={() => setShowLocationDropdown(true)}
+                  />
+                  {showLocationDropdown && locationSearch && (
+                    <div style={{
+                      position: 'absolute',
+                      top: '100%',
+                      left: 0,
+                      right: 0,
+                      background: '#fff',
+                      border: '1px solid #d1d5db',
+                      borderTop: 'none',
+                      maxHeight: 200,
+                      overflowY: 'auto',
+                      zIndex: 10,
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
+                    }}>
+                      {locations
+                        .filter(loc => loc.name.toLowerCase().includes(locationSearch.toLowerCase()))
+                        .map(loc => (
+                          <div
+                            key={loc.id}
+                            style={{ padding: '10px 16px', cursor: 'pointer', borderBottom: '1px solid #eee' }}
+                            onClick={() => {
+                              setNewListing({ ...newListing, location: loc.id, locationName: loc.name });
+                              setLocationSearch(loc.name);
+                              setShowLocationDropdown(false);
+                            }}
+                          >
+                            {loc.name}
+                          </div>
+                        ))}
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div style={styles.formGroup}>
@@ -882,14 +948,21 @@ const Landing = () => {
               </div>
 
               <div style={styles.formGroup}>
-                <label style={styles.label}>Image URL (optional)</label>
+                <label style={styles.label}>Image Upload (optional)</label>
                 <input
-                  type="url"
+                  type="file"
+                  accept="image/*"
                   style={styles.input}
-                  value={newListing.image}
-                  onChange={(e) => setNewListing({...newListing, image: e.target.value})}
-                  placeholder="https://example.com/image.jpg"
+                  onChange={(e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                      setNewListing({ ...newListing, image: file });
+                    }
+                  }}
                 />
+                {newListing.image && (
+                  <img src={URL.createObjectURL(newListing.image)} alt="Preview" style={{ marginTop: 8, maxWidth: '100%', maxHeight: 200, borderRadius: 8 }} />
+                )}
               </div>
 
               <button onClick={handlePostAd} style={styles.submitButton}>
