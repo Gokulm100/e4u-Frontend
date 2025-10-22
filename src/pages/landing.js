@@ -226,7 +226,7 @@ const Landing = () => {
       });
   };
   const handlePostAd = () => {
-    if (!newListing.title || !newListing.price || !newListing.location || !newListing.description || !newListing.seller) {
+    if (!newListing.title || !newListing.price || !newListing.location || !newListing.description || !newListing.category) {
       alert('Please fill in all required fields');
       return;
     }
@@ -723,7 +723,13 @@ const Landing = () => {
               </nav>
 
               <div style={{display: 'flex', alignItems: 'center', gap: '16px'}}>
-                <button style={styles.postButton} onClick={() => setView('post')}>
+                <button style={styles.postButton} onClick={() =>{
+                  if(!user) {
+                    alert('Please login to post an ad.');
+                  } else {
+                    setView('post');
+                  }
+                }}>
                   <Plus style={{width: '20px', height: '20px'}} />
                   <span style={{display: window.innerWidth < 640 ? 'none' : 'inline'}}>Post Ad</span>
                 </button>
@@ -826,6 +832,7 @@ const Landing = () => {
                     src={listing.image}
                     alt={listing.title}
                     style={styles.cardImage}
+                      onError={(e) => { e.target.src='https://t4.ftcdn.net/jpg/06/71/92/37/360_F_671923740_x0zOL3OIuUAnSF6sr7PuznCI5bQFKhI0.jpg'; e.target.alt='Image not found'; }}
                   />
                   <button
                     onClick={(e) => {
@@ -920,7 +927,9 @@ const Landing = () => {
                     <p style={{fontSize: '14px', color: '#6b7280'}}>Member since 2023</p>
                   </div>
                 </div>
-                <button style={styles.contactButton}>
+                <button style={styles.contactButton} onClick={()=>{
+                  
+                }}>
                   Contact Seller
                 </button>
               </div>
@@ -957,6 +966,7 @@ const Landing = () => {
                   value={newListing.category}
                   onChange={(e) => setNewListing({...newListing, category: e.target.value})}
                 >
+                   <option key='' value=''>-- Select Category --</option>
                   {categories.filter(c => c.id !== 'all').map(cat => (
                     <option key={cat.id} value={cat.id}>{cat.name}</option>
                   ))}
@@ -1035,17 +1045,6 @@ const Landing = () => {
               </div>
 
               <div style={styles.formGroup}>
-                <label style={styles.label}>Your Name *</label>
-                <input
-                  type="text"
-                  style={styles.input}
-                  value={newListing.seller}
-                  onChange={(e) => setNewListing({...newListing, seller: e.target.value})}
-                  placeholder="Your name"
-                />
-              </div>
-
-              <div style={styles.formGroup}>
                 <label style={styles.label}>Image Upload (optional)</label>
                 <input
                   type="file"
@@ -1100,6 +1099,7 @@ const Landing = () => {
                       src={listing.image}
                       alt={listing.title}
                       style={styles.cardImage}
+                       onError={(e) => { e.target.src='https://t4.ftcdn.net/jpg/06/71/92/37/360_F_671923740_x0zOL3OIuUAnSF6sr7PuznCI5bQFKhI0.jpg'; e.target.alt='Image not found'; }}
                     />
                   </div>
                   <button
@@ -1170,6 +1170,7 @@ const Landing = () => {
                         src={listing.image}
                         alt={listing.title}
                         style={styles.cardImage}
+                        onError={(e) => { e.target.src='https://t4.ftcdn.net/jpg/06/71/92/37/360_F_671923740_x0zOL3OIuUAnSF6sr7PuznCI5bQFKhI0.jpg'; e.target.alt='Image not found'; }}
                       />
                       <button
                         onClick={(e) => {
