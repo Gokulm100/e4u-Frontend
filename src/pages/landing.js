@@ -1204,7 +1204,7 @@ const Landing = () => {
                     )}
                   </>
                 ) : (
-                  <button style={styles.contactButton} onClick={() => setChatOpen(true)}>
+                  <button style={styles.contactButton} onClick={() => { if (user) { setChatOpen(true) }else { alert('Please login to contact the seller.'); }}}>
                     Contact Seller
                   </button>
                 )}
