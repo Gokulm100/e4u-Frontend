@@ -27,18 +27,38 @@ const ChatModal = ({ selectedListing, selectedMessage, user, chatMessages, setCh
     // eslint-disable-next-line
   }, [selectedListing, user]);
 
+  const isMobile = typeof window !== 'undefined' ? window.innerWidth < 768 : false;
+  const modalStyle = isMobile
+    ? {
+        position: 'fixed',
+        left: '50%',
+        bottom: 24,
+        transform: 'translateX(-50%)',
+        width: '90vw',
+        maxWidth: 350,
+        minWidth: 260,
+        background: '#fff',
+        borderRadius: 10,
+        boxShadow: '0 2px 12px rgba(0,0,0,0.15)',
+        zIndex: 9999,
+        padding: 16,
+        margin: '0 auto',
+        boxSizing: 'border-box'
+      }
+    : {
+        position: 'fixed',
+        right: 40,
+        bottom: 40,
+        width: 350,
+        background: '#fff',
+        borderRadius: 10,
+        boxShadow: '0 2px 12px rgba(0,0,0,0.15)',
+        zIndex: 9999,
+        padding: 16,
+        boxSizing: 'border-box'
+      };
   return (
-    <div style={{
-      position: 'fixed',
-      bottom: 40,
-      right: 40,
-      width: 350,
-      background: '#fff',
-      borderRadius: 10,
-      boxShadow: '0 2px 12px rgba(0,0,0,0.15)',
-      zIndex: 9999,
-      padding: 16
-    }}>
+    <div style={modalStyle}>
       <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
         <h3 style={{margin: 0}}>
             {selectedListing?.title || 'Chat'}
@@ -1123,11 +1143,20 @@ const Landing = () => {
               </div>
 
               <div style={styles.detailSection}>
-                <div style={styles.detailLocation}>
-                  <MapPin style={{width: '20px', height: '20px'}} />
-                  {selectedListing.location}
+                <div style={{
+                  ...styles.detailLocation,
+                  display: 'flex',
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: '16px',
+                  marginBottom: 0
+                }}>
+                  <span style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
+                    <MapPin style={{width: '20px', height: '20px'}} />
+                    {selectedListing.location}
+                  </span>
+                  <span style={{color: '#6b7280', fontSize: '14px'}}>Posted {selectedListing.posted}</span>
                 </div>
-                <p style={{color: '#6b7280'}}>Posted {selectedListing.posted}</p>
               </div>
 
               <div style={styles.descriptionSection}>
