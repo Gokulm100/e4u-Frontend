@@ -1,6 +1,7 @@
-import React, { useState ,useEffect} from 'react';
+/* global google */
+import React, { useState, useEffect } from 'react';
 import { Search, Plus, MapPin, Heart, User, Menu, X } from 'lucide-react';
-import {jwtDecode} from "jwt-decode";
+import { jwtDecode } from "jwt-decode";
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:3001';
 
@@ -30,50 +31,50 @@ const ChatModal = ({ selectedListing, selectedMessage, user, chatMessages, setCh
   const isMobile = typeof window !== 'undefined' ? window.innerWidth < 768 : false;
   const modalStyle = isMobile
     ? {
-        position: 'fixed',
-        left: '50%',
-        bottom: 24,
-        transform: 'translateX(-50%)',
-        width: '90vw',
-        maxWidth: 350,
-        minWidth: 260,
-        background: '#fff',
-        borderRadius: 10,
-        boxShadow: '0 2px 12px rgba(0,0,0,0.15)',
-        zIndex: 9999,
-        padding: 16,
-        margin: '0 auto',
-        boxSizing: 'border-box'
-      }
+      position: 'fixed',
+      left: '50%',
+      bottom: 24,
+      transform: 'translateX(-50%)',
+      width: '90vw',
+      maxWidth: 350,
+      minWidth: 260,
+      background: '#fff',
+      borderRadius: 10,
+      boxShadow: '0 2px 12px rgba(0,0,0,0.15)',
+      zIndex: 9999,
+      padding: 16,
+      margin: '0 auto',
+      boxSizing: 'border-box'
+    }
     : {
-        position: 'fixed',
-        right: 40,
-        bottom: 40,
-        width: 350,
-        background: '#fff',
-        borderRadius: 10,
-        boxShadow: '0 2px 12px rgba(0,0,0,0.15)',
-        zIndex: 9999,
-        padding: 16,
-        boxSizing: 'border-box'
-      };
+      position: 'fixed',
+      right: 40,
+      bottom: 40,
+      width: 350,
+      background: '#fff',
+      borderRadius: 10,
+      boxShadow: '0 2px 12px rgba(0,0,0,0.15)',
+      zIndex: 9999,
+      padding: 16,
+      boxSizing: 'border-box'
+    };
   return (
     <div style={modalStyle}>
-      <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
-        <h3 style={{margin: 0}}>
-            {selectedListing?.title || 'Chat'}
-            {/* Show the name of the 'from' person from the clicked message card, not the ad seller name */}
-            {selectedMessage && selectedMessage.from && (
-              <span style={{fontWeight: 400, fontSize: 14, marginLeft: 8, color: '#2563eb'}}>
-                — {selectedMessage.from?.name || selectedMessage.from || 'Unknown User'}
-              </span>
-            )}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <h3 style={{ margin: 0 }}>
+          {selectedListing?.title || 'Chat'}
+          {/* Show the name of the 'from' person from the clicked message card, not the ad seller name */}
+          {selectedMessage && selectedMessage.from && (
+            <span style={{ fontWeight: 400, fontSize: 14, marginLeft: 8, color: '#2563eb' }}>
+              — {selectedMessage.from?.name || selectedMessage.from || 'Unknown User'}
+            </span>
+          )}
         </h3>
-        <button style={{background: 'none', border: 'none', fontSize: 18, cursor: 'pointer'}} onClick={() => setChatOpen(false)}>×</button>
+        <button style={{ background: 'none', border: 'none', fontSize: 18, cursor: 'pointer' }} onClick={() => setChatOpen(false)}>×</button>
       </div>
-      <div style={{height: 180, overflowY: 'auto', margin: '12px 0', background: '#f7f7f7', borderRadius: 6, padding: 8}}>
+      <div style={{ height: 180, overflowY: 'auto', margin: '12px 0', background: '#f7f7f7', borderRadius: 6, padding: 8 }}>
         {chatMessages.length === 0 ? (
-          <div style={{color: '#888'}}>No messages yet.</div>
+          <div style={{ color: '#888' }}>No messages yet.</div>
         ) : (
           chatMessages.map((msg, idx) => (
             <div
@@ -94,11 +95,11 @@ const ChatModal = ({ selectedListing, selectedMessage, user, chatMessages, setCh
               >
                 {msg.message}
               </span>
-              <div style={{fontSize: 12, color: '#2563eb', marginTop: 2}}>
+              <div style={{ fontSize: 12, color: '#2563eb', marginTop: 2 }}>
                 {msg.from?.name || msg.sender || 'Unknown User'}
                 {msg.createdAt && (
-                  <span style={{color: '#888', marginLeft: 8}}>
-                    {typeof msg.createdAt === 'string' ? new Date(msg.createdAt).toLocaleString() : msg.createdAt.toLocaleString() }
+                  <span style={{ color: '#888', marginLeft: 8 }}>
+                    {typeof msg.createdAt === 'string' ? new Date(msg.createdAt).toLocaleString() : msg.createdAt.toLocaleString()}
                   </span>
                 )}
               </div>
@@ -110,7 +111,7 @@ const ChatModal = ({ selectedListing, selectedMessage, user, chatMessages, setCh
         e.preventDefault();
         if (chatInput.trim()) {
           // Add message locally
-          setChatMessages([...chatMessages, { sender: 'me', message: chatInput ,createdAt: new Date().toISOString(), from: { _id: user?._id, name: user?.name }}]);
+          setChatMessages([...chatMessages, { sender: 'me', message: chatInput, createdAt: new Date().toISOString(), from: { _id: user?._id, name: user?.name } }]);
           // Determine recipient
           let toId = '';
           if (user?._id !== selectedListing?.sellerId) {
@@ -142,23 +143,54 @@ const ChatModal = ({ selectedListing, selectedMessage, user, chatMessages, setCh
             });
           setChatInput("");
         }
-      }} style={{display: 'flex', gap: 8}}>
+      }} style={{ display: 'flex', gap: 8 }}>
         <input
           type="text"
           value={chatInput}
           onChange={e => setChatInput(e.target.value)}
-          style={{flex: 1, padding: 8, borderRadius: 6, border: '1px solid #ddd'}}
+          style={{ flex: 1, padding: 8, borderRadius: 6, border: '1px solid #ddd' }}
           placeholder="Type your message..."
         />
-        <button type="submit" style={{background: '#2563eb', color: '#fff', border: 'none', borderRadius: 6, padding: '8px 16px', cursor: 'pointer'}}>Send</button>
+        <button type="submit" style={{ background: '#2563eb', color: '#fff', border: 'none', borderRadius: 6, padding: '8px 16px', cursor: 'pointer' }}>Send</button>
       </form>
     </div>
   );
 };
 const Landing = () => {
+  // Message count for detailed ad view
+  const [messageCount, setMessageCount] = useState(0);
+  // State declarations needed for useEffect below
+  const [selectedListing, setSelectedListing] = useState(null);
+  // Image carousel state for details view
+  const [currentImageIdx, setCurrentImageIdx] = useState(0);
+  // Reset image index when selectedListing changes
+  useEffect(() => { setCurrentImageIdx(0); }, [selectedListing]);
+  const [user, setUser] = useState(null);
+  const [chatOpen, setChatOpen] = useState(false);
   // Messages collapsible state and handler
   const [messagesCollapsed, setMessagesCollapsed] = useState(false);
   const [adMessages, setAdMessages] = useState([]);
+  // Message count badge state for navbar
+  const [messageCountNavBar, setMessageCountNavBar] = useState(0);
+  // Fetch message count for detailed ad view
+  useEffect(() => {
+    if (selectedListing && user) {
+      fetch(`${API_BASE_URL}/api/ads/chat?adId=${selectedListing.id || selectedListing._id}&userId=${user._id}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+          'Content-Type': 'application/json'
+        }
+      })
+        .then(res => res.json())
+        .then(data => {
+          setMessageCount(Array.isArray(data) ? data.length : 0);
+        })
+        .catch(() => setMessageCount(0));
+    } else {
+      setMessageCount(0);
+    }
+  }, [selectedListing, user, chatOpen]);
   const handleMessagesClick = async () => {
     if (!selectedListing) return;
     setMessagesCollapsed(prev => !prev);
@@ -180,7 +212,6 @@ const Landing = () => {
     }
   };
   // Chat window state
-  const [chatOpen, setChatOpen] = useState(false);
   const [chatMessages, setChatMessages] = useState([]);
   const [chatInput, setChatInput] = useState("");
   // Track selected message for chat modal
@@ -189,6 +220,10 @@ const Landing = () => {
   const handleEditAd = () => {
     if (!editAd.title || !editAd.price || !editAd.location || !editAd.description || !editAd.category) {
       alert('Please fill in all required fields');
+      return;
+    }
+    if (editAd.description.length < 150) {
+      alert('Description must be at least 150 characters long.');
       return;
     }
     const formData = new FormData();
@@ -236,14 +271,13 @@ const Landing = () => {
   const [showLocationDropdown, setShowLocationDropdown] = useState(false);
 
   const [view, setView] = useState('home');
-  const [selectedListing, setSelectedListing] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [favorites, setFavorites] = useState([]);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [user, setUser] = useState(null);
   const [showDropdown, setShowDropdown] = useState(false);
   const [categories, setCategories] = useState(['All']);
+  const [lastListView, setLastListView] = useState('home');
 
   useEffect(() => {
     fetch(`https://api.countrystatecity.in/v1/countries/IN/states/KL/cities`, {
@@ -327,14 +361,14 @@ const Landing = () => {
   }, []);
 
   const [newListing, setNewListing] = useState({
-  title: '',
-  price: '',
-  location: '', // Will hold the location id
-  locationName: '', // Will hold the location name
-  category: '', // Will hold the category id
-  description: '',
-  seller: '',
-  image: null // Will hold the File object
+    title: '',
+    price: '',
+    location: '', // Will hold the location id
+    locationName: '', // Will hold the location name
+    category: '', // Will hold the category id
+    description: '',
+    seller: '',
+    image: null // Will hold the File object
   });
 
   const filteredListings = listings.filter(listing => {
@@ -347,20 +381,74 @@ const Landing = () => {
       return false;
     }
     const matchesSearch = listing.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         listing.description.toLowerCase().includes(searchQuery.toLowerCase());
+      listing.description.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = selectedCategory === 'All' || listing.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
 
-   useEffect(() => {
+  useEffect(() => {
     const storedUser = localStorage.getItem("user");
     if (storedUser) setUser(JSON.parse(storedUser));
-    /* global google */
+    // Dynamically load Google Identity script if not present
+    if (!window.google || !window.google.accounts) {
+      const script = document.createElement('script');
+      script.src = 'https://accounts.google.com/gsi/client';
+      script.async = true;
+      script.onload = () => {
+        // Now safe to call google.accounts.id.initialize
+        google.accounts.id.initialize({
+          client_id: "556452370430-fd5caae668lq9468hbseas0kr3o1a01g.apps.googleusercontent.com",
+          callback: handleCredentialResponse,
+        });
+        // Desktop sign-in button
+        const desktopDiv = document.getElementById("googleSignInDiv");
+        if (desktopDiv) {
+          google.accounts.id.renderButton(
+            desktopDiv,
+            { theme: "outline", size: "large" }
+          );
+        }
+        // Mobile menu sign-in button
+        const mobileDiv = document.getElementById("googleSignInDivMobile");
+        if (mobileDiv) {
+          google.accounts.id.renderButton(
+            mobileDiv,
+            { theme: "outline", size: "large" }
+          );
+        }
+      };
+      document.body.appendChild(script);
+      return;
+    }
+    // If script is already loaded, proceed as before
     google.accounts.id.initialize({
       client_id: "556452370430-fd5caae668lq9468hbseas0kr3o1a01g.apps.googleusercontent.com",
       callback: handleCredentialResponse,
     });
-    if (!storedUser) {
+    const storedToken = localStorage.getItem("authToken");
+    if (storedUser) {
+      const userObj = JSON.parse(storedUser);
+      setUser(userObj);
+      // Fetch user messages for navbar badge on page load
+      if (storedToken && userObj && userObj._id) {
+        fetch(`${API_BASE_URL}/api/ads/getUserMessages`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${storedToken}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ userId: userObj._id })
+        })
+          .then(res => res.json())
+          .then(msgData => {
+            console.log("User messages:", msgData);
+            setMessageCountNavBar(Array.isArray(msgData) ? msgData.length : (msgData.count || 0));
+          })
+          .catch(() => {
+            setMessageCountNavBar(0);
+          });
+      }
+    } else {
       // Desktop sign-in button
       const desktopDiv = document.getElementById("googleSignInDiv");
       if (desktopDiv) {
@@ -404,7 +492,24 @@ const Landing = () => {
       .then((data) => {
         localStorage.setItem("authToken", data.token);
         localStorage.setItem("user", JSON.stringify(data.user));
-        window.location.href = "/";
+        // Fetch user messages for navbar badge
+        fetch(`${API_BASE_URL}/api/ads/getUserMessages`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${data.token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ userId: data.user._id })
+        })
+          .then(res => res.json())
+          .then(msgData => {
+            setMessageCountNavBar(Array.isArray(msgData) ? msgData.length : (msgData.count || 0));
+            window.location.href = "/";
+          })
+          .catch(() => {
+            setMessageCountNavBar(0);
+            window.location.href = "/";
+          });
       });
   };
 
@@ -413,7 +518,7 @@ const Landing = () => {
     fetch(`${API_BASE_URL}/api/ads/listUserAds`, {
       method: 'POST',
       headers: {
-      'Content-Type': 'application/json'
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify({ id: userId })
     })
@@ -469,6 +574,10 @@ const Landing = () => {
       alert('Please fill in all required fields');
       return;
     }
+    if (newListing.description.length < 150) {
+      alert('Description must be at least 150 characters long.');
+      return;
+    }
 
     const formData = new FormData();
     formData.append('title', newListing.title);
@@ -505,7 +614,7 @@ const Landing = () => {
   };
 
   const toggleFavorite = (id) => {
-    setFavorites(prev => 
+    setFavorites(prev =>
       prev.includes(id) ? prev.filter(fav => fav !== id) : [...prev, id]
     );
   };
@@ -902,10 +1011,10 @@ const Landing = () => {
               e4you.com
             </h1>
 
-            <div style={{display: 'flex', alignItems: 'center', gap: '32px'}}>
-              <nav style={{...styles.nav, display: window.innerWidth < 768 ? 'none' : 'flex'}}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '32px' }}>
+              <nav style={{ ...styles.nav, display: window.innerWidth < 768 ? 'none' : 'flex' }}>
                 <button style={styles.navButton} onClick={() => setView('favorites')}>
-                  <Heart style={{width: '16px', height: '16px'}} />
+                  <Heart style={{ width: '16px', height: '16px' }} />
                   Favorites ({favorites.length})
                 </button>
                 <button style={styles.navButton} onClick={() => {
@@ -916,68 +1025,89 @@ const Landing = () => {
                 }}>
                   My Ads
                 </button>
-{user ? (
-        <div style={{ position: "relative" }}>
-          {/* Profile Avatar */}
-          <img
-            src={user.profilePic}
-            alt={user.name}
-            style={{ width: "40px", height: "40px", borderRadius: "50%", cursor: "pointer" }}
-            onClick={() => setShowDropdown(!showDropdown)}
-          />
+                <button style={{ ...styles.postButton, background: 'transparent', color: '#2563eb' }} onClick={() => setView('messages')} title="Messages">Messages
+                  <div style={{position: 'relative', display: 'inline-block'}}>
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
+                    <span style={{
+                      position: 'absolute',
+                      top: -6,
+                      right: -10,
+                      background: messageCountNavBar > 0 ? '#2563eb' : '#d1d5db',
+                      color: '#fff',
+                      borderRadius: '50%',
+                      padding: '2px 6px',
+                      fontSize: '12px',
+                      fontWeight: 'bold',
+                      minWidth: '8px',
+                      textAlign: 'center',
+                      zIndex: 2,
+                      opacity: messageCountNavBar >= 0 ? 1 : 0
+                    }}>{messageCountNavBar}</span>
+                  </div>
+                </button>
+                {user ? (
+                  <div style={{ position: "relative" }}>
+                    {/* Profile Avatar */}
+                    <img
+                      src={user.profilePic}
+                      alt={user.name}
+                      style={{ width: "40px", height: "40px", borderRadius: "50%", cursor: "pointer" }}
+                      onClick={() => setShowDropdown(!showDropdown)}
+                    />
 
-          {/* Dropdown */}
-          {showDropdown && (
-            <div
-              style={{
-                position: "absolute",
-                top: "50px",
-                right: 0,
-                background: "#fff",
-                boxShadow: "0 2px 5px rgba(0,0,0,0.2)",
-                borderRadius: "5px",
-                overflow: "hidden",
-              }}
-            >
-              <button
-                style={{
-                  padding: "10px 20px",
-                  width: "100%",
-                  border: "none",
-                  background: "white",
-                  textAlign: "left",
-                  cursor: "pointer",
-                }}
-                onClick={handleLogout}
-              >
-                Logout
-              </button>
-            </div>
-          )}
-        </div>
-      ) : (
-   <div id="googleSignInDiv"></div>  // Google Sign-In button
+                    {/* Dropdown */}
+                    {showDropdown && (
+                      <div
+                        style={{
+                          position: "absolute",
+                          top: "50px",
+                          right: 0,
+                          background: "#fff",
+                          boxShadow: "0 2px 5px rgba(0,0,0,0.2)",
+                          borderRadius: "5px",
+                          overflow: "hidden",
+                        }}
+                      >
+                        <button
+                          style={{
+                            padding: "10px 20px",
+                            width: "100%",
+                            border: "none",
+                            background: "white",
+                            textAlign: "left",
+                            cursor: "pointer",
+                          }}
+                          onClick={handleLogout}
+                        >
+                          Logout
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div id="googleSignInDiv"></div>  // Google Sign-In button
 
-  )}
+                )}
               </nav>
 
-              <div style={{display: 'flex', alignItems: 'center', gap: '16px'}}>
-                <button style={styles.postButton} onClick={() =>{
-                  if(!user) {
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+
+                <button style={styles.postButton} onClick={() => {
+                  if (!user) {
                     alert('Please login to post an ad.');
                   } else {
                     setView('post');
                   }
                 }}>
-                  <Plus style={{width: '20px', height: '20px'}} />
-                  <span style={{display: window.innerWidth < 640 ? 'none' : 'inline'}}>Post Ad</span>
+                  <Plus style={{ width: '20px', height: '20px' }} />
+                  <span style={{ display: window.innerWidth < 640 ? 'none' : 'inline' }}>Post Ad</span>
                 </button>
 
-                <button 
-                  style={{...styles.menuButton, display: window.innerWidth < 768 ? 'block' : 'none'}}
+                <button
+                  style={{ ...styles.menuButton, display: window.innerWidth < 768 ? 'block' : 'none' }}
                   onClick={() => setMenuOpen(!menuOpen)}
                 >
-                  {menuOpen ? <X style={{width: '24px', height: '24px'}} /> : <Menu style={{width: '24px', height: '24px'}} />}
+                  {menuOpen ? <X style={{ width: '24px', height: '24px' }} /> : <Menu style={{ width: '24px', height: '24px' }} />}
                 </button>
               </div>
             </div>
@@ -985,11 +1115,11 @@ const Landing = () => {
 
           {menuOpen && (
             <div style={styles.mobileMenu}>
-              <button 
+              <button
                 style={styles.mobileMenuItem}
                 onClick={() => { setView('favorites'); setMenuOpen(false); }}
               >
-                <Heart style={{width: '16px', height: '16px'}} />
+                <Heart style={{ width: '16px', height: '16px' }} />
                 Favorites ({favorites.length})
               </button>
               <button
@@ -1004,6 +1134,17 @@ const Landing = () => {
               >
                 My Ads
               </button>
+              <button
+                style={styles.mobileMenuItem}
+                onClick={() => {
+                  setView('messages');
+                  setMenuOpen(false);
+                }}
+                title="Messages"
+              >
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#595a5bff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
+                Messages
+              </button>
               {user ? (
                 <button
                   style={styles.mobileMenuItem}
@@ -1015,7 +1156,7 @@ const Landing = () => {
                   Logout
                 </button>
               ) : (
-                <div style={{padding: '12px 16px', width: '30%'}}>
+                <div style={{ padding: '12px 16px', width: '30%' }}>
                   <div id="googleSignInDivMobile"></div>
                 </div>
               )}
@@ -1040,18 +1181,18 @@ const Landing = () => {
           </div>
 
           <div style={styles.categories}>
-              {categories.map((cat, idx) => (
-                <button
-                  key={cat.id || idx}
-                  onClick={() => setSelectedCategory(cat.name)}
-                  style={{
-                    ...styles.categoryButton,
-                    ...(selectedCategory === cat.name ? styles.categoryButtonActive : styles.categoryButtonInactive)
-                  }}
-                >
-                  {cat.name}
-                </button>
-              ))}
+            {categories.map((cat, idx) => (
+              <button
+                key={cat.id || idx}
+                onClick={() => setSelectedCategory(cat.name)}
+                style={{
+                  ...styles.categoryButton,
+                  ...(selectedCategory === cat.name ? styles.categoryButtonActive : styles.categoryButtonInactive)
+                }}
+              >
+                {cat.name}
+              </button>
+            ))}
           </div>
 
           <div style={styles.grid}>
@@ -1060,6 +1201,7 @@ const Landing = () => {
                 key={listing.id || idx}
                 style={styles.card}
                 onClick={() => {
+                  setLastListView('home');
                   setSelectedListing(listing);
                   setView('detail');
                 }}
@@ -1071,7 +1213,7 @@ const Landing = () => {
                     src={listing.image}
                     alt={listing.title}
                     style={styles.cardImage}
-                      onError={(e) => { e.target.src='https://t4.ftcdn.net/jpg/06/71/92/37/360_F_671923740_x0zOL3OIuUAnSF6sr7PuznCI5bQFKhI0.jpg'; e.target.alt='Image not found'; }}
+                    onError={(e) => { e.target.src = 'https://t4.ftcdn.net/jpg/06/71/92/37/360_F_671923740_x0zOL3OIuUAnSF6sr7PuznCI5bQFKhI0.jpg'; e.target.alt = 'Image not found'; }}
                   />
                   <button
                     onClick={(e) => {
@@ -1092,7 +1234,7 @@ const Landing = () => {
                   <h3 style={styles.cardTitle}>{listing.title}</h3>
                   <p style={styles.cardPrice}>₹{listing.price.toLocaleString()}</p>
                   <div style={styles.cardLocation}>
-                    <MapPin style={{width: '16px', height: '16px'}} />
+                    <MapPin style={{ width: '16px', height: '16px' }} />
                     {listing.location}
                   </div>
                   <p style={styles.cardPosted}>{listing.posted}</p>
@@ -1111,35 +1253,130 @@ const Landing = () => {
 
       {view === 'detail' && selectedListing && (
         <div style={styles.detailContainer}>
-          <button style={styles.backButton} onClick={() => setView('home')}>
+          <button style={styles.backButton} onClick={() => setView(lastListView)}>
             ← Back to listings
           </button>
-          
+
           <div style={styles.detailCard}>
-            <img
-              src={selectedListing.image}
-              alt={selectedListing.title}
-              style={styles.detailImage}
-            />
-            
+            {/* Image carousel logic (hooks at top level) */}
+            {(() => {
+              const images = Array.isArray(selectedListing.images) && selectedListing.images.length > 0
+                ? selectedListing.images
+                : selectedListing.image
+                  ? [selectedListing.image]
+                  : [];
+              const fallback = 'https://t4.ftcdn.net/jpg/06/71/92/37/360_F_671923740_x0zOL3OIuUAnSF6sr7PuznCI5bQFKhI0.jpg';
+              return (
+                <div style={{ position: 'relative', textAlign: 'center' }}>
+                  <button
+                    style={{
+                      position: 'absolute',
+                      left: 0,
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      background: 'rgba(255,255,255,0.7)',
+                      border: 'none',
+                      borderRadius: '50%',
+                      width: 36,
+                      height: 36,
+                      fontSize: 24,
+                      cursor: 'pointer',
+                      zIndex: 2,
+                      display: images.length > 1 ? 'block' : 'none'
+                    }}
+                    onClick={() => setCurrentImageIdx(idx => (idx === 0 ? images.length - 1 : idx - 1))}
+                    aria-label="Previous image"
+                  >&#8592;</button>
+                  <img
+                    src={images.length > 0 ? images[currentImageIdx] : fallback}
+                    alt={selectedListing.title}
+                    style={{
+                      maxWidth: '100%',
+                      maxHeight: '400px',
+                      objectFit: 'contain',
+                      display: 'block',
+                      margin: '32px auto',
+                      background: '#f7f7f7',
+                      borderRadius: '10px'
+                    }}
+                    onError={e => { e.target.src = fallback; e.target.alt = 'Image not found'; }}
+                  />
+                  <button
+                    style={{
+                      position: 'absolute',
+                      right: 0,
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      background: 'rgba(255,255,255,0.7)',
+                      border: 'none',
+                      borderRadius: '50%',
+                      width: 36,
+                      height: 36,
+                      fontSize: 24,
+                      cursor: 'pointer',
+                      zIndex: 2,
+                      display: images.length > 1 ? 'block' : 'none'
+                    }}
+                    onClick={() => setCurrentImageIdx(idx => (idx === images.length - 1 ? 0 : idx + 1))}
+                    aria-label="Next image"
+                  >&#8594;</button>
+                  {/* Image index indicator */}
+                  {images.length > 1 && (
+                    <div style={{ position: 'absolute', bottom: 10, left: '50%', transform: 'translateX(-50%)', background: '#fff', borderRadius: 12, padding: '2px 12px', fontSize: 14, color: '#2563eb', boxShadow: '0 1px 4px rgba(0,0,0,0.08)' }}>
+                      {currentImageIdx + 1} / {images.length}
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+
             <div style={styles.detailContent}>
               <div style={styles.detailHeader}>
-                <div>
-                  <h2 style={styles.detailTitle}>{selectedListing.title}</h2>
-                  <p style={styles.detailPrice}>₹{selectedListing.price.toLocaleString()}</p>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'flex-start' }}>
+                  <h2 style={{ ...styles.detailTitle, marginBottom: 0, textAlign: 'left' }}>{selectedListing.title}</h2>
+                  <p style={{ ...styles.detailPrice, marginTop: 4, marginBottom: 0, textAlign: 'left' }}>
+                    ₹{selectedListing.price.toLocaleString()}
+                  </p>
                 </div>
-                <button
-                  onClick={() => toggleFavorite(selectedListing.id)}
-                  style={{...styles.favoriteButton, position: 'relative', top: 0, right: 0}}
-                >
-                  <Heart
-                    style={{
-                      width: '24px',
-                      height: '24px',
-                      ...(favorites.includes(selectedListing.id) ? styles.favoriteIconActive : styles.favoriteIconInactive)
-                    }}
-                  />
-                </button>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <button
+                    onClick={() => toggleFavorite(selectedListing.id)}
+                    style={{ ...styles.favoriteButton, position: 'relative', top: 0, right: 0 }}
+                  >
+                    <Heart
+                      style={{
+                        width: '24px',
+                        height: '24px',
+                        ...(favorites.includes(selectedListing.id) ? styles.favoriteIconActive : styles.favoriteIconInactive)
+                      }}
+                    />
+                  </button>
+                  <button
+                    onClick={handleMessagesClick}
+                    style={{ ...styles.favoriteButton, position: 'relative', top: 0, right: 0 }}
+                    title="Messages"
+                  >
+                    <div style={{ position: 'relative', display: 'inline-block' }}>
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#909090ff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
+                      {messageCount > 0 && (
+                        <span style={{
+                          position: 'absolute',
+                          top: -6,
+                          right: -6,
+                          background: '#2563eb',
+                          color: '#fff',
+                          borderRadius: '50%',
+                          padding: '2px 6px',
+                          fontSize: '12px',
+                          fontWeight: 'bold',
+                          minWidth: '8px',
+                          textAlign: 'center',
+                          zIndex: 2
+                        }}>{messageCount}</span>
+                      )}
+                    </div>
+                  </button>
+                </div>
               </div>
 
               <div style={styles.detailSection}>
@@ -1151,28 +1388,28 @@ const Landing = () => {
                   gap: '16px',
                   marginBottom: 0
                 }}>
-                  <span style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
-                    <MapPin style={{width: '20px', height: '20px'}} />
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <MapPin style={{ width: '20px', height: '20px' }} />
                     {selectedListing.location}
                   </span>
-                  <span style={{color: '#6b7280', fontSize: '14px'}}>Posted {selectedListing.posted}</span>
+                  <span style={{ color: '#6b7280', fontSize: '14px' }}>Posted {selectedListing.posted}</span>
                 </div>
               </div>
 
               <div style={styles.descriptionSection}>
                 <h3 style={styles.sectionTitle}>Description</h3>
-                <p style={{color: '#374151', lineHeight: '1.6'}}>{selectedListing.description}</p>
+                <p style={{ color: '#374151', lineHeight: '1.6', textAlign: 'justify' }}>{selectedListing.description}</p>
               </div>
 
               <div style={styles.sellerCard}>
                 <h3 style={styles.sectionTitle}>Seller Information</h3>
                 <div style={styles.sellerInfo}>
                   <div style={styles.sellerAvatar}>
-                    <User style={{width: '24px', height: '24px'}} />
+                    <User style={{ width: '24px', height: '24px' }} />
                   </div>
                   <div>
                     <p style={styles.sellerName}>{typeof selectedListing.seller === 'object' && selectedListing.seller !== null ? selectedListing.seller.name : selectedListing.seller}</p>
-                    <p style={{fontSize: '14px', color: '#6b7280'}}>Member since 2023</p>
+                    <p style={{ fontSize: '14px', color: '#6b7280' }}>Member since 2023</p>
                   </div>
                 </div>
                 {myAds.some(ad => ad.id === selectedListing.id || ad._id === selectedListing.id || ad.id === selectedListing._id) ? (
@@ -1181,12 +1418,12 @@ const Landing = () => {
                       Messages {messagesCollapsed ? '▲' : '▼'}
                     </button>
                     {messagesCollapsed && (
-                      <div style={{marginTop: 16, background: '#fff', borderRadius: 8, boxShadow: '0 1px 3px rgba(0,0,0,0.08)', padding: 16}}>
-                        <h3 style={{marginTop: 0, marginBottom: 16}}>Messages for "{selectedListing?.title}"</h3>
+                      <div style={{ marginTop: 16, background: '#fff', borderRadius: 8, boxShadow: '0 1px 3px rgba(0,0,0,0.08)', padding: 16 }}>
+                        <h3 style={{ marginTop: 0, marginBottom: 16 }}>Messages for "{selectedListing?.title}"</h3>
                         {adMessages.length === 0 ? (
-                          <div style={{color: '#888'}}>No messages found for this ad.</div>
+                          <div style={{ color: '#888' }}>No messages found for this ad.</div>
                         ) : (
-                          <ul style={{listStyle: 'none', padding: 0}}>
+                          <ul style={{ listStyle: 'none', padding: 0 }}>
                             {adMessages.map((msg, idx) => {
                               console.log('Message:', msg);
                               const isFromCurrentUser = (msg.from?._id || msg.from) === (user?._id);
@@ -1221,9 +1458,9 @@ const Landing = () => {
                                   onMouseEnter={e => e.currentTarget.style.background = '#dcf2f9ff'}
                                   onMouseLeave={e => e.currentTarget.style.background = '#f0f9fcff'}
                                 >
-                                  <div style={{fontWeight: 600, color: '#2563eb', marginBottom: 4}}>{otherName}</div>
-                                  <div style={{color: '#374151', fontSize: 15, marginBottom: 4, textAlign: 'left'}}>{msg.text || msg.message}</div>
-                                  <div style={{fontSize: 12, color: '#888', textAlign: 'left'}}>{msg.date ? new Date(msg.date).toLocaleString() : ''}</div>
+                                  <div style={{ fontWeight: 600, color: '#2563eb', marginBottom: 4 }}>{otherName}</div>
+                                  <div style={{ color: '#374151', fontSize: 15, marginBottom: 4, textAlign: 'left' }}>{msg.text || msg.message}</div>
+                                  <div style={{ fontSize: 12, color: '#888', textAlign: 'left' }}>{msg.date ? new Date(msg.date).toLocaleString() : ''}</div>
                                 </li>
                               );
                             })}
@@ -1233,7 +1470,7 @@ const Landing = () => {
                     )}
                   </>
                 ) : (
-                  <button style={styles.contactButton} onClick={() => { if (user) { setChatOpen(true) }else { alert('Please login to contact the seller.'); }}}>
+                  <button style={styles.contactButton} onClick={() => { if (user) { setChatOpen(true) } else { alert('Please login to contact the seller.'); } }}>
                     Contact Seller
                   </button>
                 )}
@@ -1263,7 +1500,7 @@ const Landing = () => {
 
           <div style={styles.formCard}>
             <h2 style={styles.formTitle}>Post Your Ad</h2>
-            
+
             <div>
               <div style={styles.formGroup}>
                 <label style={styles.label}>Title *</label>
@@ -1271,7 +1508,7 @@ const Landing = () => {
                   type="text"
                   style={styles.input}
                   value={newListing.title}
-                  onChange={(e) => setNewListing({...newListing, title: e.target.value})}
+                  onChange={(e) => setNewListing({ ...newListing, title: e.target.value })}
                   placeholder="e.g., iPhone 13 Pro Max"
                 />
               </div>
@@ -1281,9 +1518,9 @@ const Landing = () => {
                 <select
                   style={styles.select}
                   value={newListing.category}
-                  onChange={(e) => setNewListing({...newListing, category: e.target.value})}
+                  onChange={(e) => setNewListing({ ...newListing, category: e.target.value })}
                 >
-                   <option key='' value=''>-- Select Category --</option>
+                  <option key='' value=''>-- Select Category --</option>
                   {categories.filter(c => c.id !== 'all').map(cat => (
                     <option key={cat.id} value={cat.id}>{cat.name}</option>
                   ))}
@@ -1296,7 +1533,7 @@ const Landing = () => {
                   type="number"
                   style={styles.input}
                   value={newListing.price}
-                  onChange={(e) => setNewListing({...newListing, price: e.target.value})}
+                  onChange={(e) => setNewListing({ ...newListing, price: e.target.value })}
                   placeholder="15000"
                 />
               </div>
@@ -1356,7 +1593,7 @@ const Landing = () => {
                 <textarea
                   style={styles.textarea}
                   value={newListing.description}
-                  onChange={(e) => setNewListing({...newListing, description: e.target.value})}
+                  onChange={(e) => setNewListing({ ...newListing, description: e.target.value })}
                   placeholder="Describe your item..."
                 />
               </div>
@@ -1390,11 +1627,11 @@ const Landing = () => {
       {/* Move myads block inside main return's <div> */}
       {view === 'myads' && (
         <div style={styles.container}>
-          <h2 style={{fontSize: '24px', fontWeight: 'bold', marginBottom: '24px'}}>My Ads</h2>
+          <h2 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '24px' }}>My Ads</h2>
           {(!myAds || myAds.length === 0) ? (
             <div style={styles.emptyState}>
               <p style={styles.emptyText}>No ads posted yet</p>
-              <button style={{...styles.backButton, marginTop: '16px'}} onClick={() => setView('home')}>
+              <button style={{ ...styles.backButton, marginTop: '16px' }} onClick={() => setView('home')}>
                 Start browsing
               </button>
             </div>
@@ -1497,6 +1734,7 @@ const Landing = () => {
                       key={listing.id || idx}
                       style={{ ...styles.card, position: 'relative' }}
                       onClick={() => {
+                        setLastListView('myads');
                         setSelectedListing(listing);
                         setView('detail');
                       }}
@@ -1508,7 +1746,7 @@ const Landing = () => {
                           src={listing.image}
                           alt={listing.title}
                           style={styles.cardImage}
-                          onError={(e) => { e.target.src='https://t4.ftcdn.net/jpg/06/71/92/37/360_F_671923740_x0zOL3OIuUAnSF6sr7PuznCI5bQFKhI0.jpg'; e.target.alt='Image not found'; }}
+                          onError={(e) => { e.target.src = 'https://t4.ftcdn.net/jpg/06/71/92/37/360_F_671923740_x0zOL3OIuUAnSF6sr7PuznCI5bQFKhI0.jpg'; e.target.alt = 'Image not found'; }}
                         />
                       </div>
                       <button
@@ -1537,13 +1775,13 @@ const Landing = () => {
                           setEditAd({ ...listing, category: catId });
                         }}
                       >
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9" /><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z" /></svg>
                       </button>
                       <div style={styles.cardContent}>
                         <h3 style={styles.cardTitle}>{listing.title}</h3>
                         <p style={styles.cardPrice}>₹{listing.price.toLocaleString()}</p>
                         <div style={styles.cardLocation}>
-                          <MapPin style={{width: '16px', height: '16px'}} />
+                          <MapPin style={{ width: '16px', height: '16px' }} />
                           {listing.location}
                         </div>
                         <p style={styles.cardPosted}>{listing.posted}</p>
@@ -1558,12 +1796,12 @@ const Landing = () => {
       )}
       {view === 'favorites' && (
         <div style={styles.container}>
-          <h2 style={{fontSize: '24px', fontWeight: 'bold', marginBottom: '24px'}}>My Favorites</h2>
+          <h2 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '24px' }}>My Favorites</h2>
           {favorites.length === 0 ? (
             <div style={styles.emptyState}>
-              <Heart style={{width: '64px', height: '64px', color: '#d1d5db', margin: '0 auto 16px'}} />
+              <Heart style={{ width: '64px', height: '64px', color: '#d1d5db', margin: '0 auto 16px' }} />
               <p style={styles.emptyText}>No favorites yet</p>
-              <button style={{...styles.backButton, marginTop: '16px'}} onClick={() => setView('home')}>
+              <button style={{ ...styles.backButton, marginTop: '16px' }} onClick={() => setView('home')}>
                 Start browsing
               </button>
             </div>
@@ -1576,6 +1814,7 @@ const Landing = () => {
                     key={listing.id || idx}
                     style={styles.card}
                     onClick={() => {
+                      setLastListView('favorites');
                       setSelectedListing(listing);
                       setView('detail');
                     }}
@@ -1587,7 +1826,7 @@ const Landing = () => {
                         src={listing.image}
                         alt={listing.title}
                         style={styles.cardImage}
-                        onError={(e) => { e.target.src='https://t4.ftcdn.net/jpg/06/71/92/37/360_F_671923740_x0zOL3OIuUAnSF6sr7PuznCI5bQFKhI0.jpg'; e.target.alt='Image not found'; }}
+                        onError={(e) => { e.target.src = 'https://t4.ftcdn.net/jpg/06/71/92/37/360_F_671923740_x0zOL3OIuUAnSF6sr7PuznCI5bQFKhI0.jpg'; e.target.alt = 'Image not found'; }}
                       />
                       <button
                         onClick={(e) => {
@@ -1596,14 +1835,14 @@ const Landing = () => {
                         }}
                         style={styles.favoriteButton}
                       >
-                        <Heart style={{...styles.favoriteIcon, ...styles.favoriteIconActive}} />
+                        <Heart style={{ ...styles.favoriteIcon, ...styles.favoriteIconActive }} />
                       </button>
                     </div>
                     <div style={styles.cardContent}>
                       <h3 style={styles.cardTitle}>{listing.title}</h3>
                       <p style={styles.cardPrice}>₹{listing.price.toLocaleString()}</p>
                       <div style={styles.cardLocation}>
-                        <MapPin style={{width: '16px', height: '16px'}} />
+                        <MapPin style={{ width: '16px', height: '16px' }} />
                         {listing.location}
                       </div>
                       <p style={styles.cardPosted}>{listing.posted}</p>
