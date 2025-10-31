@@ -1,5 +1,6 @@
 /* global google */
 import React, { useState, useEffect } from 'react';
+import MessagesPage from './MessagesPage';
 import { Search, Plus, MapPin, Heart, User, Menu, X } from 'lucide-react';
 import { jwtDecode } from "jwt-decode";
 
@@ -35,123 +36,239 @@ const ChatModal = ({ selectedListing, selectedMessage, user, chatMessages, setCh
       left: '50%',
       bottom: 24,
       transform: 'translateX(-50%)',
-      width: '90vw',
-      maxWidth: 350,
-      minWidth: 260,
+  width: '95vw',
+  maxWidth: 380,
+  minWidth: 260,
       background: '#fff',
-      borderRadius: 10,
-      boxShadow: '0 2px 12px rgba(0,0,0,0.15)',
+      borderRadius: 16,
+      boxShadow: '0 4px 24px rgba(0,0,0,0.18)',
       zIndex: 9999,
-      padding: 16,
+      padding: 0,
       margin: '0 auto',
-      boxSizing: 'border-box'
+      boxSizing: 'border-box',
+      overflow: 'hidden'
     }
     : {
       position: 'fixed',
       right: 40,
       bottom: 40,
-      width: 350,
+  width: 380,
       background: '#fff',
-      borderRadius: 10,
-      boxShadow: '0 2px 12px rgba(0,0,0,0.15)',
+      borderRadius: 16,
+      boxShadow: '0 4px 24px rgba(0,0,0,0.18)',
       zIndex: 9999,
-      padding: 16,
-      boxSizing: 'border-box'
+      padding: 0,
+      boxSizing: 'border-box',
+      overflow: 'hidden'
     };
+
+  const headerStyle = {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    background: 'linear-gradient(90deg,#2563eb 60%,#1e40af 100%)',
+    color: '#fff',
+  padding: '8px 18px',
+  borderTopLeftRadius: 16,
+  borderTopRightRadius: 16,
+  minHeight: 36
+  };
+  const titleStyle = {
+  fontSize: 18,
+  fontWeight: 600,
+  margin: 0,
+  display: 'flex',
+  alignItems: 'center',
+  gap: 8,
+  textAlign: 'justify',
+  width: '100%'
+  };
+  const closeBtnStyle = {
+    background: 'none',
+    border: 'none',
+    fontSize: 24,
+    color: '#fff',
+    cursor: 'pointer',
+    marginLeft: 8
+  };
+  const chatAreaStyle = {
+  height: 200,
+    overflowY: 'auto',
+    background: '#f3f4f6',
+    padding: '18px 16px',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 10
+  };
+  const inputAreaStyle = {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 8,
+    padding: '16px',
+    background: '#fff',
+    borderBottomLeftRadius: 16,
+    borderBottomRightRadius: 16,
+    boxShadow: '0 -2px 8px rgba(0,0,0,0.04)'
+  };
+  const inputStyle = {
+    flex: 1,
+    padding: '10px 14px',
+    borderRadius: 8,
+    border: '1px solid #d1d5db',
+    fontSize: 15,
+    boxShadow: '0 1px 2px rgba(0,0,0,0.03)'
+  };
+  const sendBtnStyle = {
+    background: 'linear-gradient(90deg,#2563eb 60%,#1e40af 100%)',
+    color: '#fff',
+    border: 'none',
+    borderRadius: 8,
+    padding: '10px 20px',
+    fontWeight: 600,
+    fontSize: 15,
+    cursor: 'pointer',
+    boxShadow: '0 2px 8px rgba(37,99,235,0.08)'
+  };
+  const bubbleStyle = (isMe) => ({
+  alignSelf: isMe ? 'flex-end' : 'flex-start',
+  background: isMe ? 'linear-gradient(90deg,#2563eb 60%,#1e40af 100%)' : '#e5e7eb',
+  color: isMe ? '#fff' : '#374151',
+  borderRadius: 12,
+  padding: '6px 12px',
+  maxWidth: '80%',
+  fontSize: 15,
+  boxShadow: isMe ? '0 2px 8px rgba(37,99,235,0.08)' : '0 1px 4px rgba(0,0,0,0.04)',
+  marginBottom: 2,
+  position: 'relative',
+  display: 'inline-block'
+  });
+  const metaStyle = (isMe) => ({
+  fontSize: 12,
+  color: isMe ? '#c7d2fe' : '#6b7280',
+  marginTop: 4,
+  textAlign: 'right',
+  width: '100%'
+  });
+
   return (
     <div style={modalStyle}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h3 style={{ margin: 0 }}>
-          {selectedListing?.title || 'Chat'}
-          {/* Show the name of the 'from' person from the clicked message card, not the ad seller name */}
-          {selectedMessage && selectedMessage.from && (
-            <span style={{ fontWeight: 400, fontSize: 14, marginLeft: 8, color: '#2563eb' }}>
-              — {selectedMessage.from?.name || selectedMessage.from || 'Unknown User'}
+      <div style={headerStyle}>
+        <div style={titleStyle}>
+          <span style={{ fontWeight: 600 }}>
+            {selectedListing?.title || 'Chat'}
+            {' - '}
+            <span style={{ fontWeight: 400, fontSize: 14, color: '#c7d2fe' }}>
+              {(() => {
+                if (user?._id === selectedListing?.sellerId) {
+                  // Seller is logged in, receiver is selectedMessage.from
+                  return selectedMessage?.from?.name || selectedMessage?.from || 'Unknown User';
+                } else {
+                  // Buyer is logged in, receiver is seller
+                  return selectedListing?.seller || 'Unknown User';
+                }
+              })()}
             </span>
-          )}
-        </h3>
-        <button style={{ background: 'none', border: 'none', fontSize: 18, cursor: 'pointer' }} onClick={() => setChatOpen(false)}>×</button>
+          </span>
+        </div>
+        <button style={closeBtnStyle} onClick={() => setChatOpen(false)} title="Close chat">×</button>
       </div>
-      <div style={{ height: 180, overflowY: 'auto', margin: '12px 0', background: '#f7f7f7', borderRadius: 6, padding: 8 }}>
+      <div style={chatAreaStyle}>
         {chatMessages.length === 0 ? (
-          <div style={{ color: '#888' }}>No messages yet.</div>
+          <div style={{ color: '#888', textAlign: 'center', marginTop: 40 }}>No messages yet.</div>
         ) : (
-          chatMessages.map((msg, idx) => (
-            <div
-              key={idx}
-              style={{
-                marginBottom: 8,
-                textAlign: (msg.from?._id === user?._id) ? 'right' : 'left'
-              }}
-            >
-              <span
-                style={{
-                  background: (msg.from?._id === user?._id) ? '#2563eb' : '#eee',
-                  color: (msg.from?._id === user?._id) ? '#fff' : '#333',
-                  borderRadius: 6,
-                  padding: '6px 12px',
-                  display: 'inline-block'
-                }}
-              >
-                {msg.message}
-              </span>
-              <div style={{ fontSize: 12, color: '#2563eb', marginTop: 2 }}>
-                {msg.from?.name || msg.sender || 'Unknown User'}
-                {msg.createdAt && (
-                  <span style={{ color: '#888', marginLeft: 8 }}>
-                    {typeof msg.createdAt === 'string' ? new Date(msg.createdAt).toLocaleString() : msg.createdAt.toLocaleString()}
-                  </span>
+          chatMessages.map((msg, idx) => {
+            const isMe = msg.from?._id === user?._id;
+            const currentDate = msg.createdAt ? new Date(msg.createdAt) : null;
+            let showDate = false;
+            if (currentDate) {
+              if (idx === 0) {
+                showDate = true;
+              } else {
+                const prevMsg = chatMessages[idx - 1];
+                const prevDate = prevMsg && prevMsg.createdAt ? new Date(prevMsg.createdAt) : null;
+                if (!prevDate || prevDate.toDateString() !== currentDate.toDateString()) {
+                  showDate = true;
+                }
+              }
+            }
+            return (
+              <React.Fragment key={idx}>
+                {showDate && currentDate && (
+                  <div style={{ textAlign: 'center', color: '#6b7280', fontSize: 13, margin: '10px 0 2px 0' }}>
+                    {currentDate.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}
+                  </div>
                 )}
-              </div>
-            </div>
-          ))
+                <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'flex-end', gap: 0 }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: isMe ? 'flex-end' : 'flex-start', width: '100%' }}>
+                    <div style={bubbleStyle(isMe)}>
+                      {msg.message}
+                      {msg.createdAt && (
+                        <div style={metaStyle(isMe)}>
+                          <span style={{ color: isMe ? '#c7d2fe' : '#888', marginLeft: 8 }}>
+                            {currentDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </React.Fragment>
+            );
+          })
         )}
       </div>
-      <form onSubmit={e => {
-        e.preventDefault();
-        if (chatInput.trim()) {
-          // Add message locally
-          setChatMessages([...chatMessages, { sender: 'me', message: chatInput, createdAt: new Date().toISOString(), from: { _id: user?._id, name: user?.name } }]);
-          // Determine recipient
-          let toId = '';
-          if (user?._id !== selectedListing?.sellerId) {
-            // If logged-in user is not the seller, send to seller
-            toId = selectedListing?.sellerId;
-          } else if (selectedMessage && selectedMessage.user) {
-            // If logged-in user is the seller, send to user from message list
-            toId = selectedMessage.user;
+      <form
+        onSubmit={e => {
+          e.preventDefault();
+          if (chatInput.trim()) {
+            setChatMessages([
+              ...chatMessages,
+              {
+                sender: 'me',
+                message: chatInput,
+                createdAt: new Date().toISOString(),
+                from: { _id: user?._id, name: user?.name, profilePic: user?.profilePic }
+              }
+            ]);
+            let toId = '';
+            if (user?._id !== selectedListing?.sellerId) {
+              toId = selectedListing?.sellerId;
+            } else if (selectedMessage && selectedMessage.user) {
+              toId = selectedMessage.user;
+            }
+            fetch(`${API_BASE_URL}/api/ads/chat`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+              },
+              body: JSON.stringify({
+                adId: selectedListing?.id || selectedListing?._id,
+                message: chatInput,
+                to: toId,
+                from: user?._id || ''
+              })
+            })
+              .then(res => res.json())
+              .then(data => {
+                // Optionally handle response
+              })
+              .catch(() => {
+                // Optionally handle error
+              });
+            setChatInput("");
           }
-          fetch(`${API_BASE_URL}/api/ads/chat`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-            },
-            body: JSON.stringify({
-              adId: selectedListing?.id || selectedListing?._id,
-              message: chatInput,
-              to: toId,
-              from: user?._id || ''
-            })
-          })
-            .then(res => res.json())
-            .then(data => {
-              // Optionally handle response, e.g., update chatMessages with server data
-            })
-            .catch(() => {
-              // Optionally handle error
-            });
-          setChatInput("");
-        }
-      }} style={{ display: 'flex', gap: 8 }}>
+        }}
+        style={inputAreaStyle}
+      >
         <input
           type="text"
           value={chatInput}
           onChange={e => setChatInput(e.target.value)}
-          style={{ flex: 1, padding: 8, borderRadius: 6, border: '1px solid #ddd' }}
+          style={inputStyle}
           placeholder="Type your message..."
         />
-        <button type="submit" style={{ background: '#2563eb', color: '#fff', border: 'none', borderRadius: 6, padding: '8px 16px', cursor: 'pointer' }}>Send</button>
+        <button type="submit" style={sendBtnStyle}>Send</button>
       </form>
     </div>
   );
@@ -492,24 +609,26 @@ const Landing = () => {
       .then((data) => {
         localStorage.setItem("authToken", data.token);
         localStorage.setItem("user", JSON.stringify(data.user));
-        // Fetch user messages for navbar badge
-        fetch(`${API_BASE_URL}/api/ads/getUserMessages`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${data.token}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ userId: data.user._id })
-        })
-          .then(res => res.json())
-          .then(msgData => {
-            setMessageCountNavBar(Array.isArray(msgData) ? msgData.length : (msgData.count || 0));
-            window.location.href = "/";
+        // Delay fetching user messages for navbar badge by 30 seconds
+        setTimeout(() => {
+          fetch(`${API_BASE_URL}/api/ads/getUserMessages`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${data.token}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ userId: data.user._id })
           })
-          .catch(() => {
-            setMessageCountNavBar(0);
-            window.location.href = "/";
-          });
+            .then(res => res.json())
+            .then(msgData => {
+              setMessageCountNavBar(Array.isArray(msgData) ? msgData.length : (msgData.count || 0));
+              window.location.href = "/";
+            })
+            .catch(() => {
+              setMessageCountNavBar(0);
+              window.location.href = "/";
+            });
+        }, 8000); // 30 seconds
       });
   };
 
@@ -1142,7 +1261,24 @@ const Landing = () => {
                 }}
                 title="Messages"
               >
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#595a5bff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
+                <div style={{ position: 'relative', display: 'inline-block' }}>
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#595a5bff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
+                  <span style={{
+                    position: 'absolute',
+                    top: -6,
+                    right: -10,
+                    background: messageCountNavBar > 0 ? '#2563eb' : '#d1d5db',
+                    color: '#fff',
+                    borderRadius: '50%',
+                    padding: '2px 6px',
+                    fontSize: '12px',
+                    fontWeight: 'bold',
+                    minWidth: '8px',
+                    textAlign: 'center',
+                    zIndex: 2,
+                    opacity: messageCountNavBar >= 0 ? 1 : 0
+                  }}>{messageCountNavBar}</span>
+                </div>
                 Messages
               </button>
               {user ? (
@@ -1400,75 +1536,16 @@ const Landing = () => {
                 <h3 style={styles.sectionTitle}>Description</h3>
                 <p style={{ color: '#374151', lineHeight: '1.6', textAlign: 'justify' }}>{selectedListing.description}</p>
               </div>
+              <hr style={{ border: 'none', borderTop: '1px solid #e5e7eb', margin: '24px 0' }} />
 
-              <div style={styles.sellerCard}>
-                <h3 style={styles.sectionTitle}>Seller Information</h3>
-                <div style={styles.sellerInfo}>
-                  <div style={styles.sellerAvatar}>
-                    <User style={{ width: '24px', height: '24px' }} />
-                  </div>
-                  <div>
-                    <p style={styles.sellerName}>{typeof selectedListing.seller === 'object' && selectedListing.seller !== null ? selectedListing.seller.name : selectedListing.seller}</p>
-                    <p style={{ fontSize: '14px', color: '#6b7280' }}>Member since 2023</p>
-                  </div>
+              <div style={{ margin: '32px 0 0 0', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '8px' }}>
+                <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#111', marginBottom: '6px' }}>Seller Information</h3>
+                <div style={{ fontWeight: 600, fontSize: '1.08rem', color: '#111', marginBottom: '6px' }}>
+                  {typeof selectedListing.seller === 'object' && selectedListing.seller !== null ? selectedListing.seller.name : selectedListing.seller}
                 </div>
+                <div style={{ fontSize: '13px', color: '#6b7280', marginBottom: '0' }}>Member since 2023</div>
                 {myAds.some(ad => ad.id === selectedListing.id || ad._id === selectedListing.id || ad.id === selectedListing._id) ? (
-                  <>
-                    <button style={styles.contactButton} onClick={handleMessagesClick}>
-                      Messages {messagesCollapsed ? '▲' : '▼'}
-                    </button>
-                    {messagesCollapsed && (
-                      <div style={{ marginTop: 16, background: '#fff', borderRadius: 8, boxShadow: '0 1px 3px rgba(0,0,0,0.08)', padding: 16 }}>
-                        <h3 style={{ marginTop: 0, marginBottom: 16 }}>Messages for "{selectedListing?.title}"</h3>
-                        {adMessages.length === 0 ? (
-                          <div style={{ color: '#888' }}>No messages found for this ad.</div>
-                        ) : (
-                          <ul style={{ listStyle: 'none', padding: 0 }}>
-                            {adMessages.map((msg, idx) => {
-                              console.log('Message:', msg);
-                              const isFromCurrentUser = (msg.from?._id || msg.from) === (user?._id);
-                              let otherName = 'Unknown User';
-                              if (isFromCurrentUser) {
-                                otherName = msg.to?.name || msg.to || 'Unknown User';
-                              } else {
-                                otherName = msg.from?.name || msg.from || 'Unknown User';
-                              }
-                              return (
-                                <li
-                                  key={idx}
-                                  style={{
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                    alignItems: 'flex-start',
-                                    background: '#f0f9fcff',
-                                    borderRadius: '12px',
-                                    marginBottom: '12px',
-                                    padding: '12px 16px',
-                                    boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
-                                    cursor: 'pointer',
-                                    transition: 'background 0.2s',
-                                    border: 'none',
-                                    textAlign: 'left'
-                                  }}
-                                  onClick={() => {
-                                    setSelectedMessage(msg);
-                                    setChatOpen(false);
-                                    setTimeout(() => setChatOpen(true), 0);
-                                  }}
-                                  onMouseEnter={e => e.currentTarget.style.background = '#dcf2f9ff'}
-                                  onMouseLeave={e => e.currentTarget.style.background = '#f0f9fcff'}
-                                >
-                                  <div style={{ fontWeight: 600, color: '#2563eb', marginBottom: 4 }}>{otherName}</div>
-                                  <div style={{ color: '#374151', fontSize: 15, marginBottom: 4, textAlign: 'left' }}>{msg.text || msg.message}</div>
-                                  <div style={{ fontSize: 12, color: '#888', textAlign: 'left' }}>{msg.date ? new Date(msg.date).toLocaleString() : ''}</div>
-                                </li>
-                              );
-                            })}
-                          </ul>
-                        )}
-                      </div>
-                    )}
-                  </>
+                  <></>
                 ) : (
                   <button style={styles.contactButton} onClick={() => { if (user) { setChatOpen(true) } else { alert('Please login to contact the seller.'); } }}>
                     Contact Seller
@@ -1854,7 +1931,10 @@ const Landing = () => {
         </div>
       )}
       {/* Add missing closing div for main app container */}
-    </div>
+      {view === 'messages' && (
+        <MessagesPage />
+      )}
+      </div>
   );
 };
 
