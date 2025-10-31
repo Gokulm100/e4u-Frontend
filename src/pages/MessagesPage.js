@@ -47,21 +47,6 @@ const mockSellingChats = [
     lastMessage: 'Can I see more photos?',
     time: '1 day ago',
     avatar: 'https://randomuser.me/api/portraits/men/32.jpg',
-  }, {
-    id: 1,
-    buyerName: 'Alice',
-    item: 'iPhone 13 Pro Max',
-    lastMessage: 'Is it still available?',
-    time: '2 hours ago',
-    avatar: 'https://randomuser.me/api/portraits/women/44.jpg',
-  },
-  {
-    id: 2,
-    buyerName: 'Bob',
-    item: 'Mountain Bike',
-    lastMessage: 'Can I see more photos?',
-    time: '1 day ago',
-    avatar: 'https://randomuser.me/api/portraits/men/32.jpg',
   },
 ];
 

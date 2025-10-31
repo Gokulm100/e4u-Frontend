@@ -1,7 +1,7 @@
 /* global google */
 import React, { useState, useEffect } from 'react';
 import MessagesPage from './MessagesPage';
-import { Search, Plus, MapPin, Heart, User, Menu, X } from 'lucide-react';
+import { Search, Plus, MapPin, Heart, Menu, X, Eye } from 'lucide-react';
 import { jwtDecode } from "jwt-decode";
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:3001';
@@ -285,8 +285,8 @@ const Landing = () => {
   const [user, setUser] = useState(null);
   const [chatOpen, setChatOpen] = useState(false);
   // Messages collapsible state and handler
-  const [messagesCollapsed, setMessagesCollapsed] = useState(false);
-  const [adMessages, setAdMessages] = useState([]);
+  // Removed unused messagesCollapsed state
+  // Removed unused adMessages state
   // Message count badge state for navbar
   const [messageCountNavBar, setMessageCountNavBar] = useState(0);
   // Fetch message count for detailed ad view
@@ -308,26 +308,7 @@ const Landing = () => {
       setMessageCount(0);
     }
   }, [selectedListing, user, chatOpen]);
-  const handleMessagesClick = async () => {
-    if (!selectedListing) return;
-    setMessagesCollapsed(prev => !prev);
-    if (!messagesCollapsed) {
-      try {
-        const res = await fetch(`${API_BASE_URL}/api/ads/latestMessages`, {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
-            'Content-Type': 'application/json'
-          },
-          method: 'POST',
-          body: JSON.stringify({ adId: selectedListing.id, userId: user._id })
-        });
-        const data = await res.json();
-        setAdMessages(Array.isArray(data) ? data : []);
-      } catch {
-        setAdMessages([]);
-      }
-    }
-  };
+  // Removed unused handleMessagesClick function
   // Chat window state
   const [chatMessages, setChatMessages] = useState([]);
   const [chatInput, setChatInput] = useState("");
@@ -358,7 +339,13 @@ const Landing = () => {
     formData.append('description', editAd.description);
     formData.append('seller', editAd.seller);
     if (editAd.image && typeof editAd.image !== 'string') {
-      formData.append('image', editAd.image);
+      if (Array.isArray(editAd.image)) {
+        editAd.image.forEach((file) => {
+          formData.append('images', file);
+        });
+      } else if (editAd.image) {
+        formData.append('images', editAd.image);
+      }
     }
     fetch(`${API_BASE_URL}/api/ads/edit/${editAd.id}`, {
       method: 'PUT',
@@ -464,9 +451,9 @@ const Landing = () => {
               seller: listing.seller ? listing.seller.name : 'Unknown',
               sellerId: listing.seller ? listing.seller._id : null,
               posted,
-              image: Array.isArray(listing.images) && listing.images.length > 0
-                ? `${API_BASE_URL}/${listing.images[0]}`
-                : 'https://t4.ftcdn.net/jpg/06/71/92/37/360_F_671923740_x0zOL3OIuUAnSF6sr7PuznCI5bQFKhI0.jpg',
+              images: Array.isArray(listing.images) && listing.images.length > 0
+                ? listing.images.map(img => `${API_BASE_URL}/${img}`)
+                : ['https://t4.ftcdn.net/jpg/06/71/92/37/360_F_671923740_x0zOL3OIuUAnSF6sr7PuznCI5bQFKhI0.jpg'],
             };
           });
           setListings(listingObjs);
@@ -705,7 +692,13 @@ const Landing = () => {
     formData.append('category', newListing.category);
     formData.append('description', newListing.description);
     if (newListing.image) {
-      formData.append('image', newListing.image);
+      if (Array.isArray(newListing.image)) {
+        newListing.image.forEach((file) => {
+          formData.append('images', file);
+        });
+      } else if (newListing.image) {
+        formData.append('images', newListing.image);
+      }
     }
 
     fetch(`${API_BASE_URL}/api/ads/postAdd`, {
@@ -1346,7 +1339,7 @@ const Landing = () => {
               >
                 <div style={styles.cardImageWrapper}>
                   <img
-                    src={listing.image}
+                    src={Array.isArray(listing.images) ? listing.images[0] : listing.image}
                     alt={listing.title}
                     style={styles.cardImage}
                     onError={(e) => { e.target.src = 'https://t4.ftcdn.net/jpg/06/71/92/37/360_F_671923740_x0zOL3OIuUAnSF6sr7PuznCI5bQFKhI0.jpg'; e.target.alt = 'Image not found'; }}
@@ -1373,7 +1366,13 @@ const Landing = () => {
                     <MapPin style={{ width: '16px', height: '16px' }} />
                     {listing.location}
                   </div>
-                  <p style={styles.cardPosted}>{listing.posted}</p>
+                      <p style={styles.cardPosted}>
+                        {listing.posted}
+                        <span style={{ marginLeft: 8, display: 'inline-flex', alignItems: 'center', color: '#6b7280', fontSize: 14 }}>
+                          <Eye style={{ width: 16, height: 16, marginRight: 4 }} />
+                          {typeof listing.views === 'number' ? listing.views : 0}
+                        </span>
+                      </p>
                 </div>
               </div>
             ))}
@@ -1404,25 +1403,28 @@ const Landing = () => {
               const fallback = 'https://t4.ftcdn.net/jpg/06/71/92/37/360_F_671923740_x0zOL3OIuUAnSF6sr7PuznCI5bQFKhI0.jpg';
               return (
                 <div style={{ position: 'relative', textAlign: 'center' }}>
-                  <button
-                    style={{
-                      position: 'absolute',
-                      left: 0,
-                      top: '50%',
-                      transform: 'translateY(-50%)',
-                      background: 'rgba(255,255,255,0.7)',
-                      border: 'none',
-                      borderRadius: '50%',
-                      width: 36,
-                      height: 36,
-                      fontSize: 24,
-                      cursor: 'pointer',
-                      zIndex: 2,
-                      display: images.length > 1 ? 'block' : 'none'
-                    }}
-                    onClick={() => setCurrentImageIdx(idx => (idx === 0 ? images.length - 1 : idx - 1))}
-                    aria-label="Previous image"
-                  >&#8592;</button>
+                  {images.length > 1 && (
+                    <button
+                      style={{
+                        position: 'absolute',
+                        left: 10,
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        background: '#2563eb',
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: '50%',
+                        width: 44,
+                        height: 44,
+                        fontSize: 28,
+                        cursor: 'pointer',
+                        zIndex: 2,
+                        boxShadow: '0 2px 8px rgba(37,99,235,0.18)'
+                      }}
+                      onClick={() => setCurrentImageIdx(idx => (idx === 0 ? images.length - 1 : idx - 1))}
+                      aria-label="Previous image"
+                    >&#8592;</button>
+                  )}
                   <img
                     src={images.length > 0 ? images[currentImageIdx] : fallback}
                     alt={selectedListing.title}
@@ -1433,32 +1435,36 @@ const Landing = () => {
                       display: 'block',
                       margin: '32px auto',
                       background: '#f7f7f7',
-                      borderRadius: '10px'
+                      borderRadius: '10px',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
                     }}
                     onError={e => { e.target.src = fallback; e.target.alt = 'Image not found'; }}
                   />
-                  <button
-                    style={{
-                      position: 'absolute',
-                      right: 0,
-                      top: '50%',
-                      transform: 'translateY(-50%)',
-                      background: 'rgba(255,255,255,0.7)',
-                      border: 'none',
-                      borderRadius: '50%',
-                      width: 36,
-                      height: 36,
-                      fontSize: 24,
-                      cursor: 'pointer',
-                      zIndex: 2,
-                      display: images.length > 1 ? 'block' : 'none'
-                    }}
-                    onClick={() => setCurrentImageIdx(idx => (idx === images.length - 1 ? 0 : idx + 1))}
-                    aria-label="Next image"
-                  >&#8594;</button>
+                  {images.length > 1 && (
+                    <button
+                      style={{
+                        position: 'absolute',
+                        right: 10,
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        background: '#2563eb',
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: '50%',
+                        width: 44,
+                        height: 44,
+                        fontSize: 28,
+                        cursor: 'pointer',
+                        zIndex: 2,
+                        boxShadow: '0 2px 8px rgba(37,99,235,0.18)'
+                      }}
+                      onClick={() => setCurrentImageIdx(idx => (idx === images.length - 1 ? 0 : idx + 1))}
+                      aria-label="Next image"
+                    >&#8594;</button>
+                  )}
                   {/* Image index indicator */}
                   {images.length > 1 && (
-                    <div style={{ position: 'absolute', bottom: 10, left: '50%', transform: 'translateX(-50%)', background: '#fff', borderRadius: 12, padding: '2px 12px', fontSize: 14, color: '#2563eb', boxShadow: '0 1px 4px rgba(0,0,0,0.08)' }}>
+                    <div style={{ position: 'absolute', bottom: 10, left: '50%', transform: 'translateX(-50%)', background: '#2563eb', borderRadius: 12, padding: '4px 16px', fontSize: 16, color: '#fff', boxShadow: '0 1px 4px rgba(0,0,0,0.12)' }}>
                       {currentImageIdx + 1} / {images.length}
                     </div>
                   )}
@@ -1476,23 +1482,42 @@ const Landing = () => {
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <button
-                    onClick={() => toggleFavorite(selectedListing.id)}
-                    style={{ ...styles.favoriteButton, position: 'relative', top: 0, right: 0 }}
+                    onClick={myAds.some(ad => ad.id === selectedListing.id || ad._id === selectedListing.id || ad.id === selectedListing._id) ? undefined : () => toggleFavorite(selectedListing.id)}
+                    style={{
+                      ...styles.favoriteButton,
+                      position: 'relative',
+                      top: 0,
+                      right: 0,
+                      opacity: myAds.some(ad => ad.id === selectedListing.id || ad._id === selectedListing.id || ad.id === selectedListing._id) ? 0.5 : 1,
+                      cursor: myAds.some(ad => ad.id === selectedListing.id || ad._id === selectedListing.id || ad.id === selectedListing._id) ? 'not-allowed' : 'pointer',
+                    }}
+                    disabled={myAds.some(ad => ad.id === selectedListing.id || ad._id === selectedListing.id || ad.id === selectedListing._id)}
                   >
                     <Heart
                       style={{
                         width: '24px',
                         height: '24px',
-                        ...(favorites.includes(selectedListing.id) ? styles.favoriteIconActive : styles.favoriteIconInactive)
+                        ...(favorites.includes(selectedListing.id) ? styles.favoriteIconActive : styles.favoriteIconInactive),
+                        opacity: myAds.some(ad => ad.id === selectedListing.id || ad._id === selectedListing.id || ad.id === selectedListing._id) ? 0.5 : 1,
                       }}
                     />
                   </button>
                   <button
-                    onClick={handleMessagesClick}
-                    style={{ ...styles.favoriteButton, position: 'relative', top: 0, right: 0 }}
+                    onClick={myAds.some(ad => ad.id === selectedListing.id || ad._id === selectedListing.id || ad.id === selectedListing._id) ? undefined : () => {
+                      if (user) { setChatOpen(true); } else { alert('Please login to contact the seller.'); }
+                    }}
+                    style={{
+                      ...styles.favoriteButton,
+                      position: 'relative',
+                      top: 0,
+                      right: 0,
+                      opacity: myAds.some(ad => ad.id === selectedListing.id || ad._id === selectedListing.id || ad.id === selectedListing._id) ? 0.5 : 1,
+                      cursor: myAds.some(ad => ad.id === selectedListing.id || ad._id === selectedListing.id || ad.id === selectedListing._id) ? 'not-allowed' : 'pointer',
+                    }}
+                    disabled={myAds.some(ad => ad.id === selectedListing.id || ad._id === selectedListing.id || ad.id === selectedListing._id)}
                     title="Messages"
                   >
-                    <div style={{ position: 'relative', display: 'inline-block' }}>
+                    <div style={{ position: 'relative', display: 'inline-block', opacity: myAds.some(ad => ad.id === selectedListing.id || ad._id === selectedListing.id || ad.id === selectedListing._id) ? 0.5 : 1 }}>
                       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#909090ff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
                       {messageCount > 0 && (
                         <span style={{
@@ -1507,7 +1532,8 @@ const Landing = () => {
                           fontWeight: 'bold',
                           minWidth: '8px',
                           textAlign: 'center',
-                          zIndex: 2
+                          zIndex: 2,
+                          opacity: myAds.some(ad => ad.id === selectedListing.id || ad._id === selectedListing.id || ad.id === selectedListing._id) ? 0.5 : 1,
                         }}>{messageCount}</span>
                       )}
                     </div>
@@ -1528,7 +1554,13 @@ const Landing = () => {
                     <MapPin style={{ width: '20px', height: '20px' }} />
                     {selectedListing.location}
                   </span>
-                  <span style={{ color: '#6b7280', fontSize: '14px' }}>Posted {selectedListing.posted}</span>
+                  <span style={{ color: '#6b7280', fontSize: '14px', display: 'inline-flex', alignItems: 'center' }}>
+                    Posted {selectedListing.posted}
+                    <span style={{ marginLeft: 8, display: 'inline-flex', alignItems: 'center' }}>
+                      <Eye style={{ width: 16, height: 16, marginRight: 4 }} />
+                      {typeof selectedListing.views === 'number' ? selectedListing.views : 0}
+                    </span>
+                  </span>
                 </div>
               </div>
 
@@ -1680,16 +1712,21 @@ const Landing = () => {
                 <input
                   type="file"
                   accept="image/*"
+                  multiple
                   style={styles.input}
                   onChange={(e) => {
-                    const file = e.target.files[0];
-                    if (file) {
-                      setNewListing({ ...newListing, image: file });
+                    const files = Array.from(e.target.files);
+                    if (files.length > 0) {
+                      setNewListing({ ...newListing, image: files });
                     }
                   }}
                 />
-                {newListing.image && (
-                  <img src={URL.createObjectURL(newListing.image)} alt="Preview" style={{ marginTop: 8, maxWidth: '100%', maxHeight: 200, borderRadius: 8 }} />
+                {Array.isArray(newListing.image) && newListing.image.length > 0 && (
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
+                    {newListing.image.map((file, idx) => (
+                      <img key={idx} src={URL.createObjectURL(file)} alt={`Preview ${idx + 1}`} style={{ maxWidth: 100, maxHeight: 100, borderRadius: 8 }} />
+                    ))}
+                  </div>
                 )}
               </div>
 
@@ -1778,18 +1815,21 @@ const Landing = () => {
                         <input
                           type="file"
                           accept="image/*"
+                          multiple
                           style={styles.input}
                           onChange={e => {
-                            const file = e.target.files[0];
-                            if (file) {
-                              setEditAd({ ...editAd, image: file });
+                            const files = Array.from(e.target.files);
+                            if (files.length > 0) {
+                              setEditAd({ ...editAd, image: files });
                             }
                           }}
                         />
-                        {editAd.image && (
-                          typeof editAd.image === 'string'
-                            ? <img src={editAd.image} alt="Preview" style={{ marginTop: 8, maxWidth: '100%', maxHeight: 200, borderRadius: 8 }} />
-                            : <img src={URL.createObjectURL(editAd.image)} alt="Preview" style={{ marginTop: 8, maxWidth: '100%', maxHeight: 200, borderRadius: 8 }} />
+                        {Array.isArray(editAd.image) && editAd.image.length > 0 && (
+                          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
+                            {editAd.image.map((file, idx) => (
+                              <img key={idx} src={typeof file === 'string' ? file : URL.createObjectURL(file)} alt={`Preview ${idx + 1}`} style={{ maxWidth: 100, maxHeight: 100, borderRadius: 8 }} />
+                            ))}
+                          </div>
                         )}
                       </div>
                       <button
@@ -1861,7 +1901,13 @@ const Landing = () => {
                           <MapPin style={{ width: '16px', height: '16px' }} />
                           {listing.location}
                         </div>
-                        <p style={styles.cardPosted}>{listing.posted}</p>
+                        <p style={styles.cardPosted}>
+                          {listing.posted}
+                          <span style={{ marginLeft: 8, display: 'inline-flex', alignItems: 'center', color: '#6b7280', fontSize: 14 }}>
+                            <Eye style={{ width: 16, height: 16, marginRight: 4 }} />
+                            {typeof listing.views === 'number' ? listing.views : 0}
+                          </span>
+                        </p>
                       </div>
                     </div>
                   ))}
@@ -1922,7 +1968,13 @@ const Landing = () => {
                         <MapPin style={{ width: '16px', height: '16px' }} />
                         {listing.location}
                       </div>
-                      <p style={styles.cardPosted}>{listing.posted}</p>
+                        <p style={styles.cardPosted}>
+                          {listing.posted}
+                          <span style={{ marginLeft: 8, display: 'inline-flex', alignItems: 'center', color: '#6b7280', fontSize: 14 }}>
+                            <Eye style={{ width: 16, height: 16, marginRight: 4 }} />
+                            {typeof listing.views === 'number' ? listing.views : 0}
+                          </span>
+                        </p>
                     </div>
                   </div>
                 ))}
