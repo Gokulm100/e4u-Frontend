@@ -6,6 +6,34 @@ import { jwtDecode } from "jwt-decode";
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:3001';
 
+// Loader overlay component
+function LoaderOverlay() {
+  return (
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      width: '100vw',
+      height: '100vh',
+      background: 'rgba(255,255,255,0.7)',
+      zIndex: 9999,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center'
+    }}>
+      <div style={{
+        width: 60,
+        height: 60,
+        border: '6px solid #c1f7d3',
+        borderTop: '6px solid #2563eb',
+        borderRadius: '50%',
+        animation: 'spin 1s linear infinite'
+      }} />
+      <style>{`@keyframes spin { 0% { transform: rotate(0deg);} 100% { transform: rotate(360deg);} }`}</style>
+    </div>
+  );
+}
+
 // ChatModal component for chat window
 const ChatModal = ({ selectedListing, selectedMessage, user, chatMessages, setChatMessages, chatInput, setChatInput, setChatOpen }) => {
   useEffect(() => {
@@ -289,6 +317,8 @@ const Landing = () => {
   // Removed unused adMessages state
   // Message count badge state for navbar
   const [messageCountNavBar, setMessageCountNavBar] = useState(0);
+  // Loader state
+  const [loading, setLoading] = useState(false);
   // Fetch message count for detailed ad view
   useEffect(() => {
     if (selectedListing && user) {
@@ -583,6 +613,7 @@ const Landing = () => {
   };
 
   const handleCredentialResponse = (response) => {
+    setLoading(true);
     const token = response.credential;
     const userInfo = jwtDecode(token);
     console.log("Google user:", userInfo);
@@ -596,26 +627,10 @@ const Landing = () => {
       .then((data) => {
         localStorage.setItem("authToken", data.token);
         localStorage.setItem("user", JSON.stringify(data.user));
-        // Delay fetching user messages for navbar badge by 30 seconds
-        setTimeout(() => {
-          fetch(`${API_BASE_URL}/api/ads/getUserMessages`, {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${data.token}`,
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ userId: data.user._id })
-          })
-            .then(res => res.json())
-            .then(msgData => {
-              setMessageCountNavBar(Array.isArray(msgData) ? msgData.length : (msgData.count || 0));
-              window.location.href = "/";
-            })
-            .catch(() => {
-              setMessageCountNavBar(0);
-              window.location.href = "/";
-            });
-        }, 8000); // 30 seconds
+        window.location.reload();
+      })
+      .catch(() => {
+        setLoading(false);
       });
   };
 
@@ -908,14 +923,22 @@ const Landing = () => {
       fontWeight: '600',
       marginBottom: '4px',
       overflow: 'hidden',
+      textAlign: 'left',
       textOverflow: 'ellipsis',
       whiteSpace: 'nowrap'
+    },
+    cardCategory: {
+      color: '#2563eb',
+      fontWeight: 500,
+      fontSize: 14,
+      margin: '4px 0',
+      textAlign: 'left'
     },
     cardPrice: {
       fontSize: '24px',
       fontWeight: 'bold',
       color: '#111827',
-      marginBottom: '8px'
+      marginBottom: '15px'
     },
     cardLocation: {
       display: 'flex',
@@ -1361,17 +1384,33 @@ const Landing = () => {
                 </div>
                 <div style={styles.cardContent}>
                   <h3 style={styles.cardTitle}>{listing.title}</h3>
+                  <p style={{ margin: '4px 0', textAlign: 'left' }}>
+                    <span style={{
+                      display: 'inline-block',
+                      padding: '2px 10px',
+                      borderRadius: '5px',
+                      fontSize: 13,
+                      fontWeight: 600,
+                      background: getCategoryGradient(listing.category),
+                      color: '#333',
+                      letterSpacing: 0.5,
+                      minWidth: 60,
+                      textAlign: 'center',
+                      boxShadow: '0 1px 3px rgba(0,0,0,0.07)'
+                    }}>{listing.category}</span>
+                  </p>
                   <p style={styles.cardPrice}>₹{listing.price.toLocaleString()}</p>
                   <div style={styles.cardLocation}>
                     <MapPin style={{ width: '16px', height: '16px' }} />
                     {listing.location}
+                                            <span style={{ marginLeft: 8, display: 'inline-flex', alignItems: 'center', color: '#6b7280', fontSize: 14 }}>
+                          <Eye style={{ width: 16, height: 20, marginRight: 4 }} />
+                          {typeof listing.views === 'number' ? listing.views : 0}
+                        </span>
                   </div>
                       <p style={styles.cardPosted}>
                         {listing.posted}
-                        <span style={{ marginLeft: 8, display: 'inline-flex', alignItems: 'center', color: '#6b7280', fontSize: 14 }}>
-                          <Eye style={{ width: 16, height: 16, marginRight: 4 }} />
-                          {typeof listing.views === 'number' ? listing.views : 0}
-                        </span>
+
                       </p>
                 </div>
               </div>
@@ -1892,10 +1931,25 @@ const Landing = () => {
                           setEditAd({ ...listing, category: catId });
                         }}
                       >
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9" /><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z" /></svg>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9" /><path d="M16.5 3.5a2.121 2.121 0     1 3 3 3 3L7 19l-4 1 1-4 12.5-12.5z" /></svg>
                       </button>
                       <div style={styles.cardContent}>
                         <h3 style={styles.cardTitle}>{listing.title}</h3>
+                        <p style={{ margin: '4px 0', textAlign: 'left' }}>
+                          <span style={{
+                            display: 'inline-block',
+                            padding: '2px 10px',
+                            borderRadius: '12px',
+                            fontSize: 13,
+                            fontWeight: 600,
+                            background: getCategoryGradient(listing.category),
+                            color: '#333',
+                            letterSpacing: 0.5,
+                            minWidth: 60,
+                            textAlign: 'center',
+                            boxShadow: '0 1px 3px rgba(0,0,0,0.07)'
+                          }}>{listing.category}</span>
+                        </p>
                         <p style={styles.cardPrice}>₹{listing.price.toLocaleString()}</p>
                         <div style={styles.cardLocation}>
                           <MapPin style={{ width: '16px', height: '16px' }} />
@@ -1963,6 +2017,21 @@ const Landing = () => {
                     </div>
                     <div style={styles.cardContent}>
                       <h3 style={styles.cardTitle}>{listing.title}</h3>
+                      <p style={{ margin: '4px 0', textAlign: 'left' }}>
+                        <span style={{
+                          display: 'inline-block',
+                          padding: '2px 10px',
+                          borderRadius: '12px',
+                          fontSize: 13,
+                          fontWeight: 600,
+                          background: getCategoryGradient(listing.category),
+                          color: '#333',
+                          letterSpacing: 0.5,
+                          minWidth: 60,
+                          textAlign: 'center',
+                          boxShadow: '0 1px 3px rgba(0,0,0,0.07)'
+                        }}>{listing.category}</span>
+                      </p>
                       <p style={styles.cardPrice}>₹{listing.price.toLocaleString()}</p>
                       <div style={styles.cardLocation}>
                         <MapPin style={{ width: '16px', height: '16px' }} />
@@ -1986,8 +2055,23 @@ const Landing = () => {
       {view === 'messages' && (
         <MessagesPage />
       )}
+      {loading && <LoaderOverlay />}
       </div>
   );
 };
+
+// Helper function for unique pastel gradient backgrounds
+function getCategoryGradient(category) {
+  const gradients = {
+    Electronics: 'linear-gradient(90deg, #a4d3f9ff 0%, #f7f7f7 100%)', // pastel pink
+    Furniture: 'linear-gradient(90deg, #c1f7d3 0%, #f7f7f7 100%)',   // pastel green
+    Vehicles: 'linear-gradient(90deg, #ffe5b4 0%, #f7f7f7 100%)',    // pastel orange
+    RealEstate: 'linear-gradient(90deg, #4af2b5ff 0%, #f3acacff 100%)',  // pastel teal
+    Services: 'linear-gradient(90deg, #d0bdf4 0%, #f7f7f7 100%)',    // pastel purple
+    Games: 'linear-gradient(90deg, #fac3ecff 0%, #f7f7f7 100%)',        // pastel magenta
+    Uncategorized: 'linear-gradient(90deg, #f7cac9 0%, #f7f7f7 100%)'// pastel rose
+  };
+  return gradients[category] || 'linear-gradient(90deg, #e0eafc 0%, #cfdef3 100%)';
+}
 
 export default Landing
