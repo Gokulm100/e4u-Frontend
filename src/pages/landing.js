@@ -433,7 +433,8 @@ const Landing = () => {
         if (Array.isArray(data)) {
           const categoryObjs = data.map(cat => ({
             id: cat._id,
-            name: cat.name
+            name: cat.name,
+            subCategories: cat.subCategory || []
           }));
           setCategories([{ id: 'all', name: 'All' }, ...categoryObjs]);
         }
@@ -500,6 +501,7 @@ const Landing = () => {
     location: '', // Will hold the location id
     locationName: '', // Will hold the location name
     category: '', // Will hold the category id
+    subCategory: '', // Will hold the subcategory id
     description: '',
     seller: '',
     image: null // Will hold the File object
@@ -520,6 +522,11 @@ const Landing = () => {
     return matchesSearch && matchesCategory;
   });
 
+
+const [subCategories, setSubCategories] = useState([]);
+const [selectedSubCategory, setSelectedSubCategory] = useState('');
+
+// ...existing code...
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
     if (storedUser) setUser(JSON.parse(storedUser));
@@ -731,6 +738,7 @@ const Landing = () => {
           price: '',
           location: '',
           category: '',
+          subCategory: '',
           description: '',
           seller: '',
           image: null
@@ -882,6 +890,22 @@ const Landing = () => {
     categoryButtonInactive: {
       backgroundColor: '#ffffff',
       color: '#374151'
+    },
+    subCategoryButton: {
+      padding: '8px 18px',
+      borderRadius: '20px',
+      border: 'none',
+      cursor: 'pointer',
+      fontSize: '15px',
+      transition: 'all 0.2s'
+    },
+    subCategoryButtonActive: {
+      background: 'linear-gradient(90deg, #a1c4fd 0%, #c2e9fb 100%)',
+      color: '#2563eb'
+    },
+    subCategoryButtonInactive: {
+      background: 'linear-gradient(90deg, #f7f7f7 0%, #e0eafc 100%)',
+      color: '#333'
     },
     grid: {
       display: 'grid',
@@ -1336,7 +1360,11 @@ const Landing = () => {
             {categories.map((cat, idx) => (
               <button
                 key={cat.id || idx}
-                onClick={() => setSelectedCategory(cat.name)}
+                onClick={() => {
+                  setSelectedCategory(cat.name);
+                  setSubCategories(cat['subCategories'] || []);
+                  setSelectedSubCategory('');
+                }}
                 style={{
                   ...styles.categoryButton,
                   ...(selectedCategory === cat.name ? styles.categoryButtonActive : styles.categoryButtonInactive)
@@ -1346,6 +1374,41 @@ const Landing = () => {
               </button>
             ))}
           </div>
+
+          {/* Render subcategory bar below category bar */}
+          {selectedCategory && subCategories.length > 0 && (
+  <div style={{
+    display: 'flex',
+    gap: '8px',
+    marginBottom: '24px',
+    overflowX: 'auto',
+    padding: '8px 0',
+    animation: 'fadeIn 0.3s'
+  }}>
+    {subCategories.map((sub, idx) => (
+
+      <button
+        key={sub.id || idx}
+        onClick={() => setSelectedSubCategory(sub)}
+        style={{
+          padding: '8px 18px',
+          borderRadius: '20px',
+          border: 'none',
+          cursor: 'pointer',
+          fontSize: '15px',
+          background: selectedSubCategory === sub
+            ? 'linear-gradient(90deg, #a1c4fd 0%, #c2e9fb 100%)'
+            : 'linear-gradient(90deg, #f7f7f7 0%, #e0eafc 100%)',
+          color: selectedSubCategory === sub ? '#2563eb' : '#333',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.07)',
+          transition: 'background 0.2s, color 0.2s'
+        }}
+      >
+        {sub}
+      </button>
+    ))}
+  </div>
+)}
 
           <div style={styles.grid}>
             {filteredListings.map((listing, idx) => (
@@ -1666,7 +1729,9 @@ const Landing = () => {
                 <select
                   style={styles.select}
                   value={newListing.category}
-                  onChange={(e) => setNewListing({ ...newListing, category: e.target.value })}
+                  onChange={e => {
+                    setNewListing({ ...newListing, category: e.target.value, subCategory: '' });
+                  }}
                 >
                   <option key='' value=''>-- Select Category --</option>
                   {categories.filter(c => c.id !== 'all').map(cat => (
@@ -1674,6 +1739,28 @@ const Landing = () => {
                   ))}
                 </select>
               </div>
+              {newListing.category &&
+  (() => {
+    const selectedCat = categories.find(c => c.id === newListing.category);
+    if (selectedCat && Array.isArray(selectedCat.subCategory) && selectedCat.subCategory.length > 0) {
+      return (
+        <div style={styles.formGroup}>
+          <label style={styles.label}>Subcategory</label>
+          <select
+            style={styles.select}
+            value={newListing.subCategory || ''}
+            onChange={e => setNewListing({ ...newListing, subCategory: e.target.value })}
+          >
+            <option key='' value=''>-- Select Subcategory --</option>
+            {selectedCat.subCategory.map(sub => (
+              <option key={sub} value={sub}>{sub}</option>
+            ))}
+          </select>
+        </div>
+      );
+    }
+    return null;
+  })()}
 
               <div style={styles.formGroup}>
                 <label style={styles.label}>Price (₹) *</label>
@@ -1807,19 +1894,43 @@ const Landing = () => {
                           onChange={e => setEditAd({ ...editAd, title: e.target.value })}
                           placeholder="e.g., iPhone 13 Pro Max"
                         />
-                      </div>
+                                           </div>
                       <div style={styles.formGroup}>
                         <label style={styles.label}>Category *</label>
                         <select
                           style={styles.select}
                           value={editAd.category}
-                          onChange={e => setEditAd({ ...editAd, category: e.target.value })}
+                          onChange={e => {
+                            setEditAd({ ...editAd, category: e.target.value, subCategory: '' });
+                          }}
                         >
                           {categories.filter(c => c.id !== 'all').map(cat => (
                             <option key={cat.id} value={cat.id}>{cat.name}</option>
                           ))}
                         </select>
                       </div>
+                      {editAd.category &&
+  (() => {
+    const selectedCat = categories.find(c => c.id === editAd.category);
+    if (selectedCat && Array.isArray(selectedCat.subCategory) && selectedCat.subCategory.length > 0) {
+      return (
+        <div style={styles.formGroup}>
+          <label style={styles.label}>Subcategory</label>
+          <select
+            style={styles.select}
+            value={editAd.subCategory || ''}
+            onChange={e => setEditAd({ ...editAd, subCategory: e.target.value })}
+          >
+            <option key='' value=''>-- Select Subcategory --</option>
+            {selectedCat.subCategory.map(sub => (
+              <option key={sub} value={sub}>{sub}</option>
+            ))}
+          </select>
+        </div>
+      );
+    }
+    return null;
+  })()}
                       <div style={styles.formGroup}>
                         <label style={styles.label}>Price (₹) *</label>
                         <input
