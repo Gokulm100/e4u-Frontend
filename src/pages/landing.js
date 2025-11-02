@@ -526,7 +526,57 @@ const Landing = () => {
 const [subCategories, setSubCategories] = useState([]);
 const [selectedSubCategory, setSelectedSubCategory] = useState('');
 
-// ...existing code...
+// Subcategory bar styles for mobile responsiveness and horizontal scroll
+const subCategoryBarStyle = {
+  display: 'flex',
+  gap: '8px',
+  marginBottom: '24px',
+  overflowX: 'auto',
+  padding: '8px 0',
+  animation: 'fadeIn 0.3s',
+  scrollbarWidth: 'thin',
+  scrollbarColor: '#c1c1c1 #f7f7f7',
+};
+
+const responsiveSubCategoryButton = {
+  padding: '8px 14px',
+  borderRadius: '20px',
+  border: 'none',
+  cursor: 'pointer',
+  fontSize: '15px',
+  background: 'linear-gradient(90deg, #f7f7f7 0%, #e0eafc 100%)',
+  color: '#333',
+  boxShadow: '0 1px 3px rgba(0,0,0,0.07)',
+  transition: 'background 0.2s, color 0.2s',
+  whiteSpace: 'nowrap',
+  width: 'auto'
+};
+
+const responsiveSubCategoryButtonActive = {
+  ...responsiveSubCategoryButton,
+  background: 'linear-gradient(90deg, #a1c4fd 0%, #c2e9fb 100%)',
+  color: '#2563eb',
+};
+
+// Update responsiveTagStyle to show full text and cover it
+const responsiveTagStyle = {
+  display: 'inline-block',
+  padding: '2px 12px',
+  borderRadius: '12px',
+  fontSize: '13px',
+  fontWeight: 600,
+  background: 'linear-gradient(90deg, #ffd6e0 0%, #f7f7f7 100%)',
+  color: '#333',
+  letterSpacing: 0.5,
+  minWidth: 'fit-content',
+  maxWidth: '100%',
+  textAlign: 'center',
+  boxShadow: '0 1px 3px rgba(0,0,0,0.07)',
+  whiteSpace: 'nowrap',
+  overflow: 'visible',
+  textOverflow: 'clip',
+};
+
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
     if (storedUser) setUser(JSON.parse(storedUser));
@@ -1376,33 +1426,13 @@ const [selectedSubCategory, setSelectedSubCategory] = useState('');
           </div>
 
           {/* Render subcategory bar below category bar */}
-          {selectedCategory && subCategories.length > 0 && (
-  <div style={{
-    display: 'flex',
-    gap: '8px',
-    marginBottom: '24px',
-    overflowX: 'auto',
-    padding: '8px 0',
-    animation: 'fadeIn 0.3s'
-  }}>
+          {selectedCategory && subCategories && subCategories.length > 0 && (
+  <div style={subCategoryBarStyle}>
     {subCategories.map((sub, idx) => (
-
       <button
-        key={sub.id || idx}
+        key={sub}
         onClick={() => setSelectedSubCategory(sub)}
-        style={{
-          padding: '8px 18px',
-          borderRadius: '20px',
-          border: 'none',
-          cursor: 'pointer',
-          fontSize: '15px',
-          background: selectedSubCategory === sub
-            ? 'linear-gradient(90deg, #a1c4fd 0%, #c2e9fb 100%)'
-            : 'linear-gradient(90deg, #f7f7f7 0%, #e0eafc 100%)',
-          color: selectedSubCategory === sub ? '#2563eb' : '#333',
-          boxShadow: '0 1px 3px rgba(0,0,0,0.07)',
-          transition: 'background 0.2s, color 0.2s'
-        }}
+        style={selectedSubCategory === sub ? responsiveSubCategoryButtonActive : responsiveSubCategoryButton}
       >
         {sub}
       </button>
@@ -1448,19 +1478,7 @@ const [selectedSubCategory, setSelectedSubCategory] = useState('');
                 <div style={styles.cardContent}>
                   <h3 style={styles.cardTitle}>{listing.title}</h3>
                   <p style={{ margin: '4px 0', textAlign: 'left' }}>
-                    <span style={{
-                      display: 'inline-block',
-                      padding: '2px 10px',
-                      borderRadius: '5px',
-                      fontSize: 13,
-                      fontWeight: 600,
-                      background: getCategoryGradient(listing.category),
-                      color: '#333',
-                      letterSpacing: 0.5,
-                      minWidth: 60,
-                      textAlign: 'center',
-                      boxShadow: '0 1px 3px rgba(0,0,0,0.07)'
-                    }}>{listing.category}</span>
+                    <span style={responsiveTagStyle}>{listing.category}</span>
                   </p>
                   <p style={styles.cardPrice}>₹{listing.price.toLocaleString()}</p>
                   <div style={styles.cardLocation}>
@@ -1926,7 +1944,7 @@ const [selectedSubCategory, setSelectedSubCategory] = useState('');
               <option key={sub} value={sub}>{sub}</option>
             ))}
           </select>
-        </div>
+               </div>
       );
     }
     return null;
@@ -2014,7 +2032,7 @@ const [selectedSubCategory, setSelectedSubCategory] = useState('');
                           alt={listing.title}
                           style={styles.cardImage}
                           onError={(e) => { e.target.src = 'https://t4.ftcdn.net/jpg/06/71/92/37/360_F_671923740_x0zOL3OIuUAnSF6sr7PuznCI5bQFKhI0.jpg'; e.target.alt = 'Image not found'; }}
-                        />
+                      />
                       </div>
                       <button
                         style={{
@@ -2042,7 +2060,7 @@ const [selectedSubCategory, setSelectedSubCategory] = useState('');
                           setEditAd({ ...listing, category: catId });
                         }}
                       >
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9" /><path d="M16.5 3.5a2.121 2.121 0     1 3 3 3 3L7 19l-4 1 1-4 12.5-12.5z" /></svg>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9" /><path d="M16.5 3.5a2.121 2.121 0     1 3 3 3L7 19l-4 1 1-4 12.5-12.5z" /></svg>
                       </button>
                       <div style={styles.cardContent}>
                         <h3 style={styles.cardTitle}>{listing.title}</h3>
