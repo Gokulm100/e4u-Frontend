@@ -1,73 +1,5 @@
-import React from 'react';
-
-const mockSellingChats = [
-  {
-    id: 1,
-    buyerName: 'Alice',
-    item: 'iPhone 13 Pro Max',
-    lastMessage: 'Is it still available?',
-    time: '2 hours ago',
-    avatar: 'https://randomuser.me/api/portraits/women/44.jpg',
-  },
-  {
-    id: 2,
-    buyerName: 'Bob',
-    item: 'Mountain Bike',
-    lastMessage: 'Can I see more photos?',
-    time: '1 day ago',
-    avatar: 'https://randomuser.me/api/portraits/men/32.jpg',
-  },
-   {
-    id: 1,
-    buyerName: 'Alice',
-    item: 'iPhone 13 Pro Max',
-    lastMessage: 'Is it still available?',
-    time: '2 hours ago',
-    avatar: 'https://randomuser.me/api/portraits/women/44.jpg',
-  },
-  {
-    id: 2,
-    buyerName: 'Bob',
-    item: 'Mountain Bike',
-    lastMessage: 'Can I see more photos?',
-    time: '1 day ago',
-    avatar: 'https://randomuser.me/api/portraits/men/32.jpg',
-  }, {
-    id: 1,
-    buyerName: 'Alice',
-    item: 'iPhone 13 Pro Max',
-    lastMessage: 'Is it still available?',
-    time: '2 hours ago',
-    avatar: 'https://randomuser.me/api/portraits/women/44.jpg',
-  },
-  {
-    id: 2,
-    buyerName: 'Bob',
-    item: 'Mountain Bike',
-    lastMessage: 'Can I see more photos?',
-    time: '1 day ago',
-    avatar: 'https://randomuser.me/api/portraits/men/32.jpg',
-  },
-];
-
-const mockBuyingChats = [
-  {
-    id: 3,
-    sellerName: 'Charlie',
-    item: 'MacBook Air',
-    lastMessage: 'Price negotiable?',
-    time: '3 hours ago',
-    avatar: 'https://randomuser.me/api/portraits/men/45.jpg',
-  },
-  {
-    id: 4,
-    sellerName: 'Diana',
-    item: 'Guitar',
-    lastMessage: 'When can I pick up?',
-    time: '2 days ago',
-    avatar: 'https://randomuser.me/api/portraits/women/65.jpg',
-  },
-];
+import React, { useState, useEffect } from 'react';
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:3001';
 
 const tabStyle = {
   display: 'flex',
@@ -82,6 +14,7 @@ const activeTabStyle = {
 const cardStyle = {
   display: 'flex',
   alignItems: 'center',
+  textAlign: 'left',
   background: '#fff',
   borderRadius: '12px',
   boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
@@ -104,6 +37,10 @@ const itemStyle = {
   fontWeight: 500,
   color: '#2563eb',
   marginBottom: '4px',
+  textOverflow: 'ellipsis',
+  overflow: 'hidden',
+  whiteSpace: 'nowrap',
+  maxWidth: '250px',
 };
 const nameStyle = {
   fontWeight: 600,
@@ -121,8 +58,52 @@ const timeStyle = {
 };
 
 const MessagesPage = () => {
-  const [activeTab, setActiveTab] = React.useState('selling');
+  const [activeTab, setActiveTab] = useState('selling');
+  const [sellingChats, setSellingChats] = useState([]);
+  const [buyingChats, setBuyingChats] = useState([]);
 
+  useEffect(() => {
+    const user = JSON.parse(localStorage.getItem('user'));
+     const storedToken = localStorage.getItem("authToken");
+    if (user) {
+      fetch(`${API_BASE_URL}/api/ads/getSellingMessages`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${storedToken}`,
+        }
+      })
+      .then(res => res.json())
+      .then(data => {
+        // Try to use data.messages or data as array
+        if (Array.isArray(data.filteredMessages)) {
+          console.log(data.filteredMessages);
+          setSellingChats(data.filteredMessages);
+        } else {
+          setSellingChats([]);
+        }
+      })
+      .catch(() => setSellingChats([]));
+     fetch(`${API_BASE_URL}/api/ads/getBuyingMessages`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${storedToken}`,
+        }
+      })
+      .then(res => res.json())
+      .then(data => {
+        // Try to use data.messages or data as array
+        if (Array.isArray(data.filteredMessages)) {
+          console.log(data.filteredMessages);
+          setBuyingChats(data.filteredMessages);
+        } else {
+          setBuyingChats([]);
+        }
+      })
+      .catch(() => setBuyingChats([]));
+    }
+  }, []);
   return (
     <div style={{ maxWidth: 600, margin: '40px auto', padding: '0 16px' }}>
       <div style={{
@@ -164,7 +145,7 @@ const MessagesPage = () => {
         <div>
           {activeTab === 'selling' && (
             <div>
-              {mockSellingChats.map(chat => (
+              {sellingChats.map(chat => (
                 <div key={chat.id} style={cardStyle} onMouseEnter={e => e.currentTarget.style.boxShadow = '0 4px 16px rgba(37,99,235,0.12)'} onMouseLeave={e => e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.08)'}>
                   <img src={chat.avatar} alt={chat.buyerName} style={avatarStyle} />
                   <div style={infoStyle}>
@@ -175,12 +156,12 @@ const MessagesPage = () => {
                   <div style={timeStyle}>{chat.time}</div>
                 </div>
               ))}
-              {mockSellingChats.length === 0 && <div style={{ color: '#888', textAlign: 'center', marginTop: 40 }}>No selling chats yet.</div>}
+              {sellingChats.length === 0 && <div style={{ color: '#888', textAlign: 'center', marginTop: 40 }}>No selling chats yet.</div>}
             </div>
           )}
           {activeTab === 'buying' && (
             <div>
-              {mockBuyingChats.map(chat => (
+              {buyingChats.map(chat => (
                 <div key={chat.id} style={cardStyle} onMouseEnter={e => e.currentTarget.style.boxShadow = '0 4px 16px rgba(37,99,235,0.12)'} onMouseLeave={e => e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.08)'}>
                   <img src={chat.avatar} alt={chat.sellerName} style={avatarStyle} />
                   <div style={infoStyle}>
@@ -191,7 +172,7 @@ const MessagesPage = () => {
                   <div style={timeStyle}>{chat.time}</div>
                 </div>
               ))}
-              {mockBuyingChats.length === 0 && <div style={{ color: '#888', textAlign: 'center', marginTop: 40 }}>No buying chats yet.</div>}
+              {buyingChats.length === 0 && <div style={{ color: '#888', textAlign: 'center', marginTop: 40 }}>No buying chats yet.</div>}
             </div>
           )}
         </div>

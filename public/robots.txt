@@ -1,3 +1,48 @@
-# https://www.robotstxt.org/robotstxt.html
-User-agent: *
-Disallow:
+{
+  "short_name": "E4YOU",
+  "name": "E4YOU Store",
+  "description": "Shop smarter with E4YOU — your online store for all essentials.",
+  "icons": [
+    {
+      "src": "/icons/icon-72x72.png",
+      "sizes": "72x72",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-96x96.png",
+      "sizes": "96x96",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-128x128.png",
+      "sizes": "128x128",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-144x144.png",
+      "sizes": "144x144",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-384x384.png",
+      "sizes": "384x384",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "scope": "/",
+  "theme_color": "#ffffff",
+  "background_color": "#ffffff",
+  "orientation": "portrait-primary"
+}

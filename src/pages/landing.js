@@ -1,6 +1,7 @@
 /* global google */
 import React, { useState, useEffect } from 'react';
 import MessagesPage from './MessagesPage';
+import Chat from './chat';
 import { Search, Plus, MapPin, Heart, Menu, X, Eye } from 'lucide-react';
 import { jwtDecode } from "jwt-decode";
 
@@ -34,273 +35,6 @@ function LoaderOverlay() {
   );
 }
 
-// ChatModal component for chat window
-const ChatModal = ({ selectedListing, selectedMessage, user, chatMessages, setChatMessages, chatInput, setChatInput, setChatOpen }) => {
-  useEffect(() => {
-    // Fetch chat messages from /api/ads/chat with adId and userId as query params
-    if (selectedListing && user) {
-      fetch(`${API_BASE_URL}/api/ads/chat?adId=${selectedListing.id || selectedListing._id}&userId=${selectedMessage.user}`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
-          'Content-Type': 'application/json'
-        }
-      })
-        .then(res => res.json())
-        .then(data => {
-          setChatMessages(Array.isArray(data) ? data : []);
-        })
-        .catch(() => {
-          setChatMessages([]);
-        });
-    }
-    // eslint-disable-next-line
-  }, [selectedListing, user]);
-
-  const isMobile = typeof window !== 'undefined' ? window.innerWidth < 768 : false;
-  const modalStyle = isMobile
-    ? {
-      position: 'fixed',
-      left: '50%',
-      bottom: 24,
-      transform: 'translateX(-50%)',
-  width: '95vw',
-  maxWidth: 380,
-  minWidth: 260,
-      background: '#fff',
-      borderRadius: 16,
-      boxShadow: '0 4px 24px rgba(0,0,0,0.18)',
-      zIndex: 9999,
-      padding: 0,
-      margin: '0 auto',
-      boxSizing: 'border-box',
-      overflow: 'hidden'
-    }
-    : {
-      position: 'fixed',
-      right: 40,
-      bottom: 40,
-  width: 380,
-      background: '#fff',
-      borderRadius: 16,
-      boxShadow: '0 4px 24px rgba(0,0,0,0.18)',
-      zIndex: 9999,
-      padding: 0,
-      boxSizing: 'border-box',
-      overflow: 'hidden'
-    };
-
-  const headerStyle = {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    background: 'linear-gradient(90deg,#2563eb 60%,#1e40af 100%)',
-    color: '#fff',
-  padding: '8px 18px',
-  borderTopLeftRadius: 16,
-  borderTopRightRadius: 16,
-  minHeight: 36
-  };
-  const titleStyle = {
-  fontSize: 18,
-  fontWeight: 600,
-  margin: 0,
-  display: 'flex',
-  alignItems: 'center',
-  gap: 8,
-  textAlign: 'justify',
-  width: '100%'
-  };
-  const closeBtnStyle = {
-    background: 'none',
-    border: 'none',
-    fontSize: 24,
-    color: '#fff',
-    cursor: 'pointer',
-    marginLeft: 8
-  };
-  const chatAreaStyle = {
-  height: 200,
-    overflowY: 'auto',
-    background: '#f3f4f6',
-    padding: '18px 16px',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: 10
-  };
-  const inputAreaStyle = {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 8,
-    padding: '16px',
-    background: '#fff',
-    borderBottomLeftRadius: 16,
-    borderBottomRightRadius: 16,
-    boxShadow: '0 -2px 8px rgba(0,0,0,0.04)'
-  };
-  const inputStyle = {
-    flex: 1,
-    padding: '10px 14px',
-    borderRadius: 8,
-    border: '1px solid #d1d5db',
-    fontSize: 15,
-    boxShadow: '0 1px 2px rgba(0,0,0,0.03)'
-  };
-  const sendBtnStyle = {
-    background: 'linear-gradient(90deg,#2563eb 60%,#1e40af 100%)',
-    color: '#fff',
-    border: 'none',
-    borderRadius: 8,
-    padding: '10px 20px',
-    fontWeight: 600,
-    fontSize: 15,
-    cursor: 'pointer',
-    boxShadow: '0 2px 8px rgba(37,99,235,0.08)'
-  };
-  const bubbleStyle = (isMe) => ({
-  alignSelf: isMe ? 'flex-end' : 'flex-start',
-  background: isMe ? 'linear-gradient(90deg,#2563eb 60%,#1e40af 100%)' : '#e5e7eb',
-  color: isMe ? '#fff' : '#374151',
-  borderRadius: 12,
-  padding: '6px 12px',
-  maxWidth: '80%',
-  fontSize: 15,
-  boxShadow: isMe ? '0 2px 8px rgba(37,99,235,0.08)' : '0 1px 4px rgba(0,0,0,0.04)',
-  marginBottom: 2,
-  position: 'relative',
-  display: 'inline-block'
-  });
-  const metaStyle = (isMe) => ({
-  fontSize: 12,
-  color: isMe ? '#c7d2fe' : '#6b7280',
-  marginTop: 4,
-  textAlign: 'right',
-  width: '100%'
-  });
-
-  return (
-    <div style={modalStyle}>
-      <div style={headerStyle}>
-        <div style={titleStyle}>
-          <span style={{ fontWeight: 600 }}>
-            {selectedListing?.title || 'Chat'}
-            {' - '}
-            <span style={{ fontWeight: 400, fontSize: 14, color: '#c7d2fe' }}>
-              {(() => {
-                if (user?._id === selectedListing?.sellerId) {
-                  // Seller is logged in, receiver is selectedMessage.from
-                  return selectedMessage?.from?.name || selectedMessage?.from || 'Unknown User';
-                } else {
-                  // Buyer is logged in, receiver is seller
-                  return selectedListing?.seller || 'Unknown User';
-                }
-              })()}
-            </span>
-          </span>
-        </div>
-        <button style={closeBtnStyle} onClick={() => setChatOpen(false)} title="Close chat">×</button>
-      </div>
-      <div style={chatAreaStyle}>
-        {chatMessages.length === 0 ? (
-          <div style={{ color: '#888', textAlign: 'center', marginTop: 40 }}>No messages yet.</div>
-        ) : (
-          chatMessages.map((msg, idx) => {
-            const isMe = msg.from?._id === user?._id;
-            const currentDate = msg.createdAt ? new Date(msg.createdAt) : null;
-            let showDate = false;
-            if (currentDate) {
-              if (idx === 0) {
-                showDate = true;
-              } else {
-                const prevMsg = chatMessages[idx - 1];
-                const prevDate = prevMsg && prevMsg.createdAt ? new Date(prevMsg.createdAt) : null;
-                if (!prevDate || prevDate.toDateString() !== currentDate.toDateString()) {
-                  showDate = true;
-                }
-              }
-            }
-            return (
-              <React.Fragment key={idx}>
-                {showDate && currentDate && (
-                  <div style={{ textAlign: 'center', color: '#6b7280', fontSize: 13, margin: '10px 0 2px 0' }}>
-                    {currentDate.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}
-                  </div>
-                )}
-                <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'flex-end', gap: 0 }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: isMe ? 'flex-end' : 'flex-start', width: '100%' }}>
-                    <div style={bubbleStyle(isMe)}>
-                      {msg.message}
-                      {msg.createdAt && (
-                        <div style={metaStyle(isMe)}>
-                          <span style={{ color: isMe ? '#c7d2fe' : '#888', marginLeft: 8 }}>
-                            {currentDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </React.Fragment>
-            );
-          })
-        )}
-      </div>
-      <form
-        onSubmit={e => {
-          e.preventDefault();
-          if (chatInput.trim()) {
-            setChatMessages([
-              ...chatMessages,
-              {
-                sender: 'me',
-                message: chatInput,
-                createdAt: new Date().toISOString(),
-                from: { _id: user?._id, name: user?.name, profilePic: user?.profilePic }
-              }
-            ]);
-            let toId = '';
-            if (user?._id !== selectedListing?.sellerId) {
-              toId = selectedListing?.sellerId;
-            } else if (selectedMessage && selectedMessage.user) {
-              toId = selectedMessage.user;
-            }
-            fetch(`${API_BASE_URL}/api/ads/chat`, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-              },
-              body: JSON.stringify({
-                adId: selectedListing?.id || selectedListing?._id,
-                message: chatInput,
-                to: toId,
-                from: user?._id || ''
-              })
-            })
-              .then(res => res.json())
-              .then(data => {
-                // Optionally handle response
-              })
-              .catch(() => {
-                // Optionally handle error
-              });
-            setChatInput("");
-          }
-        }}
-        style={inputAreaStyle}
-      >
-        <input
-          type="text"
-          value={chatInput}
-          onChange={e => setChatInput(e.target.value)}
-          style={inputStyle}
-          placeholder="Type your message..."
-        />
-        <button type="submit" style={sendBtnStyle}>Send</button>
-      </form>
-    </div>
-  );
-};
 const Landing = () => {
   // Message count for detailed ad view
   const [messageCount, setMessageCount] = useState(0);
@@ -1704,7 +1438,7 @@ const responsiveTagStyle = {
                   </button>
                 )}
                 {chatOpen && (
-                  <ChatModal
+                  <Chat
                     selectedListing={selectedListing}
                     selectedMessage={selectedMessage || { user: user?._id }}
                     user={user}
@@ -1713,6 +1447,8 @@ const responsiveTagStyle = {
                     chatInput={chatInput}
                     setChatInput={setChatInput}
                     setChatOpen={setChatOpen}
+                    chatOpen={chatOpen}
+                    API_BASE_URL={API_BASE_URL}
                   />
                 )}
               </div>
