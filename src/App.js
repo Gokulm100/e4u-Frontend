@@ -10,10 +10,4 @@ function App() {
     </div>
   );
 }
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/service-worker.js').then(registration => {
-    // Check for updates on every page load
-    registration.update();
-  });
-}
 export default App;

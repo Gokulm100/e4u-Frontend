@@ -6,7 +6,15 @@ import { Search, Plus, MapPin, Heart, Menu, X, Eye } from 'lucide-react';
 import { jwtDecode } from "jwt-decode";
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:3001';
-
+const tempImageUrls = [
+  'https://images.unsplash.com/photo-1558981806-ec527fa84c39?w=400&h=300&fit=crop',
+  'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=400&h=300&fit=crop',
+  'https://images.unsplash.com/photo-1603302576837-37561b2e2302?w=400&h=300&fit=crop',
+  'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=400&h=300&fit=crop',
+  'https://images.unsplash.com/photo-1576435728678-68d0fbf94e91?w=400&h=300&fit=crop',
+  'https://images.unsplash.com/photo-1558981806-ec527fa84c39?w=400&h=300&fit=crop',
+  'https://images.unsplash.com/photo-1632661674596-df8be070a5c5?w=400&h=300&fit=crop'
+];
 // Loader overlay component
 function LoaderOverlay() {
   return (
@@ -218,7 +226,7 @@ const Landing = () => {
               posted,
               images: Array.isArray(listing.images) && listing.images.length > 0
                 ? listing.images.map(img => `${API_BASE_URL}/${img}`)
-                : ['https://t4.ftcdn.net/jpg/06/71/92/37/360_F_671923740_x0zOL3OIuUAnSF6sr7PuznCI5bQFKhI0.jpg'],
+                : ['https://images.unsplash.com/photo-1632661674596-df8be070a5c5?w=400&h=300&fit=crop'],
             };
           });
           setListings(listingObjs);
@@ -1186,16 +1194,20 @@ const responsiveTagStyle = {
                 }}
                 onMouseEnter={(e) => e.currentTarget.style.boxShadow = '0 4px 6px rgba(0,0,0,0.1)'}
                 onMouseLeave={(e) => e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)'}
-              >
+                >
                 <div style={styles.cardImageWrapper}>
                   <img
-                    src={Array.isArray(listing.images) ? listing.images[0] : listing.image}
-                    alt={listing.title}
-                    style={styles.cardImage}
-                    onError={(e) => { e.target.src = 'https://t4.ftcdn.net/jpg/06/71/92/37/360_F_671923740_x0zOL3OIuUAnSF6sr7PuznCI5bQFKhI0.jpg'; e.target.alt = 'Image not found'; }}
+                  src={Array.isArray(listing.images) ? listing.images[0] : listing.image}
+                  alt={listing.title}
+                  style={styles.cardImage}
+                  onError={(e) => {
+                    const randomIdx = Math.floor(Math.random() * tempImageUrls.length);
+                    e.target.src = tempImageUrls[randomIdx];
+                    e.target.alt = 'Image not found';
+                  }}
                   />
                   <button
-                    onClick={(e) => {
+                  onClick={(e) => {
                       e.stopPropagation();
                       toggleFavorite(listing.id);
                     }}
