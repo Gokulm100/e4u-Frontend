@@ -13,12 +13,12 @@ root.render(
     </React.StrictMode>,
   </GoogleOAuthProvider>
 );
+// Unregister old service workers
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker
-      .register('/service-worker.js')
-      .then(() => console.log('Service Worker registered'))
-      .catch(err => console.log('Service Worker registration failed:', err));
+  navigator.serviceWorker.getRegistrations().then(registrations => {
+    registrations.forEach(registration => {
+      registration.unregister();
+    });
   });
 }
 // If you want to start measuring performance in your app, pass a function

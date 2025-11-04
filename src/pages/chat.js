@@ -89,7 +89,7 @@ const Chat = ({
   }, [chatMessages]);
 
   return (
-    <div style={{ position: 'fixed', bottom: 24, right: 24, width: 370, maxWidth: '95vw', background: '#fff', boxShadow: '0 8px 32px rgba(0,0,0,0.12)', borderRadius: 16, zIndex: 10000, display: 'flex', flexDirection: 'column', overflow: 'hidden', fontFamily: 'Inter, Arial, sans-serif' }}>
+    <div style={{ position: 'fixed', bottom: 24, right: 24, width: "auto", maxWidth: 'auto', background: '#fff', boxShadow: '0 8px 32px rgba(0,0,0,0.12)', borderRadius: 16, zIndex: 10000, display: 'flex', flexDirection: 'column', overflow: 'hidden', fontFamily: 'Inter, Arial, sans-serif' }}>
       <div style={{ padding: '12px 18px', borderBottom: '1px solid #f0f0f0', fontWeight: 600, fontSize: 16, background: 'linear-gradient(90deg, #f7f7f7 0%, #e0eafc 100%)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', minHeight: 0 }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
           <span style={{ fontWeight: 700, color: '#222', fontSize: 15, lineHeight: 1.2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', width: 'auto' }}>{selectedListing?.title || 'Ad'}</span>
