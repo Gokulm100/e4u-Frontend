@@ -11,11 +11,17 @@ const Chat = ({
   chatInput,
   setChatInput,
   API_BASE_URL,
+  disableAutoFetch = false,
+  fromMessagesPage = false,
+  to
 }) => {
   // You can move all chat-related login and chat modal logic here
   // Example: fetch messages, send messages, handle chat UI
 
+  // Original effect (restored)
   useEffect(() => {
+    if (disableAutoFetch) return;
+    if (fromMessagesPage) return; 
     if (chatOpen && selectedListing && user) {
       // Fetch chat messages for the selected listing and user
       fetch(`${API_BASE_URL}/api/ads/chat?adId=${selectedListing.id || selectedListing._id}&userId=${user._id}`, {
@@ -38,10 +44,13 @@ const Chat = ({
         })
         .catch(() => setChatMessages([]));
     }
-  }, [chatOpen, selectedListing, user, API_BASE_URL, setChatMessages]);
+  }, [chatOpen, selectedListing, user, API_BASE_URL, setChatMessages, disableAutoFetch, fromMessagesPage]);
 
+
+  // Removed new effect for MessagesPage modal open
   const handleSendMessage = () => {
     if (!chatInput.trim()) return;
+    alert('Sending message...',to);
     // Use the correct payload structure as in landing.js
     fetch(`${API_BASE_URL}/api/ads/chat`, {
       method: 'POST',
@@ -52,7 +61,7 @@ const Chat = ({
       body: JSON.stringify({
         adId: selectedListing.id || selectedListing._id,
         message: chatInput.trim(),
-        to: selectedListing.sellerId || selectedListing.seller?._id,
+        to: selectedListing.sellerId || selectedListing.seller?._id ||to,
         from: user._id
       })
     })
@@ -87,6 +96,15 @@ const Chat = ({
       chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [chatMessages]);
+
+  // Local state for messages if needed
+  // useEffect to sync chatMessages prop to state if disableAutoFetch is true
+  useEffect(() => {
+    if (disableAutoFetch) {
+      setChatMessages(chatMessages);
+    }
+    // eslint-disable-next-line
+  }, [chatMessages, disableAutoFetch]);
 
   return (
     <div style={{ position: 'fixed', bottom: 24, right: 24, width: "auto", maxWidth: 'auto', background: '#fff', boxShadow: '0 8px 32px rgba(0,0,0,0.12)', borderRadius: 16, zIndex: 10000, display: 'flex', flexDirection: 'column', overflow: 'hidden', fontFamily: 'Inter, Arial, sans-serif' }}>

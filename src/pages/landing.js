@@ -108,6 +108,7 @@ const Landing = () => {
     //   if (found && found.id) categoryId = found.id;
     // }
     formData.append('category', categoryId);
+    formData.append('subCategory', editAd.subCategory);
     formData.append('description', editAd.description);
     formData.append('seller', editAd.seller);
     if (editAd.image && typeof editAd.image !== 'string') {
@@ -223,12 +224,14 @@ const Landing = () => {
               description: listing.description,
               seller: listing.seller ? listing.seller.name : 'Unknown',
               sellerId: listing.seller ? listing.seller._id : null,
+              subCategory: listing?.subCategory?.name ? listing?.subCategory?.name : 'General',
               posted,
               images: Array.isArray(listing.images) && listing.images.length > 0
                 ? listing.images.map(img => `${API_BASE_URL}/${img}`)
                 : ['https://images.unsplash.com/photo-1632661674596-df8be070a5c5?w=400&h=300&fit=crop'],
             };
           });
+          console.log("Fetched listings:", listingObjs);
           setListings(listingObjs);
         }
       })
@@ -476,12 +479,14 @@ const responsiveTagStyle = {
               description: listing.description,
               seller: listing.seller ? listing.seller.name : 'Unknown',
               sellerId: listing.seller ? listing.seller._id : null,
+              subCategory: listing?.subCategory ? listing?.subCategory : '',
               posted,
               image: Array.isArray(listing.images) && listing.images.length > 0
                 ? `${API_BASE_URL}/${listing.images[0]}`
                 : 'https://t4.ftcdn.net/jpg/06/71/92/37/360_F_671923740_x0zOL3OIuUAnSF6sr7PuznCI5bQFKhI0.jpg',
             };
           });
+          console.log("Fetched user ads:", listingObjs);
           setMyAds(listingObjs);
         }
       })
@@ -504,6 +509,9 @@ const responsiveTagStyle = {
     formData.append('price', newListing.price);
     formData.append('location', newListing.locationName);
     formData.append('category', newListing.category);
+    if (newListing.subCategory) {
+      formData.append('subCategory', newListing.subCategory);
+    }
     formData.append('description', newListing.description);
     if (newListing.image) {
       if (Array.isArray(newListing.image)) {
@@ -972,6 +980,8 @@ const responsiveTagStyle = {
                   if (user && user._id) {
                     fetchMyAds(user._id);
                   }
+                  setEditMode(false);
+                  setEditAd(null);
                   setView('myads');
                 }}>
                   My Ads
@@ -1079,6 +1089,8 @@ const responsiveTagStyle = {
                   if (user && user._id) {
                     fetchMyAds(user._id);
                   }
+                  setEditMode(false);
+                  setEditAd(null);
                   setView('myads');
                   setMenuOpen(false);
                 }}
@@ -1505,28 +1517,28 @@ const responsiveTagStyle = {
                   ))}
                 </select>
               </div>
-              {newListing.category &&
-  (() => {
-    const selectedCat = categories.find(c => c.id === newListing.category);
-    if (selectedCat && Array.isArray(selectedCat.subCategory) && selectedCat.subCategory.length > 0) {
-      return (
-        <div style={styles.formGroup}>
-          <label style={styles.label}>Subcategory</label>
-          <select
-            style={styles.select}
-            value={newListing.subCategory || ''}
-            onChange={e => setNewListing({ ...newListing, subCategory: e.target.value })}
-          >
-            <option key='' value=''>-- Select Subcategory --</option>
-            {selectedCat.subCategory.map(sub => (
-              <option key={sub} value={sub}>{sub}</option>
-            ))}
-          </select>
-        </div>
-      );
-    }
-    return null;
-  })()}
+              {/* Subcategory dropdown for Add Ad form */}
+              {(() => {
+                const selectedCat = categories.find(c => c.id === newListing.category);
+                if (selectedCat && Array.isArray(selectedCat.subCategories) && selectedCat.subCategories.length > 0) {
+                  return (
+                    <div style={styles.formGroup}>
+                      <label style={styles.label}>Subcategory</label>
+                      <select
+                        style={styles.select}
+                        value={newListing.subCategory || ''}
+                        onChange={e => setNewListing({ ...newListing, subCategory: e.target.value })}
+                      >
+                        <option key='' value=''>-- Select Subcategory --</option>
+                        {selectedCat.subCategories.map(sub => (
+                          <option key={sub} value={sub}>{sub}</option>
+                        ))}
+                      </select>
+                    </div>
+                  );
+                }
+                return null;
+              })()}
 
               <div style={styles.formGroup}>
                 <label style={styles.label}>Price (₹) *</label>
@@ -1675,28 +1687,29 @@ const responsiveTagStyle = {
                           ))}
                         </select>
                       </div>
-                      {editAd.category &&
-  (() => {
-    const selectedCat = categories.find(c => c.id === editAd.category);
-    if (selectedCat && Array.isArray(selectedCat.subCategory) && selectedCat.subCategory.length > 0) {
-      return (
-        <div style={styles.formGroup}>
-          <label style={styles.label}>Subcategory</label>
-          <select
-            style={styles.select}
-            value={editAd.subCategory || ''}
-            onChange={e => setEditAd({ ...editAd, subCategory: e.target.value })}
-          >
-            <option key='' value=''>-- Select Subcategory --</option>
-            {selectedCat.subCategory.map(sub => (
-              <option key={sub} value={sub}>{sub}</option>
-            ))}
-          </select>
-               </div>
-      );
-    }
-    return null;
-  })()}
+                      {/* Subcategory dropdown for Edit Ad form */}
+                      {(() => {
+                        const selectedCat = categories.find(c => c.id === editAd.category);
+                        if (selectedCat && Array.isArray(selectedCat.subCategories) && selectedCat.subCategories.length > 0) {
+                          console.log('Selected Category for Edit Ad:', editAd);
+                          return (
+                            <div style={styles.formGroup}>
+                              <label style={styles.label}>Subcategory</label>
+                              <select
+                                style={styles.select}
+                                value={editAd.subCategory || ''}
+                                onChange={e => setEditAd({ ...editAd, subCategory: e.target.value })}
+                              >
+                                <option key='' value=''>-- Select Subcategory --</option>
+                                {selectedCat.subCategories.map(sub => (
+                                  <option key={sub} value={sub}>{sub}</option>
+                                ))}
+                              </select>
+                            </div>
+                          );
+                        }
+                        return null;
+                      })()}
                       <div style={styles.formGroup}>
                         <label style={styles.label}>Price (₹) *</label>
                         <input
@@ -1801,14 +1814,26 @@ const responsiveTagStyle = {
                           setEditMode(true);
                           // Always set category to id for edit form
                           let catId = listing.category;
+                          let subCat = '';
                           if (categories && categories.length) {
                             const found = categories.find(cat => cat.name === listing.category);
                             if (found && found.id) catId = found.id;
+                            // Try to get subCategory from listing if present
+                            if (listing.subCategory) {
+                              subCat = listing.subCategory;
+                            } else if (listing.subcategory) {
+                              subCat = listing.subcategory;
+                            }
                           }
-                          setEditAd({ ...listing, category: catId });
+                          setEditAd({ ...listing, category: catId, subCategory: subCat });
                         }}
                       >
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9" /><path d="M16.5 3.5a2.121 2.121 0     1 3 3 3L7 19l-4 1 1-4 12.5-12.5z" /></svg>
+                        {/* Pencil/Edit icon for better appearance */}
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M12 20h9" />
+                          <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z" />
+                          <path d="M15 6l3 3" />
+                        </svg>
                       </button>
                       <div style={styles.cardContent}>
                         <h3 style={styles.cardTitle}>{listing.title}</h3>

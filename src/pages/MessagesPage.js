@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import Chat from './chat';
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:3001';
 
 const isMobile = typeof window !== 'undefined' ? window.innerWidth < 600 : false;
@@ -86,6 +87,15 @@ const MessagesPage = () => {
   const [activeTab, setActiveTab] = useState('selling');
   const [sellingChats, setSellingChats] = useState([]);
   const [buyingChats, setBuyingChats] = useState([]);
+  const [chatOpen, setChatOpen] = useState(false);
+  const [selectedChat, setSelectedChat] = useState(null);
+  const [chatMessages, setChatMessages] = useState([]);
+  const [chatInput, setChatInput] = useState("");
+  const [user, setUser] = useState(null);
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) setUser(JSON.parse(storedUser));
+  }, []);
 
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem('user'));
@@ -163,7 +173,29 @@ const MessagesPage = () => {
           {activeTab === 'selling' && (
             <div>
               {sellingChats.map(chat => (
-                <div key={chat.id} style={cardStyle} onMouseEnter={e => e.currentTarget.style.boxShadow = '0 4px 16px rgba(37,99,235,0.12)'} onMouseLeave={e => e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.08)'}>
+                <div
+                  key={chat.id}
+                  style={cardStyle}
+                  onMouseEnter={e => e.currentTarget.style.boxShadow = '0 4px 16px rgba(37,99,235,0.12)'}
+                  onMouseLeave={e => e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.08)'}
+                  onClick={async () => {
+                    setSelectedChat(chat);
+                    // Fetch messages before opening modal
+                    try {
+                      const user = JSON.parse(localStorage.getItem('user'));
+                      const res = await fetch(`${API_BASE_URL}/api/ads/chat?adId=${chat.adId}&userId=${user?._id}`);
+                      if (res.ok) {
+                        const data = await res.json();
+                        setChatMessages(data || []);
+                      } else {
+                        setChatMessages([]);
+                      }
+                    } catch {
+                      setChatMessages([]);
+                    }
+                    setChatOpen(true);
+                  }}
+                >
                   <img src={chat.avatar} alt={chat.buyerName} style={avatarStyle} />
                   <div style={infoStyle}>
                     <div style={nameStyle}>{chat.buyerName}</div>
@@ -179,7 +211,30 @@ const MessagesPage = () => {
           {activeTab === 'buying' && (
             <div>
               {buyingChats.map(chat => (
-                <div key={chat.id} style={cardStyle} onMouseEnter={e => e.currentTarget.style.boxShadow = '0 4px 16px rgba(37,99,235,0.12)'} onMouseLeave={e => e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.08)'}>
+                <div
+                  key={chat.id}
+                  style={cardStyle}
+                  onMouseEnter={e => e.currentTarget.style.boxShadow = '0 4px 16px rgba(37,99,235,0.12)'}
+                  onMouseLeave={e => e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.08)'}
+                  onClick={async () => {
+                    setSelectedChat(chat);
+                    // Fetch messages before opening modal
+                    try {
+                      const user = JSON.parse(localStorage.getItem('user'));
+                      const res = await fetch(`${API_BASE_URL}/api/ads/chat?adId=${chat.adId}&userId=${user?._id}`);
+                      if (res.ok) {
+                        console.log(res);
+                        const data = await res.json();
+                        setChatMessages(data || []);
+                      } else {
+                        setChatMessages([]);
+                      }
+                    } catch {
+                      setChatMessages([]);
+                    }
+                    setChatOpen(true);
+                  }}
+                >
                   <img src={chat.avatar} alt={chat.sellerName} style={avatarStyle} />
                   <div style={infoStyle}>
                     <div style={nameStyle}>{chat.sellerName}</div>
@@ -191,6 +246,27 @@ const MessagesPage = () => {
               ))}
               {buyingChats.length === 0 && <div style={{ color: '#888', textAlign: 'center', marginTop: 40 }}>No buying chats yet.</div>}
             </div>
+          )}
+          {/* Chat modal overlay (moved outside tab blocks) */}
+          {chatOpen && selectedChat && (
+            <Chat
+              user={user}
+              chatOpen={chatOpen}
+              setChatOpen={setChatOpen}
+              selectedListing={{
+                id: selectedChat.adId,
+                title: selectedChat.item,
+                sellerId: selectedChat.sellerId || selectedChat.buyerId
+              }}
+              selectedMessage={null}
+              chatMessages={chatMessages}
+              setChatMessages={setChatMessages}
+              chatInput={chatInput}
+              setChatInput={setChatInput}
+              API_BASE_URL={API_BASE_URL}
+              disableAutoFetch={true}
+              to={selectedChat.sellerId || selectedChat.buyerId}
+            />
           )}
         </div>
       </div>
