@@ -2,17 +2,18 @@ import React from 'react';
 import { Heart, Plus, Menu, X } from 'lucide-react';
 
 const Navbar = ({
+  styles,
   user,
   favorites,
   messageCountNavBar,
-  setView,
-  fetchMyAds,
-  handleLogout,
   showDropdown,
   setShowDropdown,
-  menuOpen,
+  handleLogout,
+  setView,
+  setEditMode,
+  setEditAd,
   setMenuOpen,
-  styles
+  menuOpen
 }) => (
   <header style={styles.header}>
     <div style={styles.headerContainer}>
@@ -27,9 +28,8 @@ const Navbar = ({
               Favorites ({favorites.length})
             </button>
             <button style={styles.navButton} onClick={() => {
-              if (user && user._id) {
-                fetchMyAds(user._id);
-              }
+              setEditMode(false);
+              setEditAd(null);
               setView('myads');
             }}>
               My Ads
@@ -114,6 +114,7 @@ const Navbar = ({
           </div>
         </div>
       </div>
+    </div>
       {menuOpen && (
         <div style={styles.mobileMenu}>
           <button
@@ -126,9 +127,8 @@ const Navbar = ({
           <button
             style={styles.mobileMenuItem}
             onClick={() => {
-              if (user && user._id) {
-                fetchMyAds(user._id);
-              }
+              setEditMode(false);
+              setEditAd(null);
               setView('myads');
               setMenuOpen(false);
             }}
@@ -161,10 +161,25 @@ const Navbar = ({
                 opacity: messageCountNavBar >= 0 ? 1 : 0
               }}>{messageCountNavBar}</span>
             </div>
+            Messages
           </button>
+          {user ? (
+            <button
+              style={styles.mobileMenuItem}
+              onClick={() => {
+                handleLogout();
+                setMenuOpen(false);
+              }}
+            >
+              Logout
+            </button>
+          ) : (
+            <div style={{ padding: '12px 16px', width: '30%' }}>
+              <div id="googleSignInDivMobile"></div>
+            </div>
+          )}
         </div>
       )}
-    </div>
   </header>
 );
 

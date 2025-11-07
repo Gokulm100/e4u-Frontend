@@ -182,8 +182,7 @@ const MessagesPage = () => {
                     setSelectedChat(chat);
                     // Fetch messages before opening modal
                     try {
-                      const user = JSON.parse(localStorage.getItem('user'));
-                      const res = await fetch(`${API_BASE_URL}/api/ads/chat?adId=${chat.adId}&userId=${user?._id}`);
+                      const res = await fetch(`${API_BASE_URL}/api/ads/chat?adId=${chat.adId}&sellerId=${chat.sellerId}&buyerId=${chat.buyerId}`);
                       if (res.ok) {
                         const data = await res.json();
                         setChatMessages(data || []);
@@ -220,8 +219,7 @@ const MessagesPage = () => {
                     setSelectedChat(chat);
                     // Fetch messages before opening modal
                     try {
-                      const user = JSON.parse(localStorage.getItem('user'));
-                      const res = await fetch(`${API_BASE_URL}/api/ads/chat?adId=${chat.adId}&userId=${user?._id}`);
+                      const res = await fetch(`${API_BASE_URL}/api/ads/chat?adId=${chat.adId}&buyerId=${chat.buyerId}&sellerId=${chat.sellerId}`);
                       if (res.ok) {
                         console.log(res);
                         const data = await res.json();
