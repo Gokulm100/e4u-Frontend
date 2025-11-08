@@ -1,4 +1,3 @@
-import React from 'react';
 import { Heart, Plus, Menu, X } from 'lucide-react';
 
 const Navbar = ({
