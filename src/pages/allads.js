@@ -19,72 +19,6 @@ const AllAds = ({ styles, setLastListView, setSelectedListing, setView, favorite
   const [selectedSubCategory, setSelectedSubCategory] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Fetch listings with filters
-  const fetchListings = React.useCallback((opts = {}) => {
-    const storedToken = localStorage.getItem('authToken');
-    setLoading(true);
-    fetch(`${API_BASE_URL}/api/ads`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${storedToken}` },
-      body: JSON.stringify({
-        page: 1,
-        limit: 5,
-        search: opts.search !== undefined ? opts.search : searchQuery,
-        category: opts.category !== undefined ? opts.category : (selectedCategory !== 'All' ? selectedCategory : undefined),
-        subCategory: opts.subCategory !== undefined ? opts.subCategory : (selectedSubCategory || undefined)
-      })
-    })
-      .then(res => res.json())
-      .then(result => {
-        let data = result?.ads || [];
-        if (Array.isArray(data)) {
-          setHasMore(data.length > 0);
-          const listingObjs = data.map(listing => {
-            let posted = 'Unknown';
-            if (listing.createdAt) {
-              const created = new Date(listing.createdAt);
-              const now = new Date();
-              const diffMs = now - created;
-              const diffMin = Math.floor(diffMs / 1000 / 60);
-              const diffHr = Math.floor(diffMin / 60);
-              const diffDay = Math.floor(diffHr / 24);
-              if (diffMin < 1) posted = 'moments ago';
-              else if (diffMin < 60) posted = `${diffMin} minute${diffMin === 1 ? '' : 's'} ago`;
-              else if (diffHr < 24) posted = `${diffHr} hour${diffHr === 1 ? '' : 's'} ago`;
-              else if (diffDay < 7) posted = `${diffDay} day${diffDay === 1 ? '' : 's'} ago`;
-              else posted = created.toLocaleDateString();
-            }
-            return {
-              id: listing._id,
-              title: listing.title,
-              price: listing.price,
-              location: listing.location,
-              category: listing?.category?.name ? listing?.category?.name : 'Uncategorized',
-              description: listing.description,
-              seller: listing.seller ? listing.seller.name : 'Unknown',
-              sellerId: listing.seller ? listing.seller._id : null,
-              subCategory: listing?.subCategory?.name ? listing?.subCategory?.name : 'General',
-              posted,
-              images: Array.isArray(listing.images) && listing.images.length > 0
-                ? listing.images.map(img => `${API_BASE_URL}/${img}`)
-                : ['https://images.unsplash.com/photo-1632661674596-df8be070a5c5?w=400&h=300&fit=crop'],
-            };
-          });
-          setListings(listingObjs);
-          setPage(1);
-        }
-      })
-      .finally(() => setLoading(false));
-  }, [searchQuery, selectedCategory, selectedSubCategory]);
-
-  // Debounced search effect
-  useEffect(() => {
-    if (searchQuery === '') return;
-    const handler = setTimeout(() => {
-      fetchListings({ search: searchQuery });
-    }, 400);
-    return () => clearTimeout(handler);
-  }, [searchQuery, fetchListings]);
   const [listings, setListings] = useState([]);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
@@ -106,13 +40,20 @@ const AllAds = ({ styles, setLastListView, setSelectedListing, setView, favorite
       });
   }, []);
 
+  // Fetch listings from API when page, search, category, or subcategory changes
   useEffect(() => {
     const limit = 5;
     setLoading(true);
     fetch(`${API_BASE_URL}/api/ads`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('authToken')}` },
-      body: JSON.stringify({ page, limit })
+      body: JSON.stringify({
+        page,
+        limit,
+        search: searchQuery || undefined,
+        category: selectedCategory !== 'All' ? selectedCategory : undefined,
+        subCategory: selectedSubCategory || undefined
+      })
     })
       .then(res => res.json())
       .then(result => {
@@ -158,7 +99,13 @@ const AllAds = ({ styles, setLastListView, setSelectedListing, setView, favorite
         }
       })
       .finally(() => setLoading(false));
-  }, [page]);
+  }, [page, searchQuery, selectedCategory, selectedSubCategory]);
+
+  // Reset page and listings when filters/search change
+  useEffect(() => {
+    setPage(1);
+    setListings([]);
+  }, [searchQuery, selectedCategory, selectedSubCategory]);
 
   useEffect(() => {
     // Disable infinite scroll when searching
@@ -175,15 +122,6 @@ const AllAds = ({ styles, setLastListView, setSelectedListing, setView, favorite
     if (observerTarget.current) observer.observe(observerTarget.current);
     return () => observer.disconnect();
   }, [hasMore, loading, listings.length, searchQuery]);
-
-  // Filter listings
-  const filteredListings = listings.filter(listing => {
-    const matchesSearch = listing.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      listing.description.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = selectedCategory === 'All' || listing.category === selectedCategory;
-    const matchesSubCategory = !selectedSubCategory || listing.subCategory === selectedSubCategory;
-    return matchesSearch && matchesCategory && matchesSubCategory;
-  });
 
   return (
     <div style={styles.container}>
@@ -207,9 +145,6 @@ const AllAds = ({ styles, setLastListView, setSelectedListing, setView, favorite
             setSelectedCategory(cat.name);
             setSubCategories(cat['subCategories'] || []);
             setSelectedSubCategory('');
-            setTimeout(() => {
-              fetchListings({ category: cat.name !== 'All' ? cat.name : undefined, subCategory: undefined });
-            }, 0);
           }}
           style={{
             ...styles.categoryButton,
@@ -228,9 +163,6 @@ const AllAds = ({ styles, setLastListView, setSelectedListing, setView, favorite
             key={sub}
             onClick={() => {
               setSelectedSubCategory(sub);
-              setTimeout(() => {
-                fetchListings({ subCategory: sub });
-              }, 0);
             }}
             style={selectedSubCategory === sub ? responsiveSubCategoryButtonActive : responsiveSubCategoryButton}
           >
@@ -238,9 +170,9 @@ const AllAds = ({ styles, setLastListView, setSelectedListing, setView, favorite
           </button>
         ))}
       </div>
-  )}
-  <div style={styles.grid}>
-      {filteredListings.map((listing, idx) => (
+    )}
+    <div style={styles.grid}>
+      {listings.map((listing, idx) => (
         <div
           key={listing.id || idx}
           style={styles.card}
@@ -299,7 +231,7 @@ const AllAds = ({ styles, setLastListView, setSelectedListing, setView, favorite
       {/* Observer target for infinite scroll */}
       <div ref={observerTarget} style={{ height: 1 }} />
     </div>
-    {filteredListings.length === 0 && (
+    {listings.length === 0 && (
       <div style={styles.emptyState}>
         <p style={styles.emptyText}>No listings found</p>
       </div>
