@@ -1,6 +1,7 @@
 import React from 'react';
 import { MapPin, Heart, Eye } from 'lucide-react';
 import Chat from './chat';
+import AiSummary from '../components/aiSummary';
 
 const AdDetail = ({
   styles,
@@ -187,6 +188,13 @@ const AdDetail = ({
           <div style={styles.descriptionSection}>
             <h3 style={styles.sectionTitle}>Description</h3>
             <p style={{ color: '#374151', lineHeight: '1.6', textAlign: 'justify' }}>{selectedListing.description}</p>
+            <AiSummary
+              adTitle={selectedListing.title}
+              category={selectedListing.category?.name || selectedListing.category}
+              subCategory={selectedListing.subCategory?.name || selectedListing.subCategory}
+              description={selectedListing.description}
+              API_BASE_URL={API_BASE_URL}
+            />
           </div>
           <hr style={{ border: 'none', borderTop: '1px solid #e5e7eb', margin: '24px 0' }} />
           <div style={{ margin: '32px 0 0 0', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '8px' }}>
