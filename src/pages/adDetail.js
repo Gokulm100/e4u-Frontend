@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { MapPin, Heart, Eye } from 'lucide-react';
 import Chat from './chat';
 import AiSummary from '../components/aiSummary';
+import AiAnalytics from '../components/aiAnalytics';
 
 const AdDetail = ({
   styles,
@@ -24,6 +25,20 @@ const AdDetail = ({
   setSelectedMessage,
   API_BASE_URL
 }) => {
+  const prevChatOpen = useRef(chatOpen);
+
+  useEffect(() => {
+    if (chatOpen && !prevChatOpen.current && user && selectedListing && API_BASE_URL) {
+      // Call markMessagesAsSeen when chat modal comes in focus
+      fetch(`${API_BASE_URL}/api/ads/markMessagesAsSeen`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ adId: selectedListing.id, userId: user._id })
+      });
+    }
+    prevChatOpen.current = chatOpen;
+  }, [chatOpen, user, selectedListing, API_BASE_URL]);
+
   if (!selectedListing) return null;
   const images = Array.isArray(selectedListing.images) && selectedListing.images.length > 0
     ? selectedListing.images
@@ -197,6 +212,7 @@ const AdDetail = ({
             />
           </div>
           <hr style={{ border: 'none', borderTop: '1px solid #e5e7eb', margin: '24px 0' }} />
+          <AiAnalytics />
           <div style={{ margin: '32px 0 0 0', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '8px' }}>
             <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#111', marginBottom: '6px' }}>Seller Information</h3>
             <div style={{ fontWeight: 600, fontSize: '1.08rem', color: '#111', marginBottom: '6px' }}>

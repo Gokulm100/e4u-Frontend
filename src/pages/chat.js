@@ -24,7 +24,7 @@ const Chat = ({
     if (fromMessagesPage) return; 
     if (chatOpen && selectedListing && user) {
       // Fetch chat messages for the selected listing and user
-      fetch(`${API_BASE_URL}/api/ads/chat?adId=${selectedListing.id || selectedListing._id}&userId=${user._id}`, {
+      fetch(`${API_BASE_URL}/api/ads/chat?adId=${selectedListing.id || selectedListing._id}&sellerId=${selectedListing.sellerId || selectedListing.seller?._id}&buyerId=${user._id}`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
@@ -47,44 +47,64 @@ const Chat = ({
   }, [chatOpen, selectedListing, user, API_BASE_URL, setChatMessages, disableAutoFetch, fromMessagesPage]);
 
 
+  // Mark messages as seen when chat modal opens (from any page)
+  useEffect(() => {
+    if (chatOpen && user && selectedListing && API_BASE_URL) {
+      fetch(`${API_BASE_URL}/api/ads/markMessagesAsSeen`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+        },
+        body: JSON.stringify({ adId: selectedListing.id || selectedListing._id, reader: user._id,sender: chatMessages.length>0 ? chatMessages[chatMessages.length-1].from._id : null })
+      });
+    }
+    // No dependency on previous state, always call when chatOpen is true and dependencies change
+  }, [chatOpen, user, selectedListing, API_BASE_URL,chatMessages]);
+
   // Removed new effect for MessagesPage modal open
   const handleSendMessage = () => {
     if (!chatInput.trim()) return;
-    alert('Sending message...',to);
     // Use the correct payload structure as in landing.js
+    // Determine recipient: if current user is seller, send to buyer; else send to seller
+    const isSeller = user._id === (selectedListing.sellerId || selectedListing.seller?._id);
+    const recipientId = isSeller
+      ? (selectedListing.buyerId || selectedListing.buyer?._id || to)
+      : (selectedListing.sellerId || selectedListing.seller?._id || to);
+
     fetch(`${API_BASE_URL}/api/ads/chat`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
-        'Content-Type': 'application/json'
+      'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+      'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        adId: selectedListing.id || selectedListing._id,
-        message: chatInput.trim(),
-        to: selectedListing.sellerId || selectedListing.seller?._id ||to,
-        from: user._id
+      adId: selectedListing.id || selectedListing._id,
+      message: chatInput.trim(),
+      to: recipientId,
+      from: user._id
       })
     })
       .then(res => res.json())
       .then(data => {
-        if (data && data.message) {
-            setChatMessages(prev => [
-            ...prev,
-            {
-              _id: data._id,
-              adId: data.adId,
-              message: data.message,
-              seenAt: data.seenAt,
-              to: data.to,
-              from: { _id: user._id }, // assuming sender is current user
-              createdAt: data.createdAt
-            }
-            ]);
+      if (data && data.message) {
+        setChatMessages(prev => [
+        ...prev,
+        {
+          _id: data._id,
+          adId: data.adId,
+          message: data.message,
+          seenAt: data.seenAt,
+          to: data.to,
+          from: { _id: user._id }, // sender is current user
+          createdAt: data.createdAt
         }
-        setChatInput('');
+        ]);
+      }
+      setChatInput('');
       })
       .catch(() => {
-        setChatInput('');
+      setChatInput('');
       });
   };
 
@@ -103,8 +123,7 @@ const Chat = ({
     if (disableAutoFetch) {
       setChatMessages(chatMessages);
     }
-    // eslint-disable-next-line
-  }, [chatMessages, disableAutoFetch]);
+  }, [chatMessages, disableAutoFetch, setChatMessages]);
 
   return (
     <div style={{ position: 'fixed', bottom: 24, right: 24, width: "auto", maxWidth: 'auto', background: '#fff', boxShadow: '0 8px 32px rgba(0,0,0,0.12)', borderRadius: 16, zIndex: 10000, display: 'flex', flexDirection: 'column', overflow: 'hidden', fontFamily: 'Inter, Arial, sans-serif' }}>
@@ -127,7 +146,7 @@ const Chat = ({
             textOverflow: 'ellipsis',
             textAlign:'left',
             width: `calc(${(selectedListing?.seller || 'Seller').length}ch + 16px)`
-          }}>{selectedListing?.seller || 'Seller'}</span>
+          }}>{selectedListing?.seller || selectedListing?.buyer}</span>
         </div>
         <button style={{ background: 'none', border: 'none', fontSize: 20, color: '#888', cursor: 'pointer', marginLeft: 8 }} onClick={() => setChatOpen(false)} aria-label="Close chat">&times;</button>
       </div>

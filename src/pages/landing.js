@@ -61,7 +61,7 @@ const Landing = () => {
   // Fetch message count for detailed ad view
   useEffect(() => {
     if (selectedListing && user) {
-      fetch(`${API_BASE_URL}/api/ads/chat?adId=${selectedListing.id || selectedListing._id}&userId=${user._id}`, {
+      fetch(`${API_BASE_URL}/api/ads/chat?adId=${selectedListing.id || selectedListing._id}&&sellerId=${selectedListing.sellerId || selectedListing.seller?._id}&buyerId=${user._id}`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('authToken')}`,

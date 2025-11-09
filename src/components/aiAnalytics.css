@@ -1,0 +1,36 @@
+/* Card base style for ai-analytics-card */
+.ai-analytics-card {
+  opacity: 0;
+  transform: scale(0.7);
+}
+/* Fade-in from center for random animation delays */
+.fade-in-center {
+  animation: ai-analytics-fade-in 1.8s cubic-bezier(.4,2,.6,1) forwards;
+}
+.ai-analytics-insights {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+/* .ai-analytics-box no longer sets opacity/transform/animation, handled by .ai-analytics-card and .fade-in-center */
+.ai-analytics-box:nth-child(1) { animation-delay: 0.1s; }
+.ai-analytics-box:nth-child(2) { animation-delay: 0.25s; }
+.ai-analytics-box:nth-child(3) { animation-delay: 0.4s; }
+.ai-analytics-box:nth-child(4) { animation-delay: 0.55s; }
+.ai-analytics-box:nth-child(5) { animation-delay: 0.7s; }
+@keyframes ai-analytics-fade-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.7);
+  }
+  80% {
+    opacity: 1;
+    transform: scale(1.08);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}

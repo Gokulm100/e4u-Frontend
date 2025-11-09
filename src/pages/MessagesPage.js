@@ -254,7 +254,10 @@ const MessagesPage = () => {
               selectedListing={{
                 id: selectedChat.adId,
                 title: selectedChat.item,
-                sellerId: selectedChat.sellerId || selectedChat.buyerId
+                sellerId: selectedChat.sellerId || selectedChat.buyerId,
+                buyerId: selectedChat.buyerId || selectedChat.sellerId,
+                seller: selectedChat.sellerName,
+                buyer: selectedChat.buyerName
               }}
               selectedMessage={null}
               chatMessages={chatMessages}
