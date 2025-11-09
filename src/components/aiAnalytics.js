@@ -95,7 +95,7 @@ const AiAnalytics = () => {
   }
 
   return (
-    <div style={{ width: '100%', margin: '0 0 24px 0', paddingTop: "10px",  paddingBottom: "10px", background: '#f3f6fa', borderRadius: 10, boxShadow: '0 2px 8px rgba(44,182,125,0.07)' }}>
+    <div style={{ width: '100%', margin: '0 0 24px 0', paddingTop: "10px",  paddingBottom: "10px", background: '#f7f9fa', borderRadius: 10, boxShadow: '0 2px 8px rgba(44,182,125,0.07)' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '18px' }}>
         <img src="https://img.icons8.com/fluency/48/bard.png" alt="bard ai icon" width="28" height="28" style={{ verticalAlign: 'middle', marginRight: '0.5rem' }} />
         <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#000000ff', margin: 0, letterSpacing: '0.5px' }}>AI Analytics</h3>
@@ -114,6 +114,7 @@ const AiAnalytics = () => {
       <div className="ai-optimization-cards actionable" style={{
         background: "white",
         padding: "20px",
+        color: "#555555",
         margin: "5px",
         borderRadius: "8px"
       }}>
