@@ -44,6 +44,9 @@ const AllAds = ({ styles, setLastListView, setSelectedListing, setView, favorite
   useEffect(() => {
     const limit = 5;
     setLoading(true);
+    let user = localStorage.getItem('user');
+    let User = user ? JSON.parse(user) : {};
+    console.log(User)
     fetch(`${API_BASE_URL}/api/ads`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('authToken')}` },
@@ -52,7 +55,8 @@ const AllAds = ({ styles, setLastListView, setSelectedListing, setView, favorite
         limit,
         search: searchQuery || undefined,
         category: selectedCategory !== 'All' ? selectedCategory : undefined,
-        subCategory: selectedSubCategory || undefined
+        subCategory: selectedSubCategory || undefined,
+        userId:User._id || undefined
       })
     })
       .then(res => res.json())
@@ -84,6 +88,7 @@ const AllAds = ({ styles, setLastListView, setSelectedListing, setView, favorite
               description: listing.description,
               seller: listing.seller ? listing.seller.name : 'Unknown',
               sellerId: listing.seller ? listing.seller._id : null,
+              views: listing.views || 0,
               subCategory: listing?.subCategory?.name ? listing?.subCategory?.name : 'General',
               posted,
               images: Array.isArray(listing.images) && listing.images.length > 0

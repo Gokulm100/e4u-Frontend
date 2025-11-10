@@ -64,6 +64,9 @@ const MyAds = ({ styles, editMode, editAd, setEditMode, setEditAd, categories, s
                 sellerId: listing.seller ? listing.seller._id : null,
                 subCategory: listing?.subCategory ? listing?.subCategory : '',
                 posted,
+                isSold: listing.isSold || false,
+                isActive: listing.isActive !== undefined ? listing.isActive : true,
+                views: listing.views || 0,
                 image: Array.isArray(listing.images) && listing.images.length > 0
                   ? `${API_BASE_URL}/${listing.images[0]}`
                   : 'https://t4.ftcdn.net/jpg/06/71/92/37/360_F_671923740_x0zOL3OIuUAnSF6sr7PuznCI5bQFKhI0.jpg',
@@ -228,6 +231,46 @@ const MyAds = ({ styles, editMode, editAd, setEditMode, setEditAd, categories, s
                       style={styles.cardImage}
                       onError={e => { e.target.src = 'https://t4.ftcdn.net/jpg/06/71/92/37/360_F_671923740_x0zOL3OIuUAnSF6sr7PuznCI5bQFKhI0.jpg'; e.target.alt = 'Image not found'; }}
                     />
+                    {/* Sold tag */}
+                    {listing.isSold && (
+                      <span style={{
+                        position: 'absolute',
+                        top: 10,
+                        right: 10,
+                        zIndex: 4,
+                        background: '#22c55e',
+                        color: '#fff',
+                        fontWeight: 700,
+                        fontSize: 14,
+                        borderRadius: 8,
+                        padding: '4px 14px',
+                        boxShadow: '0 1px 4px rgba(34,197,94,0.10)',
+                        letterSpacing: '0.5px',
+                        pointerEvents: 'none',
+                      }}>
+                        Sold
+                      </span>
+                    )}
+                    {/* Disabled tag (only if not sold) */}
+                    {!listing.isActive && !listing.isSold && (
+                      <span style={{
+                        position: 'absolute',
+                        top: 10,
+                        right: 10,
+                        zIndex: 3,
+                        background: '#f33b08ff',
+                        color: '#fff',
+                        fontWeight: 700,
+                        fontSize: 14,
+                        borderRadius: 8,
+                        padding: '4px 14px',
+                        boxShadow: '0 1px 4px rgba(245,158,66,0.10)',
+                        letterSpacing: '0.5px',
+                        pointerEvents: 'none',
+                      }}>
+                        Disabled
+                      </span>
+                    )}
                   </div>
                   <button
                     style={{
@@ -284,6 +327,7 @@ const MyAds = ({ styles, editMode, editAd, setEditMode, setEditAd, categories, s
                       }}>{listing.category}</span>
                     </p>
                     <p style={styles.cardPrice}>₹{listing.price.toLocaleString()}</p>
+
                     <div style={styles.cardLocation}>
                       <MapPin style={{ width: '16px', height: '16px' }} />
                       {listing.location}
