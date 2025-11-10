@@ -70,14 +70,14 @@ const aiOptimizationSuggestions = [
   }
 ];
 
-const LOTTIE_URL = "https://lottie.host/embed/26f77827-189f-4bbb-83de-0f9884ea53d7/fxmAVQOl4i.lottie";
+const LOTTIE_URL = "https://lottie.host/embed/972966fd-68fa-4c58-a2a7-8449c35959b5/RLKi0kD1T3.lottie";
 
 const AiAnalytics = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     // Simulate loading for 1.2s
-    const timer = setTimeout(() => setLoading(false), 5200);
+    const timer = setTimeout(() => setLoading(false), 3200);
     return () => clearTimeout(timer);
   }, []);
 

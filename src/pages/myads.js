@@ -215,7 +215,7 @@ const MyAds = ({ styles, editMode, editAd, setEditMode, setEditAd, categories, s
                   style={{ ...styles.card, position: 'relative' }}
                   onClick={() => {
                     setLastListView('myads');
-                    setSelectedListing(listing);
+                    setSelectedListing({ ...listing, showAiAnalytics: true });
                     setView('detail');
                   }}
                   onMouseEnter={e => e.currentTarget.style.boxShadow = '0 4px 6px rgba(0,0,0,0.1)'}
