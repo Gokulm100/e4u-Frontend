@@ -1,27 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 
-const aiInsights = [
-  {
-    title: 'Demand Score',
-    value: 'High',
-    description: 'Your ad is trending and has received 120+ views in the last week.'
-  },
-  {
-    title: 'Ad Visibility',
-    value: 'Top 10%',
-    description: 'Your ad appears in the top 10% of search results for its category.'
-  },
-  {
-    title: 'Highest Offer',
-    value: '₹1.18 Crore',
-    description: 'The highest offer received so far for this listing.'
-  },
-  {
-    title: 'Inquiries',
-    value: '23',
-    description: 'You have received 23 inquiries from interested buyers.'
-  }
-];
+// Removed DEFAULT_PAYLOAD. Ad details will be passed as props.
 
 const boxStyle = {
   flex: 1,
@@ -39,47 +18,80 @@ const boxStyle = {
   transition: 'transform 0.2s, box-shadow 0.2s',
 };
 
-// Define the AI optimization suggestions as a constant array
-const aiOptimizationSuggestions = [
-  {
-    title: 'Recommended Price',
-    reason: (
-      <>
-        ₹1,15,000 &mdash; Based on similar ads in this category, most competitive listings are priced between <b>₹1,10,000</b> and <b>₹1,20,000</b>.
-      </>
-    ),
-    animationDelay: '0s'
-  },
-  {
-    title: 'Condition-Based Suggestion',
-    reason: (
-      <>
-        Your product is marked as <b>Excellent</b> condition. Similar items in this state sell for <b>5-10% higher</b> than average.
-      </>
-    ),
-    animationDelay: '0.3s'
-  },
-  {
-    title: 'Optimal Price Range',
-    reason: (
-      <>
-        For a faster sale, set your price between <b>₹1,12,000</b> and <b>₹1,18,000</b> as per recent market trends.
-      </>
-    ),
-    animationDelay: '0.6s'
-  }
-];
 
 const LOTTIE_URL = "https://lottie.host/embed/972966fd-68fa-4c58-a2a7-8449c35959b5/RLKi0kD1T3.lottie";
 
-const AiAnalytics = () => {
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    // Simulate loading for 1.2s
-    const timer = setTimeout(() => setLoading(false), 3200);
-    return () => clearTimeout(timer);
-  }, []);
+const AiAnalytics = ({ad, API_BASE_URL}) => {
+  const [loading, setLoading] = useState(false);
+  const [aiInsights, setAiInsights] = useState([]);
+  const [aiOptimizationSuggestions, setAiOptimizationSuggestions] = useState([]);
+  const [error, setError] = useState(null);
+  const [generated, setGenerated] = useState(false);
+
+  const handleGenerate = () => {
+    if (!ad) return;
+    setLoading(true);
+    setError(null);
+    setGenerated(true);
+    const payload = {
+      adId: ad.id || ad._id || '',
+      category: ad.categoryId || '',
+      subCategory: ad.subCategory || '',
+    };
+    fetch(`${API_BASE_URL}/api/ai/provideAiAnalytics`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+      .then(res => {
+        if (!res.ok) throw new Error('Failed to fetch AI analytics');
+        return res.json();
+      })
+      .then(data => {
+        if (Array.isArray(data.data.analysis)) {
+          setAiInsights(data.data.analysis);
+          setAiOptimizationSuggestions(data.data.recommendations);
+        } else {
+          setAiInsights([]);
+          setAiOptimizationSuggestions([]);
+        }
+        setLoading(false);
+      })
+      .catch(err => {
+        setError('Could not load AI analytics.');
+        setAiInsights([]);
+        setLoading(false);
+      });
+  };
+
+  if (!generated) {
+    return (
+      <div style={{ width: 'auto', margin: '0 0 24px 0', padding: 24, background: '#f7f9fa', borderRadius: 10, textAlign: 'center', boxShadow: '0 2px 8px rgba(44,182,125,0.07)' }}>
+        <p style={{ fontSize: '1.1rem', color: 'linear-gradient(90deg, #862cb6 0%, #7f5af0 100%)', marginBottom: '12px' }}>Unlock the power of AI to gain deep insights into your ad performance and receive tailored optimization suggestions to boost your campaign's success.</p>
+        <button
+          onClick={handleGenerate}
+          style={{
+            padding: '12px 28px',
+            fontSize: '1.08rem',
+            fontWeight: 700,
+            color: '#fff',
+            background: 'linear-gradient(90deg, #862cb6 0%, #7f5af0 100%)',
+            border: 'none',
+            borderRadius: '5px',
+            cursor: 'pointer',
+            boxShadow: '0 2px 8px rgba(44,182,125,0.07)',
+            marginTop: '18px',
+            marginBottom: '18px',
+            transition: 'background 0.2s'
+          }}
+        >
+                  <img src="https://img.icons8.com/fluency/48/bard.png" alt="bard ai icon" width="28" height="28" style={{ verticalAlign: 'middle', marginRight: '0.5rem' }} />
+          Generate AI Analytics
+        </button>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
@@ -94,6 +106,14 @@ const AiAnalytics = () => {
     );
   }
 
+  if (error) {
+    return (
+      <div style={{ width: '100%', margin: '0 0 24px 0', padding: 24, background: '#fff3f3', borderRadius: 10, color: '#b91c1c', textAlign: 'center', fontWeight: 600 }}>
+        {error}
+      </div>
+    );
+  }
+
   return (
     <div style={{ width: '100%', margin: '0 0 24px 0', paddingTop: "10px",  paddingBottom: "10px", background: '#f7f9fa', borderRadius: 10, boxShadow: '0 2px 8px rgba(44,182,125,0.07)' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '18px' }}>
@@ -101,13 +121,25 @@ const AiAnalytics = () => {
         <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#000000ff', margin: 0, letterSpacing: '0.5px' }}>AI Analytics</h3>
       </div>
       <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '12px', marginBottom: 8 }}>
-        {aiInsights.map((insight, idx) => (
-          <div key={idx} style={boxStyle}>
-            <div style={{ fontWeight: 700, fontSize: '1.08rem', color: '#0b0b0bff', marginBottom: 6 }}>{insight.title}</div>
-            <div style={{ fontWeight: 600, fontSize: '1.2rem', color: '#632cb6ff', marginBottom: 4 }}>{insight.value}</div>
-            <div style={{ color: '#374151', fontSize: '0.98rem', opacity: 0.85 }}>{insight.description}</div>
-          </div>
-        ))}
+        {aiInsights.map((insight, idx) => {
+          // Generate a random delay for each card (between 0s and 0.7s)
+          const randomDelay = (Math.random() * 0.7).toFixed(2) + 's';
+          return (
+            <div
+              key={idx}
+              style={{
+                ...boxStyle,
+                opacity: 0,
+                animation: 'fadeInCenter 0.9s cubic-bezier(0.4,0.2,0.2,1) forwards',
+                animationDelay: randomDelay,
+              }}
+            >
+              <div style={{ fontWeight: 700, fontSize: '1.08rem', color: '#0b0b0bff', marginBottom: 6 }}>{insight.title}</div>
+              <div style={{ fontWeight: 600, fontSize: '1.2rem', color: '#632cb6ff', marginBottom: 4 }}>{insight.value}</div>
+              <div style={{ color: '#374151', fontSize: '0.98rem', opacity: 0.85 }}>{insight.description}</div>
+            </div>
+          );
+        })}
       </div>
 
       {/* AI-Powered Optimization Suggestions: Actionable Cards */}
@@ -136,7 +168,7 @@ const AiAnalytics = () => {
                 textAlign: 'left'
               }}
             >
-              <span>{suggestion.reason}</span>
+              <span>{suggestion.description}</span>
             </div>
           </div>
         ))}

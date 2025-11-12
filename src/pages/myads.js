@@ -59,6 +59,7 @@ const MyAds = ({ styles, editMode, editAd, setEditMode, setEditAd, categories, s
                 price: listing.price,
                 location: listing.location,
                 category: listing?.category?.name ? listing?.category?.name : 'Uncategorized',
+                categoryId: listing?.category?._id ? listing?.category?._id : null,
                 description: listing.description,
                 seller: listing.seller ? listing.seller.name : 'Unknown',
                 sellerId: listing.seller ? listing.seller._id : null,
@@ -272,43 +273,45 @@ const MyAds = ({ styles, editMode, editAd, setEditMode, setEditAd, categories, s
                       </span>
                     )}
                   </div>
-                  <button
-                    style={{
-                      position: 'absolute',
-                      bottom: '12px',
-                      right: '12px',
-                      background: '#fff',
-                      border: 'none',
-                      padding: '6px',
-                      borderRadius: '50%',
-                      cursor: 'pointer',
-                      boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                      zIndex: 2
-                    }}
-                    title="Edit Ad"
-                    onClick={e => {
-                      e.stopPropagation();
-                      setEditMode(true);
-                      let catId = listing.category;
-                      let subCat = '';
-                      if (categories && categories.length) {
-                        const found = categories.find(cat => cat.name === listing.category);
-                        if (found && found.id) catId = found.id;
-                        if (listing.subCategory) {
-                          subCat = listing.subCategory;
-                        } else if (listing.subcategory) {
-                          subCat = listing.subcategory;
+                  {!listing.isSold && (
+                    <button
+                      style={{
+                        position: 'absolute',
+                        bottom: '12px',
+                        right: '12px',
+                        background: '#fff',
+                        border: 'none',
+                        padding: '6px',
+                        borderRadius: '50%',
+                        cursor: 'pointer',
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                        zIndex: 2
+                      }}
+                      title="Edit Ad"
+                      onClick={e => {
+                        e.stopPropagation();
+                        setEditMode(true);
+                        let catId = listing.category;
+                        let subCat = '';
+                        if (categories && categories.length) {
+                          const found = categories.find(cat => cat.name === listing.category);
+                          if (found && found.id) catId = found.id;
+                          if (listing.subCategory) {
+                            subCat = listing.subCategory;
+                          } else if (listing.subcategory) {
+                            subCat = listing.subcategory;
+                          }
                         }
-                      }
-                      setEditAd({ ...listing, category: catId, subCategory: subCat });
-                    }}
-                  >
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M12 20h9" />
-                      <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z" />
-                      <path d="M15 6l3 3" />
-                    </svg>
-                  </button>
+                        setEditAd({ ...listing, category: catId, subCategory: subCat });
+                      }}
+                    >
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M12 20h9" />
+                        <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z" />
+                        <path d="M15 6l3 3" />
+                      </svg>
+                    </button>
+                  )}
                   <div style={styles.cardContent}>
                     <h3 style={styles.cardTitle}>{listing.title}</h3>
                     <p style={{ margin: '4px 0', textAlign: 'left' }}>
