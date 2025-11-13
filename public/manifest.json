@@ -3,11 +3,11 @@
   "description": "Website to buy and sell products on www.e4you.com",
   "dir": "ltr",
   "display": "standalone",
-  "name": "www.e4you.com",
+  "name": "E4You",
   "orientation": "any",
-  "scope": "/",
-  "short_name": "www.e4you.com",
-  "start_url": "/",
+  "scope": "https://www.e4you.store/",
+  "short_name": "E4You",
+  "start_url": "https://www.e4you.store/",
   "theme_color": "#000000",
   "icons": [
     {
