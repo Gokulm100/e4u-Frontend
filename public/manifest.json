@@ -1,14 +1,14 @@
 {
-  "background_color": "#ffffff",
-  "description": "Website to buy and sell products on www.e4you.com",
-  "dir": "ltr",
-  "display": "standalone",
-  "name": "E4You",
-  "orientation": "any",
-  "scope": "https://www.e4you.store/",
-  "short_name": "E4You",
+  "name": "e4You",
+  "short_name": "e4You",
+  "description": "Buy and sell products easily on e4You.",
   "start_url": "https://www.e4you.store/",
+  "scope": "https://www.e4you.store/",
+  "display": "standalone",
+  "background_color": "#ffffff",
   "theme_color": "#000000",
+  "orientation": "any",
+  "dir": "ltr",
   "icons": [
     {
       "src": "https://www.e4you.store/launchericon-512-512.png",
@@ -16,5 +16,6 @@
       "type": "image/png",
       "purpose": "any"
     }
-  ]
+  ],
+  "display_override": ["standalone", "fullscreen"]
 }
