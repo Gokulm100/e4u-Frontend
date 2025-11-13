@@ -1,25 +1,49 @@
 {
-  "short_name": "e4you",
-  "name": "e4you",
+  "background_color": "#ffffff",
+  "description": "Web site created using create-react-app",
+  "dir": "ltr",
+  "display": "standalone",
+  "name": "www.e4you",
+  "orientation": "any",
+  "scope": "/",
+  "short_name": "www.e4you",
+  "start_url": "/",
+  "theme_color": "#000000",
   "icons": [
     {
-      "src": "favicon.ico",
-      "sizes": "64x64 32x32 24x24 16x16" ,
-      "type": "image/x-icon"
+      "src": "https://www.e4you.store/favicon.ico",
+      "type": "image/x-icon",
+      "isSquare": false,
+      "isPng": false,
+      "isWebp": false,
+      "isJpg": false,
+      "width": 0,
+      "is512x512": false,
+      "is256x256": false,
+      "is192x192": false
     },
     {
-      "src": "logo192.png",
-      "type": "image/png",
-      "sizes": "192x192"
+      "src": "https://www.e4you.store/logo192.png",
+      "isSquare": false,
+      "isPng": true,
+      "isWebp": false,
+      "isJpg": false,
+      "width": 0,
+      "is512x512": false,
+      "is256x256": false,
+      "is192x192": false
     },
     {
-      "src": "logo512.png",
-      "type": "image/png",
-      "sizes": "512x512"
+      "src": "https://www.e4you.store/favicon.ico",
+      "type": "image/x-icon",
+      "isSquare": false,
+      "isPng": false,
+      "isWebp": false,
+      "isJpg": false,
+      "width": 0,
+      "is512x512": false,
+      "is256x256": false,
+      "is192x192": false
     }
-  ],
-  "start_url": ".",
-  "display": "standalone",
-  "theme_color": "#000000",
-  "background_color": "#ffffff"
+  ]
 }
