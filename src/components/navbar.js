@@ -1,6 +1,7 @@
 import { Heart, Plus, Menu, X } from 'lucide-react';
 import { useEffect } from 'react';
 
+
 // Add animations
 const addAnimations = () => {
   if (!document.querySelector('style[data-navbar-animations]')) {
