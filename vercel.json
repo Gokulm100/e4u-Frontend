@@ -1,6 +1,10 @@
 {
   "routes": [
     {
+      "src": "/service-worker.js",
+      "dest": "/service-worker.js"
+    },
+    {
       "src": "/static/(.*)",
       "dest": "/static/$1"
     },
