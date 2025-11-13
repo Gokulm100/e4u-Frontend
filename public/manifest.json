@@ -45,7 +45,7 @@
       "is256x256": false,
       "is192x192": false
     },{
-      "src": "https://www.e4you.store/launchericon-512x512.png",
+      "src": "https://www.e4you.store/launchericon-512-512.png",
       "type": "image/x-icon",
       "isSquare": false,
       "isPng": true,
@@ -57,7 +57,7 @@
       "is192x192": false
     },
     {
-      "src": "https://www.e4you.store/launchericon-256x256.png",
+      "src": "https://www.e4you.store/launchericon-256-256.png",
       "type": "image/x-icon",
       "isSquare": false,
       "isPng": true,
@@ -69,7 +69,7 @@
       "is192x192": false
     },
     {
-      "src": "https://www.e4you.store/launchericon-192x192.png",
+      "src": "https://www.e4you.store/launchericon-192-192.png",
       "type": "image/x-icon",
       "isSquare": false,
       "isPng": true,
