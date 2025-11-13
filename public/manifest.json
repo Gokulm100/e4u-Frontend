@@ -1,12 +1,12 @@
 {
   "background_color": "#ffffff",
-  "description": "Web site created using create-react-app",
+  "description": "Website to buy and sell products on www.e4you.com",
   "dir": "ltr",
   "display": "standalone",
-  "name": "www.e4you",
+  "name": "www.e4you.com",
   "orientation": "any",
   "scope": "/",
-  "short_name": "www.e4you",
+  "short_name": "www.e4you.com",
   "start_url": "/",
   "theme_color": "#000000",
   "icons": [
