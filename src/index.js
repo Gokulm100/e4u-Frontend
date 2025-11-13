@@ -13,6 +13,14 @@ root.render(
     </React.StrictMode>,
   </GoogleOAuthProvider>
 );
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker
+      .register('/service-worker.js')
+      .then(() => console.log('Service Worker registered'))
+      .catch(err => console.log('SW registration failed:', err));
+  });
+}
 
 // If you want to start measuring performance in your app, pass a function
 // to log results (for example: reportWebVitals(console.log))
