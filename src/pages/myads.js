@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import AiTextArea from '../components/aiTextArea';
 import { MapPin, Eye } from 'lucide-react';
 
 function getCategoryGradient(category) {
@@ -169,12 +170,14 @@ const MyAds = ({ styles, editMode, editAd, setEditMode, setEditAd, categories, s
                     />
                   </div>
                   <div style={styles.formGroup}>
-                    <label style={styles.label}>Description *</label>
-                    <textarea
-                      style={styles.textarea}
+                    <AiTextArea
                       value={editAd.description}
                       onChange={e => setEditAd({ ...editAd, description: e.target.value })}
-                      placeholder="Describe your item..."
+                      category={(() => {
+                        const selectedCat = categories.find(c => c.id === editAd.category);
+                        return selectedCat ? selectedCat.name : undefined;
+                      })()}
+                      subcategory={editAd.subCategory}
                     />
                   </div>
                   <div style={styles.formGroup}>

@@ -1,3 +1,4 @@
+import AiTextArea from '../components/aiTextArea';
 /* global google */
 import React, { useState, useEffect,useRef } from 'react';
 import MyAds from './myads';
@@ -609,11 +610,14 @@ const responsiveTagStyle = {
 
               <div style={styles.formGroup}>
                 <label style={styles.label}>Description *</label>
-                <textarea
-                  style={styles.textarea}
+                <AiTextArea
                   value={newListing.description}
-                  onChange={(e) => setNewListing({ ...newListing, description: e.target.value })}
-                  placeholder="Describe your item..."
+                  onChange={e => setNewListing({ ...newListing, description: e.target.value })}
+                  category={(() => {
+                    const selectedCat = categories.find(c => c.id === newListing.category);
+                    return selectedCat ? selectedCat.name : undefined;
+                  })()}
+                  subcategory={newListing.subCategory}
                 />
               </div>
 

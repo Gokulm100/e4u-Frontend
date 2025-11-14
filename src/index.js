@@ -20,6 +20,16 @@ if ('serviceWorker' in navigator) {
       .register('/service-worker.js')
       .then(() => console.log('Service Worker registered'))
       .catch(err => console.log('SW registration failed:', err));
+     // Request notification permission after service worker registration
+     if ('Notification' in window) {
+       Notification.requestPermission().then(permission => {
+         if (permission === 'granted') {
+           console.log('Notification permission granted.');
+         } else {
+           console.log('Notification permission denied.');
+         }
+       });
+     }
   });
 }
 serviceWorkerRegistration.register();
