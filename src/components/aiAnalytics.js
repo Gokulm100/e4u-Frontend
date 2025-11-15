@@ -68,26 +68,46 @@ const AiAnalytics = ({ad, API_BASE_URL}) => {
   if (!generated) {
     return (
       <div style={{ width: 'auto', margin: '0 0 24px 0', padding: 24, background: '#f7f9fa', borderRadius: 10, textAlign: 'center', boxShadow: '0 2px 8px rgba(44,182,125,0.07)' }}>
-        <p style={{ fontSize: '1.1rem', color: 'linear-gradient(90deg, #862cb6 0%, #7f5af0 100%)', marginBottom: '12px' }}>Unlock the power of AI to gain deep insights into your ad performance and receive tailored optimization suggestions to boost your campaign's success.</p>
+  <p style={{ fontSize: '1.1rem', color: '#00639b', marginBottom: '12px' }}>Get instant AI insights and smart tips to improve your ad results.</p>
         <button
           onClick={handleGenerate}
           style={{
-            padding: '12px 28px',
-            fontSize: '1.08rem',
-            fontWeight: 700,
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '0.45rem',
+            padding: '7px 16px',
+            fontSize: '0.98rem',
+            fontWeight: 600,
             color: '#fff',
-            background: 'linear-gradient(90deg, #862cb6 0%, #7f5af0 100%)',
+            background: 'linear-gradient(90deg, #7f5af0 0%, #632cb6 100%)',
             border: 'none',
-            borderRadius: '5px',
+            borderRadius: '6px',
             cursor: 'pointer',
-            boxShadow: '0 2px 8px rgba(44,182,125,0.07)',
-            marginTop: '18px',
-            marginBottom: '18px',
-            transition: 'background 0.2s'
+            boxShadow: '0 2px 8px rgba(44,182,125,0.08)',
+            marginTop: '12px',
+            marginBottom: '12px',
+            letterSpacing: '0.01em',
+            transition: 'background 0.16s, box-shadow 0.16s, transform 0.10s',
+            outline: 'none',
+            position: 'relative',
+            overflow: 'hidden',
+          }}
+          title="Generate AI Analytics"
+          onMouseOver={e => {
+            e.currentTarget.style.background = 'linear-gradient(90deg, #632cb6 0%, #7f5af0 100%)';
+            e.currentTarget.style.transform = 'translateY(-1px) scale(1.03)';
+            e.currentTarget.style.boxShadow = '0 4px 16px rgba(44,182,125,0.13)';
+          }}
+          onMouseOut={e => {
+            e.currentTarget.style.background = 'linear-gradient(90deg, #7f5af0 0%, #632cb6 100%)';
+            e.currentTarget.style.transform = 'none';
+            e.currentTarget.style.boxShadow = '0 2px 8px rgba(44,182,125,0.08)';
           }}
         >
-                  <img src="https://img.icons8.com/fluency/48/bard.png" alt="bard ai icon" width="28" height="28" style={{ verticalAlign: 'middle', marginRight: '0.5rem' }} />
-          Generate AI Analytics
+          <img src="https://img.icons8.com/fluency/48/bard.png" alt="bard ai icon" width="15" height="15" style={{ verticalAlign: 'middle', display: 'block', marginRight: 2 }} />
+          <span style={{ fontWeight: 600, fontSize: '0.98rem', letterSpacing: '0.01em' }}>
+            Generate AI Analytics
+          </span>
         </button>
       </div>
     );
@@ -144,15 +164,15 @@ const AiAnalytics = ({ad, API_BASE_URL}) => {
 
       {/* AI-Powered Optimization Suggestions: Actionable Cards */}
       <div className="ai-optimization-cards actionable" style={{
-        background: "white",
+        background:'linear-gradient(90deg, #6b7ba8ff 0%, #90b3deff 100%)',
         padding: "20px",
-        color: "#555555",
+        color: "#ffffffff",
         margin: "5px",
-        borderRadius: "8px"
+        borderRadius: "20px"
       }}>
         {aiOptimizationSuggestions.map((suggestion, idx) => (
           <div className="ai-optimization-action-card" key={idx}>
-            <div style={{ fontWeight: 700, fontSize: '1.08rem', color: '#0b0b0bff', marginBottom: 6, textAlign: 'left' }}>
+            <div style={{ fontWeight: 700, fontSize: '1.08rem', color: '#fefdfdff', marginBottom: 6, textAlign: 'left' }}>
               {suggestion.title}
             </div>
             <div

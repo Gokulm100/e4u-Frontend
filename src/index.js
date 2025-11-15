@@ -4,9 +4,18 @@ import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 import { GoogleOAuthProvider } from "@react-oauth/google"
-import * as serviceWorkerRegistration from './serviceWorkerRegistration';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('/firebase-messaging-sw.js')
+      .then(function(registration) {
+        console.log('FCM Service Worker registered with scope:', registration.scope);
+      }).catch(function(err) {
+        console.log('FCM Service Worker registration failed:', err);
+      });
+  });
+}
 root.render(
     <GoogleOAuthProvider clientId='556452370430-fd5caae668lq9468hbseas0kr3o1a01g.apps.googleusercontent.com'>
     <React.StrictMode>
@@ -14,26 +23,5 @@ root.render(
     </React.StrictMode>,
   </GoogleOAuthProvider>
 );
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker
-      .register('/service-worker.js')
-      .then(() => console.log('Service Worker registered'))
-      .catch(err => console.log('SW registration failed:', err));
-     // Request notification permission after service worker registration
-     if ('Notification' in window) {
-       Notification.requestPermission().then(permission => {
-         if (permission === 'granted') {
-           console.log('Notification permission granted.');
-         } else {
-           console.log('Notification permission denied.');
-         }
-       });
-     }
-  });
-}
-serviceWorkerRegistration.register();
-// If you want to start measuring performance in your app, pass a function
-// to log results (for example: reportWebVitals(console.log))
-// or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
+
 reportWebVitals();
