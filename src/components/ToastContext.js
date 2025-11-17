@@ -20,7 +20,7 @@ export function ToastProvider({ children }) {
           top: 32px;
           left: 50%;
           transform: translateX(-50%);
-          background: ${toast && toast.type === 'success' ? '#22c55e' : toast && toast.type === 'error' ? '#f33b08' : '#2563eb'};
+          background: ${toast && toast.type === 'success' ? '#22c55e' : toast && toast.type === 'error' ? '#f33b08' : '#2556ebff'};
           color: #fff;
           padding: 14px 32px;
           border-radius: 8px;

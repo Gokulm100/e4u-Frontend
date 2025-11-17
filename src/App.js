@@ -1,10 +1,11 @@
 import React, { useEffect } from 'react';
 import './App.css';
 import Landing from './pages/landing';
-import { ToastProvider } from './components/ToastContext';
+import { useToast } from './components/ToastContext';
 import { requestPermission, listenForForegroundNotifications } from "./utils/notification";
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:3001';
 function App() {
+  const { showToast } = useToast();
 
     useEffect(() => {
       const BearerToken = localStorage.getItem('authToken');
@@ -22,18 +23,22 @@ function App() {
 
         // Foreground notifications
         listenForForegroundNotifications((payload) => {
-          alert(payload.notification.title + " - " + payload.notification.body);
+          showToast(
+            (payload.notification.title ? payload.notification.title + ': ' : '') +
+            (payload.notification.body || ''),
+            'info',
+            4000
+          );
         });
+        
       }
 
       initFCM();
-    }, []);
+    }, [showToast]);
   return (
-    <ToastProvider>
-      <div className="App">
-        <Landing />
-      </div>
-    </ToastProvider>
+    <div className="App">
+      <Landing />
+    </div>
   );
 }
 

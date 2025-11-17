@@ -13,11 +13,10 @@ const Chat = ({
   API_BASE_URL,
   disableAutoFetch = false,
   fromMessagesPage = false,
-  to
+  to,
+  refreshChats
 }) => {
-  // You can move all chat-related login and chat modal logic here
-  // Example: fetch messages, send messages, handle chat UI
-
+  // (Removed effect that called refreshChats on chatOpen)
   // Original effect (restored)
   useEffect(() => {
     if (disableAutoFetch) return;
@@ -45,22 +44,6 @@ const Chat = ({
         .catch(() => setChatMessages([]));
     }
   }, [chatOpen, selectedListing, user, API_BASE_URL, setChatMessages, disableAutoFetch, fromMessagesPage]);
-
-
-  // Mark messages as seen when chat modal opens (from any page)
-  useEffect(() => {
-    if (chatOpen && user && selectedListing && API_BASE_URL) {
-      fetch(`${API_BASE_URL}/api/ads/markMessagesAsSeen`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-        },
-        body: JSON.stringify({ adId: selectedListing.id || selectedListing._id, reader: user._id,sender: chatMessages.length>0 ? chatMessages[chatMessages.length-1].from._id : null })
-      });
-    }
-    // No dependency on previous state, always call when chatOpen is true and dependencies change
-  }, [chatOpen, user, selectedListing, API_BASE_URL,chatMessages]);
 
   // Removed new effect for MessagesPage modal open
   const handleSendMessage = () => {

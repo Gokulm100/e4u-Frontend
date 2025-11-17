@@ -1,6 +1,6 @@
 import AiTextArea from '../components/aiTextArea';
 /* global google */
-import React, { useState, useEffect,useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import MyAds from './myads';
 import Favorites from './favorites';
 import MessagesPage from './MessagesPage';
@@ -11,6 +11,7 @@ import Navbar from '../components/navbar';
 import AllAds from './allads';
 import { jwtDecode } from "jwt-decode";
 import styles from '../pages/styles';
+import ConsentModal from '../components/consent';
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:3001';
 // Removed unused tempImageUrls
 // Loader overlay component
@@ -42,6 +43,50 @@ function LoaderOverlay() {
 }
 
 const Landing = () => {
+  // Ref for MessagesPage
+  const messagesPageRef = useRef();
+  // Refetch user messages for navbar badge and to pass to MessagesPage
+  function refetchUserMessages() {
+    const storedUser = localStorage.getItem("user");
+    const storedToken = localStorage.getItem("authToken");
+    if (storedUser && storedToken) {
+      const userObj = JSON.parse(storedUser);
+      if (userObj && userObj._id) {
+        fetch(`${API_BASE_URL}/api/ads/getUserMessages`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${storedToken}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ userId: userObj._id })
+        })
+          .then(res => res.json())
+          .then(msgData => {
+            setMessageCountNavBar(Array.isArray(msgData) ? msgData.length : (msgData.count || 0));
+          })
+          .catch(() => {
+            setMessageCountNavBar(0);
+          });
+      }
+    }
+  }
+  // Listen for service worker postMessage to open chat modal
+  useEffect(() => {
+    function handleSWMessage(event) {
+      refetchUserMessages();
+      if (messagesPageRef.current && typeof messagesPageRef.current.refreshChats === 'function') {
+        messagesPageRef.current.refreshChats();
+      }
+      if (event.data && event.data.type === 'OPEN_CHAT') {
+        setView('messages');
+        setChatOpen(true);
+      }
+    }
+    navigator.serviceWorker && navigator.serviceWorker.addEventListener('message', handleSWMessage);
+    return () => {
+      navigator.serviceWorker && navigator.serviceWorker.removeEventListener('message', handleSWMessage);
+    };
+  }, []);
   // Message count for detailed ad view
   const [messageCount, setMessageCount] = useState(0);
   // State declarations needed for useEffect below
@@ -255,7 +300,35 @@ const responsiveTagStyle = {
   textOverflow: 'clip',
 };
 
+
+  const [hasConsented, setHasConsented] = useState(() => {
+    return localStorage.getItem('userConsent') === 'true';
+  });
+
   useEffect(() => {
+    if (!hasConsented) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => { document.body.style.overflow = ''; };
+  }, [hasConsented]);
+
+  function handleConsent() {
+    localStorage.setItem('userConsent', 'true');
+    setHasConsented(true);
+  }
+
+  function handleDecline() {
+    localStorage.setItem('userConsent', 'false');
+    // localStorage.removeItem('user');
+    // localStorage.removeItem('authToken');
+    setUser([]);
+    setHasConsented(false);
+    window.location.reload();
+  }
+  useEffect(() => {
+    if (!hasConsented) return;
     const storedUser = localStorage.getItem("user");
     if (storedUser) setUser(JSON.parse(storedUser));
     // Dynamically load Google Identity script if not present
@@ -335,7 +408,7 @@ const responsiveTagStyle = {
         );
       }
     }
-  }, [menuOpen]);
+  }, [menuOpen, hasConsented]);
   const handleLogout = () => {
     localStorage.removeItem("user");
     localStorage.removeItem("authToken");
@@ -362,7 +435,15 @@ const responsiveTagStyle = {
       .then((data) => {
         localStorage.setItem("authToken", data.token);
         localStorage.setItem("user", JSON.stringify(data.user));
-        window.location.reload();
+        // If user has not consented, open consent modal
+        if (data.user && data.user.isConsented === false) {
+          setLoading(false);
+          localStorage.removeItem('userConsent');
+          setHasConsented(false);
+                  window.location.reload();
+        } else {
+          window.location.reload();
+        }
       })
       .catch(() => {
         setLoading(false);
@@ -432,8 +513,27 @@ const responsiveTagStyle = {
 
 
 
+
   return (
     <div style={styles.app}>
+      {/* Consent Modal and overlay if not consented */}
+      {!hasConsented && localStorage.getItem('user') && (
+        <>
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100vw',
+            height: '100vh',
+            background: 'rgba(255,255,255,0.85)',
+            zIndex: 2000
+          }} />
+          <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: 2100, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <ConsentModal onConsent={handleConsent} onDecline={handleDecline} />
+          </div>
+        </>
+      )}
+
       <Navbar
         styles={styles}
         user={user}
@@ -443,8 +543,8 @@ const responsiveTagStyle = {
         setShowDropdown={setShowDropdown}
         handleLogout={handleLogout}
         setView={setView}
-  setEditMode={setEditMode}
-  setEditAd={setEditAd}
+        setEditMode={setEditMode}
+        setEditAd={setEditAd}
         setMenuOpen={setMenuOpen}
         menuOpen={menuOpen}
       />
@@ -682,10 +782,10 @@ const responsiveTagStyle = {
       )}
       {/* Add missing closing div for main app container */}
       {view === 'messages' && (
-        <MessagesPage />
+        <MessagesPage ref={messagesPageRef} refetchUserMessages={refetchUserMessages} />
       )}
       {loading && <LoaderOverlay />}
-      </div>
+    </div>
   );
 };
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, forwardRef, useImperativeHandle } from 'react';
 import Chat from './chat';
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:3001';
 
@@ -83,7 +83,7 @@ const timeStyle = {
   marginTop: isMobile ? '6px' : '0',
 };
 
-const MessagesPage = () => {
+const MessagesPage = forwardRef(({ refetchUserMessages }, ref) => {
   const [activeTab, setActiveTab] = useState('selling');
   const [sellingChats, setSellingChats] = useState([]);
   const [buyingChats, setBuyingChats] = useState([]);
@@ -92,6 +92,33 @@ const MessagesPage = () => {
   const [chatMessages, setChatMessages] = useState([]);
   const [chatInput, setChatInput] = useState("");
   const [user, setUser] = useState(null);
+
+  // Listen for service worker postMessage to open a specific chat
+  useEffect(() => {
+    function handleSWMessage(event) {
+      if (event.data && event.data.type === 'OPEN_CHAT') {
+        // Try to find the chat by adId or chatId from the notification payload
+        const { adId, chatId } = event.data.data || {};
+        let foundChat = null;
+        if (adId) {
+          foundChat = sellingChats.concat(buyingChats).find(chat => chat.adId === adId);
+        } else if (chatId) {
+          foundChat = sellingChats.concat(buyingChats).find(chat => chat.id === chatId);
+        }
+        if (foundChat) {
+          setSelectedChat(foundChat);
+          setChatOpen(true);
+        } else {
+          // If not found, just open the messages page
+          setChatOpen(false);
+        }
+      }
+    }
+    navigator.serviceWorker && navigator.serviceWorker.addEventListener('message', handleSWMessage);
+    return () => {
+      navigator.serviceWorker && navigator.serviceWorker.removeEventListener('message', handleSWMessage);
+    };
+  }, [sellingChats, buyingChats]);
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
     if (storedUser) setUser(JSON.parse(storedUser));
@@ -139,6 +166,76 @@ const MessagesPage = () => {
       .catch(() => setBuyingChats([]));
     }
   }, []);
+  const markMessagesAsSeen = (chat) => {
+    if (user && chat) {
+      if(user._id === chat.lastMessageFrom) 
+        {
+          refreshChats();
+           refetchUserMessages();
+
+          return; // Don't mark as seen if the user is the sender
+        }
+      fetch(`${API_BASE_URL}/api/ads/markMessagesAsSeen`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+        },
+        body: JSON.stringify({ adId: chat.adId, reader: user._id, sender: chat.lastMessageFrom })
+      })
+      .then(res => {
+        if (res.ok) {
+          refreshChats();
+           refetchUserMessages();
+
+        }
+      });
+    }
+  };
+  // Function to refresh both selling and buying chats
+  const refreshChats = () => {
+    const user = JSON.parse(localStorage.getItem('user'));
+    const storedToken = localStorage.getItem('authToken');
+    if (user) {
+        fetch(`${API_BASE_URL}/api/ads/getSellingMessages`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${storedToken}`,
+          }
+        })
+          .then(res => res.json())
+          .then(data => {
+            if (Array.isArray(data.filteredMessages)) {
+              setSellingChats(data.filteredMessages);
+            } else {
+              setSellingChats([]);
+            }
+          })
+          .catch(() => setSellingChats([]));
+      fetch(`${API_BASE_URL}/api/ads/getBuyingMessages`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${storedToken}`,
+        }
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (Array.isArray(data.filteredMessages)) {
+            setBuyingChats(data.filteredMessages);
+          } else {
+            setBuyingChats([]);
+          }
+        })
+        .catch(() => setBuyingChats([]));
+    }
+  };
+
+  useImperativeHandle(ref, () => ({
+    refreshChats
+  }));
+
   return (
     <div style={{
       maxWidth: isMobile ? '100%' : 600,
@@ -158,13 +255,13 @@ const MessagesPage = () => {
         <div style={tabStyle}>
           <button
             style={activeTab === 'selling' ? activeTabStyle : tabBtnStyle}
-            onClick={() => setActiveTab('selling')}
+            onClick={() => { setActiveTab('selling'); refreshChats(); }}
           >
             Selling
           </button>
           <button
             style={activeTab === 'buying' ? activeTabStyle : tabBtnStyle}
-            onClick={() => setActiveTab('buying')}
+            onClick={() => { setActiveTab('buying'); refreshChats(); }}
           >
             Buying
           </button>
@@ -180,6 +277,7 @@ const MessagesPage = () => {
                   onMouseLeave={e => e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.08)'}
                   onClick={async () => {
                     setSelectedChat(chat);
+                    markMessagesAsSeen(chat);
                     // Fetch messages before opening modal
                     try {
                       const res = await fetch(`${API_BASE_URL}/api/ads/chat?adId=${chat.adId}&sellerId=${chat.sellerId}&buyerId=${chat.buyerId}`);
@@ -197,7 +295,19 @@ const MessagesPage = () => {
                 >
                   <img src={chat.avatar} alt={chat.buyerName} style={avatarStyle} />
                   <div style={infoStyle}>
-                    <div style={nameStyle}>{chat.buyerName}</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <div style={nameStyle}>{chat.buyerName}</div>
+                      {!chat.isSeen && chat.lastMessageFrom !== user?._id && (
+                        <span style={{
+                          display: 'inline-block',
+                          width: 10,
+                          height: 10,
+                          borderRadius: '50%',
+                          background: '#2563eb',
+                          marginLeft: 2
+                        }} />
+                      )}
+                    </div>
                     <div style={itemStyle}>{chat.item}</div>
                     <div style={messageStyle}>{chat.lastMessage}</div>
                   </div>
@@ -217,6 +327,10 @@ const MessagesPage = () => {
                   onMouseLeave={e => e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.08)'}
                   onClick={async () => {
                     setSelectedChat(chat);
+                    markMessagesAsSeen(chat);
+
+
+
                     // Fetch messages before opening modal
                     try {
                       const res = await fetch(`${API_BASE_URL}/api/ads/chat?adId=${chat.adId}&buyerId=${chat.buyerId}&sellerId=${chat.sellerId}`);
@@ -233,9 +347,21 @@ const MessagesPage = () => {
                     setChatOpen(true);
                   }}
                 >
-                  <img src={chat.avatar} alt={chat.sellerName} style={avatarStyle} />
+                  <img src={chat.avatar} alt={chat.buyerName} style={avatarStyle} />
                   <div style={infoStyle}>
-                    <div style={nameStyle}>{chat.sellerName}</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <div style={nameStyle}>{chat.buyerName}</div>
+                      {!chat.isSeen && chat.lastMessageFrom !== user?._id && (
+                        <span style={{
+                          display: 'inline-block',
+                          width: 10,
+                          height: 10,
+                          borderRadius: '50%',
+                          background: '#2563eb',
+                          marginLeft: 2
+                        }} />
+                      )}
+                    </div>
                     <div style={itemStyle}>{chat.item}</div>
                     <div style={messageStyle}>{chat.lastMessage}</div>
                   </div>
@@ -250,7 +376,9 @@ const MessagesPage = () => {
             <Chat
               user={user}
               chatOpen={chatOpen}
-              setChatOpen={setChatOpen}
+              setChatOpen={(open) => {
+                setChatOpen(open);
+              }}
               selectedListing={{
                 id: selectedChat.adId,
                 title: selectedChat.item,
@@ -267,12 +395,14 @@ const MessagesPage = () => {
               API_BASE_URL={API_BASE_URL}
               disableAutoFetch={true}
               to={selectedChat.sellerId || selectedChat.buyerId}
+              refreshChats={refreshChats}
             />
           )}
+          {/* (Removed duplicate refreshChats function) */}
         </div>
       </div>
     </div>
   );
-};
+});
 
 export default MessagesPage;

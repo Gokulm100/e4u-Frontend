@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useToast } from '../components/ToastContext';
 import { MapPin, Heart, Eye } from 'lucide-react';
 import Chat from './chat';
@@ -142,7 +142,6 @@ const AdDetail = ({
   API_BASE_URL
 }) => {
   const { showToast } = useToast();
-  const prevChatOpen = useRef(chatOpen);
 
   // Modal state for Mark as Sold
   const [soldModalOpen, setSoldModalOpen] = useState(false);
@@ -184,18 +183,6 @@ const AdDetail = ({
     setLoadingInterested(false);
     setSoldModalOpen(true);
   };
-
-  useEffect(() => {
-    if (chatOpen && !prevChatOpen.current && user && selectedListing && API_BASE_URL) {
-      // Call markMessagesAsSeen when chat modal comes in focus
-      fetch(`${API_BASE_URL}/api/ads/markMessagesAsSeen`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ adId: selectedListing.id, userId: user._id })
-      });
-    }
-    prevChatOpen.current = chatOpen;
-  }, [chatOpen, user, selectedListing, API_BASE_URL]);
 
   // Increment views if not from My Ads (i.e., showAiAnalytics is not true)
   useEffect(() => {

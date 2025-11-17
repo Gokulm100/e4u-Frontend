@@ -2,6 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
+import { ToastProvider } from './components/ToastContext';
 import reportWebVitals from './reportWebVitals';
 import { GoogleOAuthProvider } from "@react-oauth/google"
 
@@ -17,10 +18,12 @@ if ('serviceWorker' in navigator) {
   });
 }
 root.render(
-    <GoogleOAuthProvider clientId='556452370430-fd5caae668lq9468hbseas0kr3o1a01g.apps.googleusercontent.com'>
-    <React.StrictMode>
-      <App />
-    </React.StrictMode>,
+  <GoogleOAuthProvider clientId='556452370430-fd5caae668lq9468hbseas0kr3o1a01g.apps.googleusercontent.com'>
+    <ToastProvider>
+      <React.StrictMode>
+        <App />
+      </React.StrictMode>
+    </ToastProvider>
   </GoogleOAuthProvider>
 );
 
