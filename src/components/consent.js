@@ -16,6 +16,15 @@ const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:300
     overflowY: 'auto',
   };
 
+  // Responsive style for modal width on mobile
+  const responsiveModalStyle = {
+    ...modalStyle,
+    width: 'auto',
+    minWidth: 0,
+    maxWidth: '95vw',
+    boxSizing: 'border-box',
+  };
+
   const overlayStyle = {
     position: 'fixed',
     top: 0,
@@ -79,9 +88,11 @@ export default function ConsentModal({ onConsent, onDecline ,setHasConsented}) {
       });
   }, []);
 
+  // Use responsive style if mobile
+  const isMobile = typeof window !== 'undefined' && window.innerWidth <= 600;
   return (
     <div style={overlayStyle}>
-      <div style={modalStyle}>
+      <div style={isMobile ? responsiveModalStyle : modalStyle}>
         <h2 style={{ marginBottom: 18, textAlign: 'center', fontWeight: 700, fontSize: 24 }}>Consent Form</h2>
         {loading && <div style={{ textAlign: 'center', margin: 32 }}>Loading...</div>}
         {error && <div style={{ color: 'red', textAlign: 'center', margin: 32 }}>{error}</div>}
@@ -99,16 +110,36 @@ export default function ConsentModal({ onConsent, onDecline ,setHasConsented}) {
             )}
             <div style={{ display: 'flex', gap: 16, marginTop: 32, justifyContent: 'center' }}>
               <button
-                style={{ background: '#2563eb', color: '#fff', border: 'none', borderRadius: 6, padding: '10px 22px', fontWeight: 600, fontSize: 16, cursor: 'pointer' }}
+                style={{
+                  background: '#2563eb',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: 6,
+                  padding: isMobile ? '6px 12px' : '8px 16px',
+                  fontWeight: 600,
+                  fontSize: isMobile ? 13 : 15,
+                  cursor: 'pointer',
+                  minWidth: isMobile ? 90 : 120
+                }}
                 onClick={onConsent}
               >
-                ✔️ Accept & Continue
+                Accept and Continue
               </button>
               <button
-                style={{ background: '#eee', color: '#333', border: 'none', borderRadius: 6, padding: '10px 22px', fontWeight: 500, fontSize: 16, cursor: 'pointer' }}
+                style={{
+                  background: '#eee',
+                  color: '#333',
+                  border: 'none',
+                  borderRadius: 6,
+                  padding: isMobile ? '6px 12px' : '8px 16px',
+                  fontWeight: 500,
+                  fontSize: isMobile ? 13 : 15,
+                  cursor: 'pointer',
+                  minWidth: isMobile ? 70 : 100
+                }}
                 onClick={onDecline}
               >
-                ✖️ Decline
+                Decline
               </button>
             </div>
           </>

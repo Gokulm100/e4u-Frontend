@@ -118,7 +118,7 @@ const Navbar = ({
                   )}
                 </div>
               ) : (
-                <div id="googleSignInDiv"></div>
+                <div id="googleSignInDiv" key={user === null ? 'signin-visible' : 'signin-visible'}></div>
               )}
             </nav>
             <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>

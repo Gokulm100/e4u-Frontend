@@ -321,16 +321,15 @@ const responsiveTagStyle = {
 
   function handleDecline() {
     localStorage.setItem('userConsent', 'false');
-    // localStorage.removeItem('user');
-    // localStorage.removeItem('authToken');
-    setUser([]);
     setHasConsented(false);
+    localStorage.removeItem("user");
+    localStorage.removeItem("authToken");
     window.location.reload();
   }
   useEffect(() => {
-    if (!hasConsented) return;
     const storedUser = localStorage.getItem("user");
     if (storedUser) setUser(JSON.parse(storedUser));
+    if(storedUser && !hasConsented) return;
     // Dynamically load Google Identity script if not present
     if (!window.google || !window.google.accounts) {
       const script = document.createElement('script');
@@ -517,7 +516,7 @@ const responsiveTagStyle = {
   return (
     <div style={styles.app}>
       {/* Consent Modal and overlay if not consented */}
-      {!hasConsented && localStorage.getItem('user') && (
+      {!localStorage.getItem('userConsent') && (
         <>
           <div style={{
             position: 'fixed',
