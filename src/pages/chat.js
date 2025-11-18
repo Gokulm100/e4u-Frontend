@@ -19,12 +19,15 @@ const Chat = ({
 }) => {
   // (Removed effect that called refreshChats on chatOpen)
   // Original effect (restored)
+  // Memoize selectedListing IDs for effect dependencies
+  const selectedListingId = selectedListing?.id || selectedListing?._id;
+  const selectedSellerId = selectedListing?.sellerId || selectedListing?.seller?._id;
+  const selectedBuyerId = selectedListing?.buyerId || selectedListing?.buyer?._id;
   useEffect(() => {
     if (disableAutoFetch) return;
     if (fromMessagesPage) return; 
-    if (chatOpen && selectedListing && user) {
-      // Fetch chat messages for the selected listing and user
-      fetch(`${API_BASE_URL}/api/ads/chat?adId=${selectedListing.id || selectedListing._id}&sellerId=${selectedListing.sellerId || selectedListing.seller?._id}&buyerId=${user._id}`, {
+    if (chatOpen && selectedListingId && selectedSellerId && user) {
+      fetch(`${API_BASE_URL}/api/ads/chat?adId=${selectedListingId}&sellerId=${selectedSellerId}&buyerId=${selectedBuyerId}`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
@@ -33,7 +36,6 @@ const Chat = ({
       })
         .then(res => res.json())
         .then(data => {
-          // Try to use data.messages or data as array
           if (Array.isArray(data)) {
             setChatMessages(data);
           } else if (Array.isArray(data.messages)) {
@@ -44,7 +46,7 @@ const Chat = ({
         })
         .catch(() => setChatMessages([]));
     }
-  }, [chatOpen, selectedListing, user, API_BASE_URL, setChatMessages, disableAutoFetch, fromMessagesPage]);
+  }, [chatOpen, selectedListingId,selectedBuyerId, selectedSellerId, user, API_BASE_URL, setChatMessages, disableAutoFetch, fromMessagesPage]);
 
   // Removed new effect for MessagesPage modal open
   const handleSendMessage = () => {

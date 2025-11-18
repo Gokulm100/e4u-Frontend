@@ -374,13 +374,14 @@ const MessagesPage = forwardRef(({ refetchUserMessages }, ref) => {
           )}
           {/* Chat modal overlay (moved outside tab blocks) */}
           {chatOpen && selectedChat && (
+            console.log('Rendering Chat component with selectedChat:', selectedChat),
             isMobile ? (
               <ChatFullScreen
                 selectedListing={{
                   id: selectedChat.adId,
                   title: selectedChat.item,
-                  sellerId: selectedChat.sellerId || selectedChat.buyerId,
-                  buyerId: selectedChat.buyerId || selectedChat.sellerId,
+                  sellerId: activeTab === 'selling' ? user?._id : selectedChat.sellerId,
+                  buyerId: activeTab === 'selling' ? selectedChat.buyerId : user?._id,
                   seller: selectedChat.sellerName,
                   buyer: selectedChat.buyerName
                 }}
@@ -404,8 +405,8 @@ const MessagesPage = forwardRef(({ refetchUserMessages }, ref) => {
                 selectedListing={{
                   id: selectedChat.adId,
                   title: selectedChat.item,
-                  sellerId: selectedChat.sellerId || selectedChat.buyerId,
-                  buyerId: selectedChat.buyerId || selectedChat.sellerId,
+                  sellerId: activeTab === 'selling' ? user?._id : selectedChat.sellerId,
+                  buyerId: activeTab === 'selling' ? selectedChat.buyerId : user?._id,
                   seller: selectedChat.sellerName,
                   buyer: selectedChat.buyerName
                 }}
