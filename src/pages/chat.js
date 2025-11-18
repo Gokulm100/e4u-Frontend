@@ -14,7 +14,8 @@ const Chat = ({
   disableAutoFetch = false,
   fromMessagesPage = false,
   to,
-  refreshChats
+  refreshChats,
+  isMobile = false
 }) => {
   // (Removed effect that called refreshChats on chatOpen)
   // Original effect (restored)
@@ -108,8 +109,43 @@ const Chat = ({
     }
   }, [chatMessages, disableAutoFetch, setChatMessages]);
 
-  return (
-    <div style={{ position: 'fixed', bottom: 24, right: 24, width: "auto", maxWidth: 'auto', background: '#fff', boxShadow: '0 8px 32px rgba(0,0,0,0.12)', borderRadius: 16, zIndex: 10000, display: 'flex', flexDirection: 'column', overflow: 'hidden', fontFamily: 'Inter, Arial, sans-serif' }}>
+    // Responsive: full-screen on mobile if isMobile prop is true
+    const chatContainerStyle = (typeof isMobile !== 'undefined' && isMobile)
+      ? {
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '100vh',
+          background: '#fff',
+          zIndex: 10000,
+          display: 'flex',
+          flexDirection: 'column',
+          borderRadius: 0,
+          boxShadow: 'none',
+          fontFamily: 'Inter, Arial, sans-serif',
+          margin: 0,
+          padding: 0,
+          overflow: 'hidden',
+        }
+      : {
+          position: 'fixed',
+          bottom: 24,
+          right: 24,
+          width: 'auto',
+          maxWidth: 'auto',
+          background: '#fff',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
+          borderRadius: 16,
+          zIndex: 10000,
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
+          fontFamily: 'Inter, Arial, sans-serif',
+        };
+
+    return (
+      <div style={chatContainerStyle}>
       <div style={{ padding: '12px 18px', borderBottom: '1px solid #f0f0f0', fontWeight: 600, fontSize: 16, background: 'linear-gradient(90deg, #f7f7f7 0%, #e0eafc 100%)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', minHeight: 0 }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
           <span style={{ fontWeight: 700, color: '#222', fontSize: 15, lineHeight: 1.2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', width: 'auto' }}>{selectedListing?.title || 'Ad'}</span>
@@ -133,7 +169,7 @@ const Chat = ({
         </div>
         <button style={{ background: 'none', border: 'none', fontSize: 20, color: '#888', cursor: 'pointer', marginLeft: 8 }} onClick={() => setChatOpen(false)} aria-label="Close chat">&times;</button>
       </div>
-      <div style={{ flex: 1, minHeight: 220, maxHeight: 320, overflowY: 'auto', padding: '18px 24px', background: '#fafbfc' }}>
+      <div style={{ flex: 1, minHeight: 220, maxHeight: 'auto', overflowY: 'auto', padding: '18px 24px', background: '#fafbfc' }}>
         {chatMessages && chatMessages.length > 0 ? (() => {
           let lastDate = '';
           return chatMessages.map((msg, idx) => {

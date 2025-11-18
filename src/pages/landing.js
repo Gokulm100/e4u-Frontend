@@ -7,6 +7,7 @@ import MessagesPage from './MessagesPage';
 // import Chat from './chat';
 // import { MapPin, Heart, Eye } from 'lucide-react';
 import AdDetail from './adDetail';
+import ChatFullScreen from './ChatFullScreen';
 import Navbar from '../components/navbar';
 import AllAds from './allads';
 import { jwtDecode } from "jwt-decode";
@@ -97,6 +98,8 @@ const Landing = () => {
   useEffect(() => { setCurrentImageIdx(0); }, [selectedListing]);
   const [user, setUser] = useState(null);
   const [chatOpen, setChatOpen] = useState(false);
+  // Responsive check for mobile view
+  const isMobile = typeof window !== 'undefined' && window.innerWidth <= 600;
   // Messages collapsible state and handler
   // Removed unused messagesCollapsed state
   // Removed unused adMessages state
@@ -782,6 +785,21 @@ const responsiveTagStyle = {
       {/* Add missing closing div for main app container */}
       {view === 'messages' && (
         <MessagesPage ref={messagesPageRef} refetchUserMessages={refetchUserMessages} />
+      )}
+      {/* Full-screen chat for mobile only */}
+      {chatOpen && isMobile && (
+        <ChatFullScreen
+          selectedListing={selectedListing}
+          selectedMessage={selectedMessage}
+          user={user}
+          chatMessages={chatMessages}
+          setChatMessages={setChatMessages}
+          chatInput={chatInput}
+          setChatInput={setChatInput}
+          setChatOpen={setChatOpen}
+          chatOpen={chatOpen}
+          API_BASE_URL={API_BASE_URL}
+        />
       )}
       {loading && <LoaderOverlay />}
     </div>

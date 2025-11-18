@@ -1,5 +1,6 @@
 import React, { useState, useEffect, forwardRef, useImperativeHandle } from 'react';
 import Chat from './chat';
+import ChatFullScreen from './ChatFullScreen';
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:3001';
 
 const isMobile = typeof window !== 'undefined' ? window.innerWidth < 600 : false;
@@ -373,30 +374,52 @@ const MessagesPage = forwardRef(({ refetchUserMessages }, ref) => {
           )}
           {/* Chat modal overlay (moved outside tab blocks) */}
           {chatOpen && selectedChat && (
-            <Chat
-              user={user}
-              chatOpen={chatOpen}
-              setChatOpen={(open) => {
-                setChatOpen(open);
-              }}
-              selectedListing={{
-                id: selectedChat.adId,
-                title: selectedChat.item,
-                sellerId: selectedChat.sellerId || selectedChat.buyerId,
-                buyerId: selectedChat.buyerId || selectedChat.sellerId,
-                seller: selectedChat.sellerName,
-                buyer: selectedChat.buyerName
-              }}
-              selectedMessage={null}
-              chatMessages={chatMessages}
-              setChatMessages={setChatMessages}
-              chatInput={chatInput}
-              setChatInput={setChatInput}
-              API_BASE_URL={API_BASE_URL}
-              disableAutoFetch={true}
-              to={selectedChat.sellerId || selectedChat.buyerId}
-              refreshChats={refreshChats}
-            />
+            isMobile ? (
+              <ChatFullScreen
+                selectedListing={{
+                  id: selectedChat.adId,
+                  title: selectedChat.item,
+                  sellerId: selectedChat.sellerId || selectedChat.buyerId,
+                  buyerId: selectedChat.buyerId || selectedChat.sellerId,
+                  seller: selectedChat.sellerName,
+                  buyer: selectedChat.buyerName
+                }}
+                selectedMessage={null}
+                user={user}
+                chatMessages={chatMessages}
+                setChatMessages={setChatMessages}
+                chatInput={chatInput}
+                setChatInput={setChatInput}
+                setChatOpen={setChatOpen}
+                chatOpen={chatOpen}
+                API_BASE_URL={API_BASE_URL}
+              />
+            ) : (
+              <Chat
+                user={user}
+                chatOpen={chatOpen}
+                setChatOpen={(open) => {
+                  setChatOpen(open);
+                }}
+                selectedListing={{
+                  id: selectedChat.adId,
+                  title: selectedChat.item,
+                  sellerId: selectedChat.sellerId || selectedChat.buyerId,
+                  buyerId: selectedChat.buyerId || selectedChat.sellerId,
+                  seller: selectedChat.sellerName,
+                  buyer: selectedChat.buyerName
+                }}
+                selectedMessage={null}
+                chatMessages={chatMessages}
+                setChatMessages={setChatMessages}
+                chatInput={chatInput}
+                setChatInput={setChatInput}
+                API_BASE_URL={API_BASE_URL}
+                disableAutoFetch={true}
+                to={selectedChat.sellerId || selectedChat.buyerId}
+                refreshChats={refreshChats}
+              />
+            )
           )}
           {/* (Removed duplicate refreshChats function) */}
         </div>
