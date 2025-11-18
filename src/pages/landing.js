@@ -31,10 +31,10 @@ function LoaderOverlay() {
       justifyContent: 'center'
     }}>
       <div style={{
-        width: 60,
-        height: 60,
-        border: '6px solid #c1f7d3',
-        borderTop: '6px solid #2563eb',
+        width: 30,
+        height: 30,
+        border: '3px solid #d7ddd9ff',
+        borderTop: '3px solid #3f4e6fff',
         borderRadius: '50%',
         animation: 'spin 1s linear infinite'
       }} />

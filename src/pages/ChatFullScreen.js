@@ -10,6 +10,8 @@ const ChatFullScreen = ({
   setChatMessages,
   chatInput,
   setChatInput,
+  chatLoading,
+  setChatLoading,
   setChatOpen,
   chatOpen,
   API_BASE_URL
@@ -43,6 +45,8 @@ const ChatFullScreen = ({
         setChatInput={setChatInput}
         setChatOpen={setChatOpen}
         chatOpen={chatOpen}
+        chatLoading={chatLoading}
+        setChatLoading={setChatLoading}
         API_BASE_URL={API_BASE_URL}
         isMobile={true}
       />

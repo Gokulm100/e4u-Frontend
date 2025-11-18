@@ -12,8 +12,9 @@ const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:300
     textAlign: 'left',
     position: 'relative',
     zIndex: 2200,
-    maxHeight: '70vh',
-    overflowY: 'auto',
+    maxHeight: 'auto',
+    height: 'auto',
+
   };
 
   // Responsive style for modal width on mobile
@@ -21,8 +22,10 @@ const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:300
     ...modalStyle,
     width: 'auto',
     minWidth: 0,
+    marginTop: 80,
     maxWidth: '95vw',
     boxSizing: 'border-box',
+    height: 'auto',
   };
 
   const overlayStyle = {
@@ -96,6 +99,7 @@ export default function ConsentModal({ onConsent, onDecline ,setHasConsented}) {
         <h2 style={{ marginBottom: 18, textAlign: 'center', fontWeight: 700, fontSize: 24 }}>Consent Form</h2>
         {loading && <div style={{ textAlign: 'center', margin: 32 }}>Loading...</div>}
         {error && <div style={{ color: 'red', textAlign: 'center', margin: 32 }}>{error}</div>}
+        <div style={{ maxHeight: '50vh', overflowY: 'auto' }}>
         {consentData && (
           <>
             {consentData.privacyNotice && (
@@ -144,6 +148,7 @@ export default function ConsentModal({ onConsent, onDecline ,setHasConsented}) {
             </div>
           </>
         )}
+        </div>
       </div>
     </div>
   );

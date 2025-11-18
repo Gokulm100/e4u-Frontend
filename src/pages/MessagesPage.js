@@ -93,6 +93,7 @@ const MessagesPage = forwardRef(({ refetchUserMessages }, ref) => {
   const [chatMessages, setChatMessages] = useState([]);
   const [chatInput, setChatInput] = useState("");
   const [user, setUser] = useState(null);
+  const [chatLoading, setChatLoading] = useState(false);
 
   // Listen for service worker postMessage to open a specific chat
   useEffect(() => {
@@ -277,12 +278,16 @@ const MessagesPage = forwardRef(({ refetchUserMessages }, ref) => {
                   onMouseEnter={e => e.currentTarget.style.boxShadow = '0 4px 16px rgba(37,99,235,0.12)'}
                   onMouseLeave={e => e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.08)'}
                   onClick={async () => {
+                      setChatLoading(true);
                     setSelectedChat(chat);
                     markMessagesAsSeen(chat);
                     // Fetch messages before opening modal
                     try {
+                      
                       const res = await fetch(`${API_BASE_URL}/api/ads/chat?adId=${chat.adId}&sellerId=${chat.sellerId}&buyerId=${chat.buyerId}`);
                       if (res.ok) {
+                        setChatLoading(false);
+
                         const data = await res.json();
                         setChatMessages(data || []);
                       } else {
@@ -334,8 +339,10 @@ const MessagesPage = forwardRef(({ refetchUserMessages }, ref) => {
 
                     // Fetch messages before opening modal
                     try {
+                      setChatLoading(true);
                       const res = await fetch(`${API_BASE_URL}/api/ads/chat?adId=${chat.adId}&buyerId=${chat.buyerId}&sellerId=${chat.sellerId}`);
                       if (res.ok) {
+                        setChatLoading(false);
                         console.log(res);
                         const data = await res.json();
                         setChatMessages(data || []);
@@ -387,6 +394,7 @@ const MessagesPage = forwardRef(({ refetchUserMessages }, ref) => {
                 }}
                 selectedMessage={null}
                 user={user}
+                chatLoading={chatLoading}
                 chatMessages={chatMessages}
                 setChatMessages={setChatMessages}
                 chatInput={chatInput}
@@ -399,6 +407,7 @@ const MessagesPage = forwardRef(({ refetchUserMessages }, ref) => {
               <Chat
                 user={user}
                 chatOpen={chatOpen}
+                chatLoading={chatLoading}
                 setChatOpen={(open) => {
                   setChatOpen(open);
                 }}

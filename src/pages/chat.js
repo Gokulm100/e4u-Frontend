@@ -1,5 +1,4 @@
 import React, { useEffect, useRef } from 'react';
-
 const Chat = ({
   user,
   chatOpen,
@@ -14,9 +13,10 @@ const Chat = ({
   disableAutoFetch = false,
   fromMessagesPage = false,
   to,
-  refreshChats,
+  chatLoading,
   isMobile = false
 }) => {
+
   // (Removed effect that called refreshChats on chatOpen)
   // Original effect (restored)
   // Memoize selectedListing IDs for effect dependencies
@@ -36,6 +36,7 @@ const Chat = ({
       })
         .then(res => res.json())
         .then(data => {
+          // setChatLoading(false);
           if (Array.isArray(data)) {
             setChatMessages(data);
           } else if (Array.isArray(data.messages)) {
@@ -198,33 +199,38 @@ const Chat = ({
           wasAtBottomRef.current = atBottom;
         }}
       >
-        {chatMessages && chatMessages.length > 0 ? (() => {
-          let lastDate = '';
-          return chatMessages.map((msg, idx) => {
-            const dateObj = msg.createdAt ? new Date(msg.createdAt) : null;
-            const msgDate = dateObj ? `${dateObj.getDate().toString().padStart(2, '0')}-${dateObj.toLocaleString('en-US', { month: 'short' }).toUpperCase()}-${dateObj.getFullYear()}` : '';
-            const showDate = msgDate !== lastDate;
-            lastDate = msgDate;
-            return (
-              <React.Fragment key={msg._id || idx}>
-                {showDate && (
-                  <div style={{ textAlign: 'center', color: '#a2a3a4ff', fontWeight: 600, fontSize: 12, margin: '12px 0 8px 0', letterSpacing: 0.5 }}>
-                    {msgDate}
+        {chatLoading ? (
+          console.log('Chat is loading messages...'),
+          <div style={{ textAlign: 'center', color: '#666', fontSize: 14, marginTop: 20 }}>Loading messages...</div>
+        ) : (
+          chatMessages && chatMessages.length > 0 ? (() => {
+            let lastDate = '';
+            return chatMessages.map((msg, idx) => {
+              const dateObj = msg.createdAt ? new Date(msg.createdAt) : null;
+              const msgDate = dateObj ? `${dateObj.getDate().toString().padStart(2, '0')}-${dateObj.toLocaleString('en-US', { month: 'short' }).toUpperCase()}-${dateObj.getFullYear()}` : '';
+              const showDate = msgDate !== lastDate;
+              lastDate = msgDate;
+              return (
+                <React.Fragment key={msg._id || idx}>
+                  {showDate && (
+                    <div style={{ textAlign: 'center', color: '#a2a3a4ff', fontWeight: 600, fontSize: 12, margin: '12px 0 8px 0', letterSpacing: 0.5 }}>
+                      {msgDate}
+                    </div>
+                  )}
+                  <div style={{ marginBottom: 14, textAlign: msg.from?._id === user._id ? 'right' : 'left' }}>
+                    <span style={{ background: msg.from?._id === user._id ? 'linear-gradient(90deg, #e0eafc 0%, #c2e9fb 100%)' : '#f7f7f7', padding: '8px 16px', borderRadius: 14, display: 'inline-block', fontSize: 14, color: '#222', boxShadow: msg.from?._id === user._id ? '0 2px 8px rgba(37,99,235,0.08)' : '0 1px 3px rgba(0,0,0,0.04)' }}>
+                      {msg.message}
+                    </span>
+                    <div style={{ fontSize: 11, color: '#888', marginTop: 2, marginLeft: msg.from?._id === user._id ? 0 : 4, marginRight: msg.from?._id === user._id ? 4 : 0 }}>
+                      {dateObj ? dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
+                    </div>
                   </div>
-                )}
-                <div style={{ marginBottom: 14, textAlign: msg.from?._id === user._id ? 'right' : 'left' }}>
-                  <span style={{ background: msg.from?._id === user._id ? 'linear-gradient(90deg, #e0eafc 0%, #c2e9fb 100%)' : '#f7f7f7', padding: '8px 16px', borderRadius: 14, display: 'inline-block', fontSize: 14, color: '#222', boxShadow: msg.from?._id === user._id ? '0 2px 8px rgba(37,99,235,0.08)' : '0 1px 3px rgba(0,0,0,0.04)' }}>
-                    {msg.message}
-                  </span>
-                  <div style={{ fontSize: 11, color: '#888', marginTop: 2, marginLeft: msg.from?._id === user._id ? 0 : 4, marginRight: msg.from?._id === user._id ? 4 : 0 }}>
-                    {dateObj ? dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
-                  </div>
-                </div>
-              </React.Fragment>
-            );
-          });
-        })() : (
-          <div style={{ color: '#bbb', textAlign: 'center', fontSize: 14 }}>No messages yet.</div>
+                </React.Fragment>
+              );
+            });
+          })() : (
+            <div style={{ color: '#bbb', textAlign: 'center', fontSize: 14 }}>No messages yet.</div>
+          )
         )}
         <div ref={chatEndRef} />
       </div>
