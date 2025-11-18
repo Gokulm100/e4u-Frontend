@@ -92,11 +92,27 @@ const Chat = ({
       });
   };
 
-  // Ref for auto-scroll
-  const chatEndRef = useRef(null);
 
+  // Auto-scroll logic: only scroll to bottom if user was already at the bottom
+  const chatEndRef = useRef(null);
+  const chatContainerRef = useRef(null);
+  const wasAtBottomRef = useRef(true);
+
+  // Track if user is at bottom before new messages
+
+  // Fix for eslint: extract dependency
+  const firstMessageId = chatMessages.length > 0 ? chatMessages[0]?._id : null;
   useEffect(() => {
-    if (chatEndRef.current) {
+    const container = chatContainerRef.current;
+    if (!container) return;
+    const threshold = 40; // px from bottom to consider as 'at bottom'
+    const atBottom = container.scrollHeight - container.scrollTop - container.clientHeight < threshold;
+    wasAtBottomRef.current = atBottom;
+  }, [firstMessageId]); // run when first message changes (e.g., loading older messages)
+
+  // Only scroll to bottom if user was at bottom before new messages
+  useEffect(() => {
+    if (wasAtBottomRef.current && chatEndRef.current) {
       chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [chatMessages]);
@@ -169,7 +185,17 @@ const Chat = ({
         </div>
         <button style={{ background: 'none', border: 'none', fontSize: 20, color: '#888', cursor: 'pointer', marginLeft: 8 }} onClick={() => setChatOpen(false)} aria-label="Close chat">&times;</button>
       </div>
-      <div style={{ flex: 1, minHeight: 220, maxHeight: 'auto', overflowY: 'auto', padding: '18px 24px', background: '#fafbfc' }}>
+      <div
+        ref={chatContainerRef}
+        style={{ flex: 1, minHeight: 220, maxHeight: isMobile ? 'auto' : 320, overflowY: 'auto', padding: '18px 24px', background: '#fafbfc' }}
+        onScroll={() => {
+          const container = chatContainerRef.current;
+          if (!container) return;
+          const threshold = 40;
+          const atBottom = container.scrollHeight - container.scrollTop - container.clientHeight < threshold;
+          wasAtBottomRef.current = atBottom;
+        }}
+      >
         {chatMessages && chatMessages.length > 0 ? (() => {
           let lastDate = '';
           return chatMessages.map((msg, idx) => {

@@ -1,4 +1,4 @@
-import { Heart, Plus, Menu, X } from 'lucide-react';
+import { Heart, Plus, Menu, X, Megaphone } from 'lucide-react';
 import { useEffect } from 'react';
 
 
@@ -58,6 +58,7 @@ const Navbar = ({
                 setEditAd(null);
                 setView('myads');
               }}>
+                <Megaphone style={{ width: '16px', height: '16px', marginRight: 6, verticalAlign: 'middle' }} />
                 My Ads
               </button>
               <button style={{ ...styles.postButton, background: 'transparent', color: '#2563eb' }} onClick={() => setView('messages')} title="Messages">
@@ -233,6 +234,8 @@ const Navbar = ({
                   setMenuOpen(false);
                 }}
               >
+                                <Megaphone style={{ width: '16px', height: '16px', marginRight: 6, verticalAlign: 'middle' }} />
+
                 <span>My Ads</span>
               </button>
               <button
