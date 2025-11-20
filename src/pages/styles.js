@@ -5,7 +5,7 @@
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
     },
     header: {
-            background: 'linear-gradient(90deg, #205da7ff 0%, #3084ecff 100%)',
+            background: 'linear-gradient(90deg, #194983ff 0%, #276ec6ff 100%)',
       boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
       position: 'sticky',
       top: 0,
@@ -135,7 +135,7 @@ messageButton: {
       padding: '10px 16px',
       borderRadius: '24px',
       border: '0px solid #5077b2ff',
-      boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+      boxShadow: '0 1px 2px rgba(0,0,0,0.2)',
       cursor: 'pointer',
       whiteSpace: 'nowrap',
       fontSize: '15px',
@@ -152,7 +152,8 @@ messageButton: {
     subCategoryButton: {
       padding: '8px 18px',
       borderRadius: '20px',
-      border: 'none',
+      border: '0px solid #252628ff',
+      boxShadow: '0 1px 2px rgba(0,0,0,0.2)',
       cursor: 'pointer',
       fontSize: '15px',
       transition: 'all 0.2s'
