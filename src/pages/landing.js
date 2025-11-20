@@ -357,7 +357,7 @@ const responsiveTagStyle = {
         if (mobileDiv) {
           google.accounts.id.renderButton(
             mobileDiv,
-            { theme: "outline", size: "large" }
+            { theme: "filled_blue", size: "small",shape: "pill" }
           );
         }
       };
@@ -398,7 +398,7 @@ const responsiveTagStyle = {
       if (desktopDiv) {
         google.accounts.id.renderButton(
           desktopDiv,
-          { theme: "outline", size: "large" }
+          { theme: "filled_blue",size: "large",shape: "pill" }
         );
       }
       // Mobile menu sign-in button
@@ -406,7 +406,7 @@ const responsiveTagStyle = {
       if (mobileDiv) {
         google.accounts.id.renderButton(
           mobileDiv,
-          { theme: "outline", size: "large" }
+          { theme: "filled_blue",size: "large",shape: "pill" }
         );
       }
     }

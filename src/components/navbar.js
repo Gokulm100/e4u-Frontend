@@ -1,4 +1,4 @@
-import { Heart, Plus, Menu, X, Megaphone } from 'lucide-react';
+import { Heart, Menu, X, Megaphone } from 'lucide-react';
 import { useEffect } from 'react';
 
 
@@ -41,7 +41,7 @@ const Navbar = ({
   }, []);
 
   return (
-    <header style={styles.header}>
+    <header style={{...styles.header,overscrollBehavior: 'contain !important',WebkitOverflowScrolling:"touch", touchAction: 'pan-y'}} >
       <div style={styles.headerContainer}>
         <div style={styles.headerTop}>
           <h1 style={styles.logo} onClick={() => setView('home')}>
