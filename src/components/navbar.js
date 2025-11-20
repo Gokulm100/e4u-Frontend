@@ -137,7 +137,7 @@ const Navbar = ({
                 style={{ ...styles.menuButton, display: window.innerWidth < 768 ? 'block' : 'none' }}
                 onClick={() => setMenuOpen(!menuOpen)}
               >
-                {menuOpen ? <X style={{ width: '24px', height: '24px' }} /> : <Menu style={{ width: '24px', height: '24px' }} />}
+                {menuOpen ? <X style={{ width: '24px', height: '24px', color:"white" }} /> : <Menu style={{ width: '24px', height: '24px' ,color:"white"}} />}
               </button>
             </div>
           </div>
