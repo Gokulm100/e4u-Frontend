@@ -200,8 +200,7 @@ const Chat = ({
         }}
       >
         {chatLoading ? (
-          console.log('Chat is loading messages...'),
-          <div style={{ textAlign: 'center', color: '#666', fontSize: 14, marginTop: 20 }}>Loading messages...</div>
+          <div style={{ color: '#bbb', textAlign: 'center', fontSize: 14 }}>Loading messages...</div>
         ) : (
           chatMessages && chatMessages.length > 0 ? (() => {
             let lastDate = '';

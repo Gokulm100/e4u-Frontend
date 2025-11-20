@@ -320,6 +320,7 @@ const MessagesPage = forwardRef(({ refetchUserMessages }, ref) => {
                   <div style={timeStyle}>{chat.time}</div>
                 </div>
               ))}
+              
               {sellingChats.length === 0 && <div style={{ color: '#888', textAlign: 'center', marginTop: 40 }}>No selling chats yet.</div>}
             </div>
           )}

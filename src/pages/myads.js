@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import AiTextArea from '../components/aiTextArea';
-import { MapPin, Eye } from 'lucide-react';
-
+import {  Eye } from 'lucide-react';
+import LoaderOverlay from '../components/LoadingOverlay';
 function getCategoryGradient(category) {
   const gradients = {
     Electronics: 'linear-gradient(90deg, #a4d3f9ff 0%, #f7f7f7 100%)',
@@ -18,9 +18,11 @@ function getCategoryGradient(category) {
 const MyAds = ({ styles, editMode, editAd, setEditMode, setEditAd, categories, setLastListView, setSelectedListing, setView, handleEditAd, observerTarget, user }) => {
   const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:3001';
   const [myAds, setMyAds] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (user && user._id) {
+      setLoading(true);
       fetch(`${API_BASE_URL}/api/ads/listUserAds`, {
         method: 'POST',
         headers: {
@@ -30,6 +32,7 @@ const MyAds = ({ styles, editMode, editAd, setEditMode, setEditAd, categories, s
       })
         .then(res => res.json())
         .then(result => {
+          setLoading(false);
           let data = result?.ads || [];
           if (Array.isArray(data)) {
             const listingObjs = data.map(listing => {
@@ -86,7 +89,9 @@ const MyAds = ({ styles, editMode, editAd, setEditMode, setEditAd, categories, s
   return (
     <div style={styles.container}>
       <h2 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '24px' }}>My Ads</h2>
-      {(!myAds || myAds.length === 0) ? (
+      {loading ? (
+        <LoaderOverlay />
+      ) : (!myAds || myAds.length === 0) ? (
         <div style={styles.emptyState}>
           <p style={styles.emptyText}>No ads posted yet</p>
           <button style={{ ...styles.backButton, marginTop: '16px' }} onClick={() => setView('home')}>
@@ -282,10 +287,12 @@ const MyAds = ({ styles, editMode, editAd, setEditMode, setEditAd, categories, s
                         position: 'absolute',
                         bottom: '12px',
                         right: '12px',
-                        background: '#fff',
+                        color: '#2563eb',
+                        fontWeight: 600,
+                        background: '#ffffffff',
                         border: 'none',
                         padding: '6px',
-                        borderRadius: '50%',
+                        borderRadius: '4px',
                         cursor: 'pointer',
                         boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
                         zIndex: 2
@@ -308,11 +315,7 @@ const MyAds = ({ styles, editMode, editAd, setEditMode, setEditAd, categories, s
                         setEditAd({ ...listing, category: catId, subCategory: subCat });
                       }}
                     >
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M12 20h9" />
-                        <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z" />
-                        <path d="M15 6l3 3" />
-                      </svg>
+                    Edit
                     </button>
                   )}
                   <div style={styles.cardContent}>
@@ -335,14 +338,13 @@ const MyAds = ({ styles, editMode, editAd, setEditMode, setEditAd, categories, s
                     <p style={styles.cardPrice}>₹{listing.price.toLocaleString()}</p>
 
                     <div style={styles.cardLocation}>
-                      <MapPin style={{ width: '16px', height: '16px' }} />
-                      {listing.location}
+                        <Eye style={{ width: 16, height: 16, marginRight: 4 }} />
+                        {typeof listing.views === 'number' ? listing.views : 0}
                     </div>
                     <p style={styles.cardPosted}>
                       {listing.posted}
                       <span style={{ marginLeft: 8, display: 'inline-flex', alignItems: 'center', color: '#6b7280', fontSize: 14 }}>
-                        <Eye style={{ width: 16, height: 16, marginRight: 4 }} />
-                        {typeof listing.views === 'number' ? listing.views : 0}
+
                       </span>
                     </p>
                   </div>
