@@ -134,14 +134,15 @@ messageButton: {
     categoryButton: {
       padding: '10px 16px',
       borderRadius: '24px',
-      border: 'none',
+      border: '0px solid #5077b2ff',
+      boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
       cursor: 'pointer',
       whiteSpace: 'nowrap',
       fontSize: '15px',
       transition: 'all 0.2s'
     },
     categoryButtonActive: {
-      backgroundColor: '#2563eb',
+      backgroundColor: '#205da7ff',
       color: '#ffffff'
     },
     categoryButtonInactive: {
