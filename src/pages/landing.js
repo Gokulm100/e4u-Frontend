@@ -357,7 +357,7 @@ const responsiveTagStyle = {
         if (mobileDiv) {
           google.accounts.id.renderButton(
             mobileDiv,
-            { theme: "filled_blue", size: "large",shape: "pill" }
+            { theme: "outline", size: "large" }
           );
         }
       };
@@ -406,7 +406,7 @@ const responsiveTagStyle = {
       if (mobileDiv) {
         google.accounts.id.renderButton(
           mobileDiv,
-          { theme: "filled_blue",size: "large",shape: "pill" }
+          { theme: "outline",size: "large",shape: "rectangular" }
         );
       }
     }
