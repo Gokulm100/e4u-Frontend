@@ -61,10 +61,10 @@ const Navbar = ({
                 <Megaphone style={{ width: '16px', height: '16px', marginRight: 6, verticalAlign: 'middle' }} />
                 My Ads
               </button>
-              <button style={{ ...styles.postButton, background: 'transparent', color: '#2563eb' }} onClick={() => setView('messages')} title="Messages">
+              <button style={{ ...styles.messageButton, background: 'transparent', color: '#ffffffff' }} onClick={() => setView('messages')} title="Messages">
                 Messages
                 <div style={{position: 'relative', display: 'inline-block'}}>
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
+                  <svg width="22" color="#ffffffff" height="22" viewBox="0 0 24 24" fill="none" stroke="#ffffffff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
                   <span style={{
                     position: 'absolute',
                     top: -6,
@@ -130,7 +130,7 @@ const Navbar = ({
                   setView('post');
                 }
               }}>
-                <Plus style={{ width: '20px', height: '20px' }} />
+                <span style={{ display: window.innerWidth < 640 ? 'inline' : 'none' }}>Post Ad</span>
                 <span style={{ display: window.innerWidth < 640 ? 'none' : 'inline' }}>Post Ad</span>
               </button>
               <button

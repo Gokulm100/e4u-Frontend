@@ -5,7 +5,7 @@
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
     },
     header: {
-      backgroundColor: '#ffffff',
+            background: 'linear-gradient(90deg, #205da7ff 0%, #3084ecff 100%)',
       boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
       position: 'sticky',
       top: 0,
@@ -24,7 +24,7 @@
     logo: {
       fontSize: '24px',
       fontWeight: 'bold',
-      color: '#2563eb',
+      color: '#ffffffff',
       cursor: 'pointer',
       margin: 0
     },
@@ -36,7 +36,7 @@
     navButton: {
       background: 'none',
       border: 'none',
-      color: '#374151',
+      color: '#ffffffff',
       cursor: 'pointer',
       fontSize: '16px',
       padding: '8px 12px',
@@ -45,7 +45,20 @@
       gap: '4px'
     },
     postButton: {
-      backgroundColor: '#2563eb',
+      backgroundColor: '#519aeeff',
+      color: '#ffffff',
+      border: 'none',
+      padding: '10px 16px',
+      boxShadow: '2px 2px 5px rgba(0, 0, 0, 0.38)',
+      borderRadius: '50px',
+      display: 'flex',
+      alignItems: 'center',
+      gap: '4px',
+      cursor: 'pointer',
+      fontSize: '16px'
+    },
+messageButton: {
+      backgroundColor: 'transparent',
       color: '#ffffff',
       border: 'none',
       padding: '10px 16px',
