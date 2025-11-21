@@ -165,13 +165,15 @@ const Navbar = ({
             right: 0,
             bottom: 0,
             width: '280px',
+            borderTopLeftRadius: '5px',
+            borderBottomLeftRadius: '5px',
             maxWidth: '80vw',
-            backgroundColor: '#fff',
-            boxShadow: '-2px 0 8px rgba(0, 0, 0, 0.15)',
+            backgroundColor: '#f6f2f2ff',
+            boxShadow: '-2px 0 8px rgba(0, 0, 0, 1)',
             zIndex: 999,
             display: 'flex',
             flexDirection: 'column',
-            animation: 'slideIn 0.3s ease-in-out',
+            animation: 'slideIn 0.2s ease-in-out forwards',
             overflowY: 'auto'
           }}>
             <div style={{
@@ -211,7 +213,7 @@ const Navbar = ({
                   style={{ width: '48px', height: '48px', borderRadius: '50%' }}
                 />
                 <div>
-                  <div style={{ fontWeight: '600', fontSize: '16px' }}>{user.name}</div>
+                  <div style={{ fontWeight: '600', float: 'left', fontSize: '25px' }}>{user.name}</div>
                   <div style={{ fontSize: '14px', color: '#6b7280' }}>{user.email}</div>
                 </div>
               </div>
@@ -225,6 +227,7 @@ const Navbar = ({
                 <Heart style={{ width: '20px', height: '20px' }} />
                 <span>Favorites ({favorites.length})</span>
               </button>
+<hr style={{ height: '1px', backgroundColor: '#d5d1d1ff', border: 'none' }} />
               <button
                 style={styles.mobileMenuItem}
                 onClick={() => {
@@ -234,10 +237,12 @@ const Navbar = ({
                   setMenuOpen(false);
                 }}
               >
+                
                                 <Megaphone style={{ width: '16px', height: '16px', marginRight: 6, verticalAlign: 'middle' }} />
 
                 <span>My Ads</span>
               </button>
+<hr style={{ height: '1px', backgroundColor: '#d5d1d1ff', border: 'none' }} />
               <button
                 style={styles.mobileMenuItem}
                 onClick={() => {
@@ -267,6 +272,7 @@ const Navbar = ({
                 </div>
                 <span>Messages</span>
               </button>
+<hr style={{ height: '1px', backgroundColor: '#d5d1d1ff', border: 'none' }} />
             </nav>
             
             <div style={{ padding: '16px', borderTop: '1px solid #e5e7eb' }}>

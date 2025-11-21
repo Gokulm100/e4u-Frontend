@@ -91,6 +91,8 @@ messageButton: {
       cursor: 'pointer',
       borderRadius: '8px',
       fontSize: '16px',
+      color:'black',
+      fontWeight: '500',
       display: 'flex',
       alignItems: 'center',
       gap: '8px'
