@@ -711,7 +711,6 @@ const responsiveTagStyle = {
               </div>
 
               <div style={styles.formGroup}>
-                <label style={styles.label}>Description *</label>
                 <AiTextArea
                   value={newListing.description}
                   onChange={e => setNewListing({ ...newListing, description: e.target.value })}
