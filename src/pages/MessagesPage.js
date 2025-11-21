@@ -75,6 +75,7 @@ const nameStyle = {
 const messageStyle = {
   color: '#374151',
   marginBottom: '2px',
+  width: isMobile ? '100%' : '350px',
   fontSize: isMobile ? '14px' : 'inherit',
 };
 const timeStyle = {
@@ -306,8 +307,11 @@ const MessagesPage = forwardRef(({ refetchUserMessages }, ref) => {
                       <div style={{ display: 'flex', flexDirection: 'column' }}>
                         <span style={nameStyle}>{chat.buyerName}</span>
                         <span style={itemStyle}>{chat.item}</span>
-                                         <span style={messageStyle}>{chat.lastMessage}</span>
-
+                      <span style={messageStyle}>
+                        {chat.lastMessage && chat.lastMessage.length > 30
+                        ? chat.lastMessage.slice(0, 30) + ' ...'
+                        : chat.lastMessage}
+                      </span>
                       </div>
                       {!chat.isSeen && chat.lastMessageFrom !== user?._id && (
                         <span style={{
@@ -358,36 +362,39 @@ const MessagesPage = forwardRef(({ refetchUserMessages }, ref) => {
                       setChatMessages([]);
                     }
                     setChatOpen(true);
-                  }}
-                >
-                  <div style={infoStyle}>
+                    }}
+                  >
+                    <div style={infoStyle}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                       <img src={chat.avatar} alt={chat.buyerName} style={avatarStyle} />
                       <div style={{ display: 'flex', flexDirection: 'column' }}>
-                        <span style={nameStyle}>{chat.buyerName}</span>
-                        <span style={itemStyle}>{chat.item}</span>
-                                            <span style={messageStyle}>{chat.lastMessage}</span>
-
+                      <span style={nameStyle}>{chat.buyerName}</span>
+                      <span style={itemStyle}>{chat.item}</span>
+                      <span style={messageStyle}>
+                        {chat.lastMessage && chat.lastMessage.length > 30
+                        ? chat.lastMessage.slice(0, 30) + ' ...'
+                        : chat.lastMessage}
+                      </span>
                       </div>
                       {!chat.isSeen && chat.lastMessageFrom !== user?._id && (
-                        <span style={{
-                          display: 'inline-block',
-                          width: 10,
-                          height: 10,
-                          borderRadius: '50%',
-                          background: '#2563eb',
-                          marginLeft: 2
-                        }} />
+                      <span style={{
+                        display: 'inline-block',
+                        width: 10,
+                        height: 10,
+                        borderRadius: '50%',
+                        background: '#2563eb',
+                        marginLeft: 2
+                      }} />
                       )}
                     </div>
+                    </div>
+                    <div style={timeStyle}>{chat.time}</div>
                   </div>
-                  <div style={timeStyle}>{chat.time}</div>
+                  ))}
+                  {buyingChats.length === 0 && <div style={{ color: '#888', textAlign: 'center', marginTop: 40 }}>No buying chats yet.</div>}
                 </div>
-              ))}
-              {buyingChats.length === 0 && <div style={{ color: '#888', textAlign: 'center', marginTop: 40 }}>No buying chats yet.</div>}
-            </div>
-          )}
-          {/* Chat modal overlay (moved outside tab blocks) */}
+                )}
+                {/* Chat modal overlay (moved outside tab blocks) */}
           {chatOpen && selectedChat && (
             console.log('Rendering Chat component with selectedChat:', selectedChat),
             isMobile ? (
