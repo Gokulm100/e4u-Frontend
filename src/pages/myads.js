@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import AiTextArea from '../components/aiTextArea';
 import {  Eye } from 'lucide-react';
-import LoaderOverlay from '../components/LoadingOverlay';
+import CardSkeleton from '../components/CardSkeleton';
 function getCategoryGradient(category) {
   const gradients = {
     Electronics: 'linear-gradient(90deg, #a4d3f9ff 0%, #f7f7f7 100%)',
@@ -15,7 +15,7 @@ function getCategoryGradient(category) {
   return gradients[category] || 'linear-gradient(90deg, #e0eafc 0%, #cfdef3 100%)';
 }
 
-const MyAds = ({ styles, editMode, editAd, setEditMode, setEditAd, categories, setLastListView, setSelectedListing, setView, handleEditAd, observerTarget, user }) => {
+const MyAds = ({ styles, editMode, editAd, setEditMode, setEditAd, categories, setLastListView, setSelectedListing, setView, handleEditAd, observerTarget, user,isMobile }) => {
   const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:3001';
   const [myAds, setMyAds] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -101,7 +101,7 @@ const MyAds = ({ styles, editMode, editAd, setEditMode, setEditAd, categories, s
         `}
       </style>
       <h2 style={{ fontSize: '2rem', fontWeight: 700, marginBottom: 32, color: '#1c6be9ff', letterSpacing: 0.5 }}>My Ads</h2>
-      {(!myAds || myAds.length === 0) ? (
+  {((!myAds) || (myAds.length === 0 && !loading)) ? (
         <div style={{ ...styles.emptyState, background: '#f8fafc', borderRadius: 16, padding: 48}}>
           <p style={{ ...styles.emptyText, fontSize: 20, color: '#64748b', marginBottom: 16 }}>Opps! You haven't posted any ads yet.</p>
           <button
@@ -112,6 +112,9 @@ const MyAds = ({ styles, editMode, editAd, setEditMode, setEditAd, categories, s
             Create Your First Ad
           </button>
         </div>
+      ) : loading ? (
+           <div style={styles.loadingState}><CardSkeleton isMobile={isMobile}/></div>
+    
       ) : (
         <>
           {editMode ? (
@@ -134,10 +137,116 @@ const MyAds = ({ styles, editMode, editAd, setEditMode, setEditAd, categories, s
               <div style={{ ...styles.formCard, boxShadow: 'none', padding: 0 }}>
                 <h2 style={{ ...styles.formTitle, fontSize: 22, fontWeight: 700, color: '#1e293b', marginBottom: 24 }}>Edit Your Ad</h2>
                 <div>
-                  {/* Form fields remain unchanged */}
-                  {/* ... */}
-                  {/* (Keep your form fields as in your original code) */}
-                  {/* ... */}
+                  <div style={styles.formGroup}>
+                    <label style={styles.label}>Title *</label>
+                    <input
+                      type="text"
+                      style={styles.input}
+                      value={editAd?.title || ''}
+                      onChange={e => setEditAd({ ...editAd, title: e.target.value })}
+                      placeholder="e.g., iPhone 13 Pro Max"
+                    />
+                  </div>
+
+                  <div style={styles.formGroup}>
+                    <label style={styles.label}>Category *</label>
+                    <select
+                      style={styles.select}
+                      value={editAd?.category || ''}
+                      onChange={e => {
+                        setEditAd({ ...editAd, category: e.target.value, subCategory: '' });
+                      }}
+                    >
+                      <option key='' value=''>-- Select Category --</option>
+                      {categories && categories.filter(c => c.id !== 'all').map(cat => (
+                        <option key={cat.id} value={cat.id}>{cat.name}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Subcategory dropdown for Edit Ad form */}
+                  {(() => {
+                    const selectedCat = categories && categories.find(c => c.id === editAd?.category);
+                    if (selectedCat && Array.isArray(selectedCat.subCategories) && selectedCat.subCategories.length > 0) {
+                      return (
+                        <div style={styles.formGroup}>
+                          <label style={styles.label}>Subcategory</label>
+                          <select
+                            style={styles.select}
+                            value={editAd?.subCategory || ''}
+                            onChange={e => setEditAd({ ...editAd, subCategory: e.target.value })}
+                          >
+                            <option key='' value=''>-- Select Subcategory --</option>
+                            {selectedCat.subCategories.map(sub => (
+                              <option key={sub} value={sub}>{sub}</option>
+                            ))}
+                          </select>
+                        </div>
+                      );
+                    }
+                    return null;
+                  })()}
+
+                  <div style={styles.formGroup}>
+                    <label style={styles.label}>Price (₹) *</label>
+                    <input
+                      type="number"
+                      style={styles.input}
+                      value={editAd?.price || ''}
+                      onChange={e => setEditAd({ ...editAd, price: e.target.value })}
+                      placeholder="15000"
+                    />
+                  </div>
+
+                  <div style={styles.formGroup}>
+                    <label style={styles.label}>Location *</label>
+                    <input
+                      type="text"
+                      style={styles.input}
+                      value={editAd?.location || ''}
+                      onChange={e => setEditAd({ ...editAd, location: e.target.value })}
+                      placeholder="City name"
+                    />
+                  </div>
+
+                  <div style={styles.formGroup}>
+                    <AiTextArea
+                      value={editAd?.description || ''}
+                      onChange={e => setEditAd({ ...editAd, description: e.target.value })}
+                      category={(() => {
+                        const selectedCat = categories && categories.find(c => c.id === editAd?.category);
+                        return selectedCat ? selectedCat.name : undefined;
+                      })()}
+                      subcategory={editAd?.subCategory}
+                    />
+                  </div>
+
+                  <div style={styles.formGroup}>
+                    <label style={styles.label}>Image Upload (optional)</label>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      style={styles.input}
+                      onChange={e => {
+                        const files = Array.from(e.target.files);
+                        if (files.length > 0) {
+                          setEditAd({ ...editAd, image: files });
+                        }
+                      }}
+                    />
+                    {Array.isArray(editAd?.image) && editAd.image.length > 0 && (
+                      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
+                        {editAd.image.map((file, idx) => (
+                          <img key={idx} src={typeof file === 'string' ? file : URL.createObjectURL(file)} alt={`Preview ${idx + 1}`} style={{ maxWidth: 100, maxHeight: 100, borderRadius: 8 }} />
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  <button onClick={handleEditAd} style={styles.submitButton}>
+                    Save Changes
+                  </button>
                 </div>
               </div>
             </div>
@@ -286,16 +395,16 @@ const MyAds = ({ styles, editMode, editAd, setEditMode, setEditAd, categories, s
                       }}>{listing.category}</span>
                       <span style={{ color: '#64748b', fontSize: 14 }}>{listing.subCategory}</span>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', marginBottom: 8 ,marginTop:4 }}>
                       <span style={{ ...styles.cardPrice, fontSize: 18, fontWeight: 700, color: '#2563eb', marginRight: 16 }}>₹{listing.price.toLocaleString()}</span>
+
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ ...styles.cardPosted, color: '#64748b', fontSize: 14 }}>{listing.posted}</span>
                       <span style={{ ...styles.cardLocation, color: '#64748b', fontSize: 15, display: 'flex', alignItems: 'center' }}>
                         <Eye style={{ width: 16, height: 16, marginRight: 4 }} />
                         {typeof listing.views === 'number' ? listing.views : 0}
                       </span>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ ...styles.cardPosted, color: '#64748b', fontSize: 14 }}>{listing.posted}</span>
-                      <span style={{ color: '#64748b', fontSize: 14 }}>{listing.location}</span>
                     </div>
                   </div>
                 </div>
