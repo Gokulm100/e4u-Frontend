@@ -165,12 +165,12 @@ const Chat = ({
 
     return (
       <div style={chatContainerStyle}>
-      <div style={{ padding: '12px 18px', borderBottom: '1px solid #f0f0f0', fontWeight: 600, fontSize: 16, background: 'linear-gradient(90deg, #f7f7f7 0%, #e0eafc 100%)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', minHeight: 0 }}>
+      <div style={{ padding: '12px 18px',boxShadow: '0 1px 2px rgba(0,0,0,2)', borderBottomLeftRadius: 2,borderBottomRightRadius: 2, borderBottom: '1px solid #d7d6d6ff', fontWeight: 600, fontSize: 16, background: 'linear-gradient(90deg, #194983ff 0%, #5b83ccff 100%)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', minHeight: 0 }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
-          <span style={{ fontWeight: 700, color: '#222', fontSize: 15, lineHeight: 1.2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', width: 'auto' }}>{selectedListing?.title || 'Ad'}</span>
+          <span style={{ fontWeight: 700, color: '#f7f7f7ff', fontSize: 15, lineHeight: 1.2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', width: 'auto' }}>{selectedListing?.title || 'Ad'}</span>
           <span style={{
             background: 'linear-gradient(90deg, #dbeafe 0%, #f0f9ff 100%)',
-            color: '#2563eb',
+            color: '#194983ff',
             fontWeight: 600,
             fontSize: 12,
             borderRadius: 8,
@@ -186,7 +186,7 @@ const Chat = ({
             width: `calc(${(selectedListing?.seller || 'Seller').length}ch + 16px)`
           }}>{selectedListing?.seller || selectedListing?.buyer}</span>
         </div>
-        <button style={{ background: 'none', border: 'none', fontSize: 20, color: '#888', cursor: 'pointer', marginLeft: 8 }} onClick={() => setChatOpen(false)} aria-label="Close chat">&times;</button>
+        <button style={{ background: 'none', border: 'none', fontSize: 20, color: '#ffffffff', cursor: 'pointer', marginLeft: 8 }} onClick={() => setChatOpen(false)} aria-label="Close chat">&times;</button>
       </div>
       <div
         ref={chatContainerRef}

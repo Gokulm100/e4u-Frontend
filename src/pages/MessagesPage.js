@@ -79,6 +79,7 @@ const messageStyle = {
 };
 const timeStyle = {
   color: '#6b7280',
+  width: isMobile ? '100%' : 'auto',
   fontSize: isMobile ? '12px' : '13px',
   textAlign: 'right',
   marginTop: isMobile ? '6px' : '0',
@@ -299,10 +300,15 @@ const MessagesPage = forwardRef(({ refetchUserMessages }, ref) => {
                     setChatOpen(true);
                   }}
                 >
-                  <img src={chat.avatar} alt={chat.buyerName} style={avatarStyle} />
                   <div style={infoStyle}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <div style={nameStyle}>{chat.buyerName}</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <img src={chat.avatar} alt={chat.buyerName} style={avatarStyle} />
+                      <div style={{ display: 'flex', flexDirection: 'column' }}>
+                        <span style={nameStyle}>{chat.buyerName}</span>
+                        <span style={itemStyle}>{chat.item}</span>
+                                         <span style={messageStyle}>{chat.lastMessage}</span>
+
+                      </div>
                       {!chat.isSeen && chat.lastMessageFrom !== user?._id && (
                         <span style={{
                           display: 'inline-block',
@@ -314,8 +320,6 @@ const MessagesPage = forwardRef(({ refetchUserMessages }, ref) => {
                         }} />
                       )}
                     </div>
-                    <div style={itemStyle}>{chat.item}</div>
-                    <div style={messageStyle}>{chat.lastMessage}</div>
                   </div>
                   <div style={timeStyle}>{chat.time}</div>
                 </div>
@@ -356,10 +360,15 @@ const MessagesPage = forwardRef(({ refetchUserMessages }, ref) => {
                     setChatOpen(true);
                   }}
                 >
-                  <img src={chat.avatar} alt={chat.buyerName} style={avatarStyle} />
                   <div style={infoStyle}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <div style={nameStyle}>{chat.buyerName}</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <img src={chat.avatar} alt={chat.buyerName} style={avatarStyle} />
+                      <div style={{ display: 'flex', flexDirection: 'column' }}>
+                        <span style={nameStyle}>{chat.buyerName}</span>
+                        <span style={itemStyle}>{chat.item}</span>
+                                            <span style={messageStyle}>{chat.lastMessage}</span>
+
+                      </div>
                       {!chat.isSeen && chat.lastMessageFrom !== user?._id && (
                         <span style={{
                           display: 'inline-block',
@@ -371,8 +380,6 @@ const MessagesPage = forwardRef(({ refetchUserMessages }, ref) => {
                         }} />
                       )}
                     </div>
-                    <div style={itemStyle}>{chat.item}</div>
-                    <div style={messageStyle}>{chat.lastMessage}</div>
                   </div>
                   <div style={timeStyle}>{chat.time}</div>
                 </div>
