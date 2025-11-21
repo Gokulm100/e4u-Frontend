@@ -769,6 +769,7 @@ const responsiveTagStyle = {
           handleEditAd={handleEditAd}
           observerTarget={observerTarget}
           user={user}
+          isMobile={isMobile}
         />
       )}
       {view === 'favorites' && (
