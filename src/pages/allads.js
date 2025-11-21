@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Search, MapPin, Heart, Eye } from 'lucide-react';
+import CardSkeleton from '../components/CardSkeleton';
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:3001';
 const tempImageUrls = [
@@ -12,7 +13,7 @@ const tempImageUrls = [
   'https://images.unsplash.com/photo-1632661674596-df8be070a5c5?w=400&h=300&fit=crop'
 ];
 
-const AllAds = ({ styles, setLastListView, setSelectedListing, setView, favorites, toggleFavorite, responsiveTagStyle, subCategoryBarStyle, responsiveSubCategoryButton, responsiveSubCategoryButtonActive }) => {
+const AllAds = ({ styles, setLastListView, setSelectedListing, setView, favorites, toggleFavorite, responsiveTagStyle, subCategoryBarStyle, responsiveSubCategoryButton, responsiveSubCategoryButtonActive ,isMobile}) => {
   const [categories, setCategories] = useState([{ id: 'all', name: 'All' }]);
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [subCategories, setSubCategories] = useState([]);
@@ -42,7 +43,7 @@ const AllAds = ({ styles, setLastListView, setSelectedListing, setView, favorite
 
   // Fetch listings from API when page, search, category, or subcategory changes
   useEffect(() => {
-    const limit = 5;
+    const limit = 4;
     setLoading(true);
     let user = localStorage.getItem('user');
     let User = user ? JSON.parse(user) : {};
@@ -236,10 +237,13 @@ const AllAds = ({ styles, setLastListView, setSelectedListing, setView, favorite
       {/* Observer target for infinite scroll */}
       <div ref={observerTarget} style={{ height: 1 }} />
     </div>
-    {listings.length === 0 && (
+    {listings.length === 0 && !loading ? (
       <div style={styles.emptyState}>
         <p style={styles.emptyText}>No listings found</p>
       </div>
+    ) : null}
+    {loading && (
+      <div style={styles.loadingState}><CardSkeleton isMobile={isMobile}/></div>
     )}
   </div>
   );

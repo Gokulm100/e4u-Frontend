@@ -248,6 +248,9 @@ messageButton: {
       color: '#2563eb',
       cursor: 'pointer',
       fontSize: '16px',
+      borderRadius: '8px',
+      
+      fontWeight: '600',
       marginBottom: '16px',
       padding: '8px 0'
     },
@@ -257,6 +260,18 @@ messageButton: {
       boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
       overflow: 'hidden'
     },
+    createFirstAdButton: {
+              marginTop: 16,
+              background: 'linear-gradient(90deg, #2563eb 0%, #60a5fa 100%)',
+              color: '#fff',
+              fontWeight: 600,
+              border: 'none',
+              borderRadius: 8,
+              padding: '12px 32px',
+              fontSize: 16,
+              cursor: 'pointer',
+              boxShadow: '0 2px 8px rgba(37,99,235,0.08)'
+            },  
     detailImage: {
       width: '100%',
       height: '400px',
@@ -420,5 +435,6 @@ messageButton: {
     favoriteIconInactive: {
       color: '#6b7280'
     }
+    
   };
   export default styles;

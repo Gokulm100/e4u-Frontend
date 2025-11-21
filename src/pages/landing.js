@@ -563,6 +563,7 @@ const responsiveTagStyle = {
           subCategoryBarStyle={subCategoryBarStyle}
           responsiveSubCategoryButton={responsiveSubCategoryButton}
           responsiveSubCategoryButtonActive={responsiveSubCategoryButtonActive}
+          isMobile={isMobile}
         />
       )}
 
