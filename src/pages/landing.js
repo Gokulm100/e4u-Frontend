@@ -597,7 +597,7 @@ const responsiveTagStyle = {
           </button>
 
           <div style={styles.formCard}>
-            <h2 style={styles.formTitle}>Post Your Ad</h2>
+            <h2 style={styles.formTitle}>Post Ad</h2>
 
             <div>
               <div style={styles.formGroup}>

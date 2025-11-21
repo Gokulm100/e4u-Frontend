@@ -1,6 +1,37 @@
 import React, { useState, useEffect, forwardRef, useImperativeHandle } from 'react';
 import Chat from './chat';
 import ChatFullScreen from './ChatFullScreen';
+
+// Simple loader overlay component
+const ChatLoading = () => (
+  <div style={{
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    width: '100vw',
+    height: '100vh',
+    background: 'rgba(255,255,255,0.7)',
+    zIndex: 9999,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  }}>
+    <div style={{
+
+    }}>
+      <div className="loader" style={{
+        border: '4px solid #e5e7eb',
+        borderTop: '4px solid #2563eb',
+        borderRadius: '50%',
+        width: 40,
+        height: 40,
+        animation: 'spin 1s linear infinite',
+      }} />
+      <span style={{ color: '#2563eb', fontWeight: 600 }}></span>
+      <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
+    </div>
+  </div>
+);
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:3001';
 
 const isMobile = typeof window !== 'undefined' ? window.innerWidth < 600 : false;
@@ -280,16 +311,14 @@ const MessagesPage = forwardRef(({ refetchUserMessages }, ref) => {
                   onMouseEnter={e => e.currentTarget.style.boxShadow = '0 4px 16px rgba(37,99,235,0.12)'}
                   onMouseLeave={e => e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.08)'}
                   onClick={async () => {
-                      setChatLoading(true);
+                    setChatLoading(true);
                     setSelectedChat(chat);
                     markMessagesAsSeen(chat);
+                    setChatOpen(true);
                     // Fetch messages before opening modal
                     try {
-                      
                       const res = await fetch(`${API_BASE_URL}/api/ads/chat?adId=${chat.adId}&sellerId=${chat.sellerId}&buyerId=${chat.buyerId}`);
                       if (res.ok) {
-                        setChatLoading(false);
-
                         const data = await res.json();
                         setChatMessages(data || []);
                       } else {
@@ -298,7 +327,7 @@ const MessagesPage = forwardRef(({ refetchUserMessages }, ref) => {
                     } catch {
                       setChatMessages([]);
                     }
-                    setChatOpen(true);
+                    setChatLoading(false);
                   }}
                 >
                   <div style={infoStyle}>
@@ -341,18 +370,14 @@ const MessagesPage = forwardRef(({ refetchUserMessages }, ref) => {
                   onMouseEnter={e => e.currentTarget.style.boxShadow = '0 4px 16px rgba(37,99,235,0.12)'}
                   onMouseLeave={e => e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.08)'}
                   onClick={async () => {
+                    setChatLoading(true);
                     setSelectedChat(chat);
                     markMessagesAsSeen(chat);
-
-
-
+                    setChatOpen(true);
                     // Fetch messages before opening modal
                     try {
-                      setChatLoading(true);
                       const res = await fetch(`${API_BASE_URL}/api/ads/chat?adId=${chat.adId}&buyerId=${chat.buyerId}&sellerId=${chat.sellerId}`);
                       if (res.ok) {
-                        setChatLoading(false);
-                        console.log(res);
                         const data = await res.json();
                         setChatMessages(data || []);
                       } else {
@@ -361,9 +386,9 @@ const MessagesPage = forwardRef(({ refetchUserMessages }, ref) => {
                     } catch {
                       setChatMessages([]);
                     }
-                    setChatOpen(true);
-                    }}
-                  >
+                    setChatLoading(false);
+                  }}
+                >
                     <div style={infoStyle}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                       <img src={chat.avatar} alt={chat.buyerName} style={avatarStyle} />
@@ -395,8 +420,9 @@ const MessagesPage = forwardRef(({ refetchUserMessages }, ref) => {
                 </div>
                 )}
                 {/* Chat modal overlay (moved outside tab blocks) */}
-          {chatOpen && selectedChat && (
-            console.log('Rendering Chat component with selectedChat:', selectedChat),
+          {/* Loader overlay when loading chat (only for mobile) */}
+          {isMobile && chatOpen && chatLoading && <ChatLoading />}
+          {chatOpen && selectedChat && (!chatLoading || !isMobile) && (
             isMobile ? (
               <ChatFullScreen
                 selectedListing={{
