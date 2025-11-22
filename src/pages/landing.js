@@ -551,7 +551,18 @@ const responsiveTagStyle = {
         setMenuOpen={setMenuOpen}
         menuOpen={menuOpen}
       />
-     <BottomNavBar />
+     <BottomNavBar       styles={styles}
+        user={user}
+        favorites={favorites}
+        messageCountNavBar={messageCountNavBar}
+        showDropdown={showDropdown}
+        setShowDropdown={setShowDropdown}
+        handleLogout={handleLogout}
+        setView={setView}
+        setEditMode={setEditMode}
+        setEditAd={setEditAd}
+        setMenuOpen={setMenuOpen}
+        menuOpen={menuOpen} />
       {view === 'home' && (
         <AllAds
           styles={styles}

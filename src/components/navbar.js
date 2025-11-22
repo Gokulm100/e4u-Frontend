@@ -123,7 +123,7 @@ const Navbar = ({
               )}
             </nav>
             <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-              <button style={styles.postButton} onClick={() => {
+              {/* <button style={styles.postButton} onClick={() => {
                 if (!user) {
                   alert('Please login to post an ad.');
                 } else {
@@ -132,7 +132,7 @@ const Navbar = ({
               }}>
                 <span style={{ display: window.innerWidth < 640 ? 'inline' : 'none' }}>Post Ad</span>
                 <span style={{ display: window.innerWidth < 640 ? 'none' : 'inline' }}>Post Ad</span>
-              </button>
+              </button> */}
               <button
                 style={{ ...styles.menuButton, display: window.innerWidth < 768 ? 'block' : 'none' }}
                 onClick={() => setMenuOpen(!menuOpen)}
