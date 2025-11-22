@@ -284,7 +284,7 @@ const MessagesPage = forwardRef(({ refetchUserMessages }, ref) => {
         borderRadius: isMobile ? '12px' : '18px',
         boxShadow: isMobile ? '0 2px 8px rgba(37,99,235,0.08)' : '0 4px 24px rgba(37,99,235,0.10)',
         padding: isMobile ? '18px 8px' : '32px 24px',
-        minHeight: isMobile ? 'auto' : '480px',
+        minHeight: isMobile ? 'inherit' : '480px',
       }}>
         <h2 style={{ fontSize: isMobile ? '1.3rem' : '2rem', fontWeight: 700, marginBottom: isMobile ? '18px' : '32px', color: '#2563eb', textAlign: 'center' }}>Messages</h2>
         <div style={tabStyle}>
