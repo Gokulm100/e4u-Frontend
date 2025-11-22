@@ -9,6 +9,7 @@ import MessagesPage from './MessagesPage';
 import AdDetail from './adDetail';
 import ChatFullScreen from './ChatFullScreen';
 import Navbar from '../components/navbar';
+import BottomNavBar from '../components/BottomNavBar';
 import AllAds from './allads';
 import { jwtDecode } from "jwt-decode";
 import styles from '../pages/styles';
@@ -550,7 +551,7 @@ const responsiveTagStyle = {
         setMenuOpen={setMenuOpen}
         menuOpen={menuOpen}
       />
-
+     <BottomNavBar />
       {view === 'home' && (
         <AllAds
           styles={styles}
