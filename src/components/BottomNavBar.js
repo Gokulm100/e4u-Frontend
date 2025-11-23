@@ -37,6 +37,23 @@ const BottomNavBar = ({
       </button>
       <button  onClick={() => setView('messages')} className="bottom-nav__item">
         <MessageCircle />
+                  <span style={{
+                    position: 'absolute',
+                    top: 7,
+                    right:15,
+                    display: messageCountNavBar> 0? 'visible':'visible',
+                    background: messageCountNavBar > 0 ? '#2563eb' : '#d1d5db',
+                    color: '#fff',
+                    borderRadius: '50%',
+                    padding: '2px 6px',
+                    fontSize: '12px',
+                    fontWeight: 'bold',
+                    minWidth: '8px',
+                    textAlign: 'center',
+                    zIndex: 2,
+                    opacity: messageCountNavBar >= 0 ? 1 : 0
+                  }}>{messageCountNavBar}</span>
+                
         <span className="bottom-nav__label">Chat</span>
       </button>
     </nav>

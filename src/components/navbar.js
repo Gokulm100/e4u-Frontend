@@ -262,7 +262,7 @@ const Navbar = ({
                       background: '#2563eb',
                       color: '#fff',
                       borderRadius: '50%',
-                      padding: '2px 6px',
+                      padding: '2px 2px',
                       fontSize: '11px',
                       fontWeight: 'bold',
                       minWidth: '18px',
