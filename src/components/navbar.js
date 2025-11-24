@@ -1,5 +1,5 @@
-import { Heart, Menu, X, Megaphone } from 'lucide-react';
-import { useEffect } from 'react';
+import { Heart, Menu, X, Megaphone, MapPin } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 
 // Add animations
@@ -25,6 +25,7 @@ const addAnimations = () => {
 const Navbar = ({
   styles,
   user,
+  cities,
   favorites,
   messageCountNavBar,
   showDropdown,
@@ -34,8 +35,39 @@ const Navbar = ({
   setEditMode,
   setEditAd,
   setMenuOpen,
-  menuOpen
+  menuOpen,
+  isMobile
 }) => {
+
+
+  // Location selector state
+  const [locationLabel, setLocationLabel] = useState('All Locations');
+
+  // Try to get user's geolocation on mount
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const { latitude, longitude } = position.coords;
+          // Use a free reverse geocoding API (OpenStreetMap Nominatim)
+          try {
+            const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`);
+            const data = await res.json();
+            // Try to extract city name
+            const city = data.address?.city || data.address?.town || data.address?.village || data.address?.state;
+            if (city) {
+              setLocationLabel(city);
+            }
+          } catch {
+            // fallback: do nothing
+          }
+        },
+        () => {},
+        { timeout: 5000 }
+      );
+    }
+  }, []);
+
   useEffect(() => {
     addAnimations();
   }, []);
@@ -44,9 +76,41 @@ const Navbar = ({
     <header style={{...styles.header,overscrollBehavior: 'contain !important',WebkitOverflowScrolling:"touch", touchAction: 'pan-y'}} >
       <div style={styles.headerContainer}>
         <div style={styles.headerTop}>
-          <h1 style={styles.logo} onClick={() => setView('home')}>
-            e4you.com
-          </h1>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <h1 style={styles.logo} onClick={() => setView('home')}>
+              e4you.com
+            </h1>
+            {/* Location Selector with Icon */}
+            <div style={{ display: 'flex', alignItems: 'center',  borderRadius: 8,  height: 28, minWidth: 90, maxWidth: 170, marginLeft: 4, marginRight: 4, paddingLeft: 6, paddingRight: 2 ,paddingTop:'6px'}}>
+              <MapPin size={16} color="#ffffffff" style={{ marginRight: 4, minWidth: 16 }} />
+              <select
+  value={locationLabel} // Use the ID here, not the label
+  onChange={e => {
+
+    setLocationLabel(e.target.options[e.target.selectedIndex].text);
+  }}
+  style={{
+    fontSize: 13,
+    border: 'none',
+    background: 'transparent',
+    color: '#ffffffff',
+    outline: 'none',
+    minWidth: 70,
+    maxWidth: 120,
+    height: 26,
+    fontWeight: 500,
+    letterSpacing: 0.1,
+    cursor: 'pointer',
+    appearance: 'none'
+  }}
+  aria-label="Select location"
+>
+  {cities.map((city) => (
+    <option key={city.name} value={city.name}>{city.name}</option>
+  ))}
+</select>
+            </div>
+          </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '32px' }}>
             <nav style={{ ...styles.nav, display: window.innerWidth < 768 ? 'none' : 'flex' }}>
               <button style={styles.navButton} onClick={() => setView('favorites')}>
@@ -123,7 +187,7 @@ const Navbar = ({
               )}
             </nav>
             <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-              {/* <button style={styles.postButton} onClick={() => {
+              <button style={{ ...styles.postButton, display: isMobile ? 'none' : 'inline-block' }} onClick={() => {
                 if (!user) {
                   alert('Please login to post an ad.');
                 } else {
@@ -132,7 +196,7 @@ const Navbar = ({
               }}>
                 <span style={{ display: window.innerWidth < 640 ? 'inline' : 'none' }}>Post Ad</span>
                 <span style={{ display: window.innerWidth < 640 ? 'none' : 'inline' }}>Post Ad</span>
-              </button> */}
+              </button>
               <button
                 style={{ ...styles.menuButton, display: window.innerWidth < 768 ? 'block' : 'none' }}
                 onClick={() => setMenuOpen(!menuOpen)}

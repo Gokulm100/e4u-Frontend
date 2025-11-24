@@ -552,6 +552,7 @@ const responsiveTagStyle = {
       <Navbar
         styles={styles}
         user={user}
+        cities={locations}
         favorites={favorites}
         messageCountNavBar={messageCountNavBar}
         showDropdown={showDropdown}
@@ -562,6 +563,7 @@ const responsiveTagStyle = {
         setEditAd={setEditAd}
         setMenuOpen={setMenuOpen}
         menuOpen={menuOpen}
+        isMobile={isMobile}
       />
      <BottomNavBar       styles={styles}
         user={user}
