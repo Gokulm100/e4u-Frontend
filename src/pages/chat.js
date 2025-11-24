@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from 'react';
+import { useSwipeable } from 'react-swipeable';
 const Chat = ({
   user,
   chatOpen,
@@ -163,8 +164,18 @@ const Chat = ({
           fontFamily: 'Inter, Arial, sans-serif',
         };
 
+    // Setup swipe handlers for mobile: swipe right closes chat
+    const swipeHandlers = useSwipeable({
+      onSwipedRight: () => {
+        if (isMobile) setChatOpen(false);
+      },
+      delta: 50, // minimum distance(px) before a swipe is detected
+      trackTouch: true,
+      trackMouse: false,
+    });
+
     return (
-      <div style={chatContainerStyle}>
+      <div style={chatContainerStyle} {...(isMobile ? swipeHandlers : {})}>
       <div style={{ padding: '12px 18px',boxShadow: '0 1px 2px rgba(0,0,0,2)', borderBottomLeftRadius: 2,borderBottomRightRadius: 2, borderBottom: '1px solid #d7d6d6ff', fontWeight: 600, fontSize: 16, background: 'linear-gradient(90deg, #194983ff 0%, #5b83ccff 100%)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', minHeight: 0 }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
           <span style={{ fontWeight: 700, color: '#f7f7f7ff', fontSize: 15, lineHeight: 1.2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', width: 'auto' }}>{selectedListing?.title || 'Ad'}</span>

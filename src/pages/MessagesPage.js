@@ -1,4 +1,5 @@
 import React, { useState, useEffect, forwardRef, useImperativeHandle } from 'react';
+import { useSwipeable } from 'react-swipeable';
 import Chat from './chat';
 import ChatFullScreen from './ChatFullScreen';
 
@@ -118,6 +119,15 @@ const timeStyle = {
 };
 
 const MessagesPage = forwardRef(({ refetchUserMessages }, ref) => {
+  // Swipe handlers for chat modal (mobile only)
+  const chatSwipeHandlers = useSwipeable({
+    onSwipedRight: () => {
+      if (isMobile && chatOpen) setChatOpen(false);
+    },
+    delta: 50,
+    trackTouch: true,
+    trackMouse: false,
+  });
   const [activeTab, setActiveTab] = useState('selling');
   const [sellingChats, setSellingChats] = useState([]);
   const [buyingChats, setBuyingChats] = useState([]);
@@ -424,26 +434,28 @@ const MessagesPage = forwardRef(({ refetchUserMessages }, ref) => {
           {isMobile && chatOpen && chatLoading && <ChatLoading />}
           {chatOpen && selectedChat && (!chatLoading || !isMobile) && (
             isMobile ? (
-              <ChatFullScreen
-                selectedListing={{
-                  id: selectedChat.adId,
-                  title: selectedChat.item,
-                  sellerId: activeTab === 'selling' ? user?._id : selectedChat.sellerId,
-                  buyerId: activeTab === 'selling' ? selectedChat.buyerId : user?._id,
-                  seller: selectedChat.sellerName,
-                  buyer: selectedChat.buyerName
-                }}
-                selectedMessage={null}
-                user={user}
-                chatLoading={chatLoading}
-                chatMessages={chatMessages}
-                setChatMessages={setChatMessages}
-                chatInput={chatInput}
-                setChatInput={setChatInput}
-                setChatOpen={setChatOpen}
-                chatOpen={chatOpen}
-                API_BASE_URL={API_BASE_URL}
-              />
+              <div {...chatSwipeHandlers} style={{ width: '100vw', height: '100vh', position: 'fixed', top: 0, left: 0, zIndex: 10001, background: 'rgba(30,41,59,0.10)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <ChatFullScreen
+                  selectedListing={{
+                    id: selectedChat.adId,
+                    title: selectedChat.item,
+                    sellerId: activeTab === 'selling' ? user?._id : selectedChat.sellerId,
+                    buyerId: activeTab === 'selling' ? selectedChat.buyerId : user?._id,
+                    seller: selectedChat.sellerName,
+                    buyer: selectedChat.buyerName
+                  }}
+                  selectedMessage={null}
+                  user={user}
+                  chatLoading={chatLoading}
+                  chatMessages={chatMessages}
+                  setChatMessages={setChatMessages}
+                  chatInput={chatInput}
+                  setChatInput={setChatInput}
+                  setChatOpen={setChatOpen}
+                  chatOpen={chatOpen}
+                  API_BASE_URL={API_BASE_URL}
+                />
+              </div>
             ) : (
               <Chat
                 user={user}

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useSwipeable } from 'react-swipeable';
 import { useToast } from '../components/ToastContext';
 import { MapPin, Heart, Eye } from 'lucide-react';
 import Chat from './chat';
@@ -161,6 +162,16 @@ const AdDetail = ({
   // Responsive check for mobile view
   const isMobile = typeof window !== 'undefined' && window.innerWidth <= 600;
 
+  // Swipe right to go back (only on mobile)
+  const swipeHandlers = useSwipeable({
+    onSwipedRight: () => {
+      if (isMobile) setView(lastListView);
+    },
+    delta: 50,
+    trackTouch: true,
+    trackMouse: false,
+  });
+
   // Fetch interested users when Mark as Sold is clicked
   const handleMarkAsSoldClick = async () => {
     if (!selectedListing || !selectedListing.id || !API_BASE_URL) return;
@@ -209,7 +220,7 @@ const AdDetail = ({
   const fallback = 'https://t4.ftcdn.net/jpg/06/71/92/37/360_F_671923740_x0zOL3OIuUAnSF6sr7PuznCI5bQFKhI0.jpg';
 
   return (
-    <div style={styles.detailContainer}>
+    <div style={styles.detailContainer} {...(isMobile ? swipeHandlers : {})}>
       <button style={styles.backButton} onClick={() => setView(lastListView)}>
         ← Back to listings
       </button>

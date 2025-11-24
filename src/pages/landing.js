@@ -1,6 +1,7 @@
 import AiTextArea from '../components/aiTextArea';
 /* global google */
 import React, { useState, useEffect, useRef } from 'react';
+import { useSwipeable } from 'react-swipeable';
 import MyAds from './myads';
 import Favorites from './favorites';
 import MessagesPage from './MessagesPage';
@@ -47,6 +48,17 @@ function LoaderOverlay() {
 const Landing = () => {
   // Ref for MessagesPage
   const messagesPageRef = useRef();
+  // Responsive check for mobile view
+  // const isMobile = typeof window !== 'undefined' && window.innerWidth <= 600;
+  // Swipe handlers for Post Ad page
+  const postAdSwipeHandlers = useSwipeable({
+    onSwipedRight: () => {
+      if (isMobile) setView('home');
+    },
+    delta: 50,
+    trackTouch: true,
+    trackMouse: false,
+  });
   // Refetch user messages for navbar badge and to pass to MessagesPage
   function refetchUserMessages() {
     const storedUser = localStorage.getItem("user");
@@ -604,7 +616,7 @@ const responsiveTagStyle = {
       )}
 
       {view === 'post' && (
-        <div style={styles.formContainer}>
+        <div style={styles.formContainer} {...(isMobile ? postAdSwipeHandlers : {})}>
           <button style={styles.backButton} onClick={() => setView('home')}>
             ← Back
           </button>
@@ -797,7 +809,7 @@ const responsiveTagStyle = {
       )}
       {/* Add missing closing div for main app container */}
       {view === 'messages' && (
-        <MessagesPage ref={messagesPageRef} refetchUserMessages={refetchUserMessages} />
+        <MessagesPage ref={messagesPageRef} refetchUserMessages={refetchUserMessages} setView={setView} />
       )}
       {/* Full-screen chat for mobile only */}
       {chatOpen && isMobile && (
