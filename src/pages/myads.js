@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import AiTextArea from '../components/aiTextArea';
 import {  Eye } from 'lucide-react';
+import { useSwipeable } from 'react-swipeable';
 import CardSkeleton from '../components/CardSkeleton';
 function getCategoryGradient(category) {
   const gradients = {
@@ -19,7 +20,18 @@ const MyAds = ({ styles, editMode, editAd, setEditMode, setEditAd, categories, s
   const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:3001';
   const [myAds, setMyAds] = useState([]);
   const [loading, setLoading] = useState(true);
-
+  const editAdSwipeHandlers = useSwipeable({
+    onSwipedRight: () => {
+      if (isMobile) {
+        setEditMode(false);
+        setEditAd(null);
+        setView && setView('myads');
+      }
+    },
+    delta: 50,
+    trackTouch: true,
+    trackMouse: false,
+  });
   useEffect(() => {
     if (user && user._id) {
       setLoading(true);
@@ -87,7 +99,7 @@ const MyAds = ({ styles, editMode, editAd, setEditMode, setEditAd, categories, s
   }, [user, API_BASE_URL]);
 
   return (
-    <div style={{ ...styles.container, maxWidth: 1100, margin: '0 auto', padding: '32px 16px' }}>
+    <div style={{ ...styles.container, maxWidth: 1100, margin: '0 auto', padding: '32px 16px' }} {...(isMobile ? editAdSwipeHandlers : {})}>
       <style>
         {`
           @keyframes pulse {
@@ -102,7 +114,7 @@ const MyAds = ({ styles, editMode, editAd, setEditMode, setEditAd, categories, s
       </style>
       <h2 style={{ fontSize: '2rem', fontWeight: 700, marginBottom: 32, color: '#1c6be9ff', letterSpacing: 0.5 }}>My Ads</h2>
   {((!myAds) || (myAds.length === 0 && !loading)) ? (
-        <div style={{ ...styles.emptyState, background: '#f8fafc', borderRadius: 16, padding: 48}}>
+        <div style={{ ...styles.emptyState, background: '#f8fafc', borderRadius: 16, padding: 48}} {...(isMobile ? editAdSwipeHandlers : {})}>
           <p style={{ ...styles.emptyText, fontSize: 20, color: '#64748b', marginBottom: 16 }}>Opps! You haven't posted any ads yet.</p>
           <button
             className="pulse-animate"
@@ -118,7 +130,7 @@ const MyAds = ({ styles, editMode, editAd, setEditMode, setEditAd, categories, s
       ) : (
         <>
           {editMode ? (
-            <div style={{ ...styles.formContainer, background: '#fff', borderRadius: 16, boxShadow: '0 2px 16px rgba(0,0,0,0.06)', padding: 32, maxWidth: 600, margin: '0 auto' }}>
+            <div className="test" style={{ ...styles.formContainer, background: '#fff', borderRadius: 16, boxShadow: '0 2px 16px rgba(0,0,0,0.06)', padding: 32, maxWidth: 600, margin: '0 auto' }} {...(isMobile ? editAdSwipeHandlers : {})}>
               <button
                 style={{
                   ...styles.backButton,
