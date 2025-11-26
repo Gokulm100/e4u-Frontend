@@ -154,7 +154,6 @@ const AllAds = ({ styles, setLastListView, setSelectedListing, setView, favorite
           cursor: 'pointer',
         }}>
           <img src="https://img.icons8.com/fluency/48/bard.png" alt="bard ai icon" width="25" height="25" style={{ verticalAlign: 'middle'}} />
-          <span style={{ fontSize: 13, color: '#000000ff', fontWeight: 500 }}>AI Search</span>
           <span style={{
             display: 'inline-block',
             width: 38,
