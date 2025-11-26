@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, MapPin, Heart, Eye } from 'lucide-react';
+import { Search, MapPin, Heart, Eye,Sparkles } from 'lucide-react';
 import CardSkeleton from '../components/CardSkeleton';
-
+import AiISearchButton from '../components/AISearchButton';
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:3001';
 const tempImageUrls = [
   'https://images.unsplash.com/photo-1558981806-ec527fa84c39?w=400&h=300&fit=crop',
@@ -19,6 +19,7 @@ const AllAds = ({ styles, setLastListView, setSelectedListing, setView, favorite
   const [subCategories, setSubCategories] = useState([]);
   const [selectedSubCategory, setSelectedSubCategory] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [aiSearch, setAiSearch] = useState(false);
 
   const [listings, setListings] = useState([]);
   const [page, setPage] = useState(1);
@@ -132,15 +133,65 @@ const AllAds = ({ styles, setLastListView, setSelectedListing, setView, favorite
   return (
     <div style={styles.container}>
     <div style={styles.searchBar}>
-      <div style={styles.searchInputWrapper}>
-        <Search style={styles.searchIcon} />
-        <input
-          type="text"
-          placeholder="Search for products, services and more..."
-          style={styles.searchInput}
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-        />
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div style={{ ...styles.searchInputWrapper, flex: 1, minWidth: 0 }}>
+          <Search style={styles.searchIcon} />
+          <input
+            type="text"
+            placeholder={aiSearch ? "Ask AI about products, services and more… e.g., ‘Smartphone under 12,000 in Trivandrum’" : "Search for products, services and more..."}
+            style={{ ...styles.searchInput, width: '100%', minWidth: 0, flex: 1 }}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
+        {/* Toggle switch for AI search */}
+        <label style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 6,
+          marginLeft: 8,
+          userSelect: 'none',
+          cursor: 'pointer',
+        }}>
+          <img src="https://img.icons8.com/fluency/48/bard.png" alt="bard ai icon" width="25" height="25" style={{ verticalAlign: 'middle'}} />
+          <span style={{ fontSize: 13, color: '#000000ff', fontWeight: 500 }}>AI Search</span>
+          <span style={{
+            display: 'inline-block',
+            width: 38,
+            height: 22,
+            background: aiSearch ? 'linear-gradient(to right, #9333ea, #2563eb)' : '#e5e7eb',
+            borderRadius: 12,
+            position: 'relative',
+            transition: 'background 0.2s',
+            verticalAlign: 'middle',
+          }}>
+            <input
+              type="checkbox"
+              checked={aiSearch}
+              onChange={() => setAiSearch(v => !v)}
+              style={{
+                opacity: 0,
+                width: 0,
+                height: 0,
+                position: 'absolute',
+              }}
+              aria-checked={aiSearch}
+            />
+            <span style={{
+              position: 'absolute',
+              left: aiSearch ? 18 : 2,
+              top: 2,
+              width: 18,
+              height: 18,
+              background: '#fff',
+              borderRadius: '50%',
+              boxShadow: '0 1px 4px rgba(0,0,0,0.10)',
+              transition: 'left 0.2s',
+              border: '1px solid #d1d5db',
+            }} />
+          </span>
+          <span style={{ fontSize: 13, color: aiSearch ? '#2563eb' : '#888', fontWeight: 500, marginLeft: 4 }}>{aiSearch ? 'On' : 'Off'}</span>
+        </label>
       </div>
     </div>
     <div style={styles.categories}>
@@ -245,6 +296,7 @@ const AllAds = ({ styles, setLastListView, setSelectedListing, setView, favorite
     {loading && (
       <div style={styles.loadingState}><CardSkeleton isMobile={isMobile}/></div>
     )}
+    <AiISearchButton isMobile={isMobile}/>
   </div>
   );
 };
