@@ -278,7 +278,8 @@ messageButton: {
       objectFit: 'cover'
     },
     detailContent: {
-      padding: '24px'
+      padding: '15px',
+      paddingBottom:'70px'
     },
     detailHeader: {
       display: 'flex',

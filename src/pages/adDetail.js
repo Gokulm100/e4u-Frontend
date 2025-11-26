@@ -550,7 +550,7 @@ const AdDetail = ({
                       }}
                     />
                   </button>
-                  <button
+                  {/* <button
                     onClick={() => { if (user) { setChatOpen(true); } else { showToast('Please login to contact the seller.', 'error'); } }}
                     style={{
                       ...styles.favoriteButton,
@@ -579,7 +579,7 @@ const AdDetail = ({
                         }}>{messageCount}</span>
                       )}
                     </div>
-                  </button>
+                  </button> */}
                 </>
               )}
             </div>
