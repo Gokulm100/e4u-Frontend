@@ -103,10 +103,7 @@ messageButton: {
       padding: '24px 16px'
     },
     searchBar: {
-      backgroundColor: '#ffffff',
-      padding: '16px',
       borderRadius: '8px',
-      boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
       marginBottom: '24px'
     },
     searchInputWrapper: {
@@ -115,7 +112,6 @@ messageButton: {
     searchIcon: {
       position: 'absolute',
       left: '12px',
-      top: '12px',
       color: '#9ca3af'
     },
     searchInput: {
@@ -435,7 +431,21 @@ messageButton: {
     },
     favoriteIconInactive: {
       color: '#6b7280'
-    }
-    
+    },
+      smartSearch:{
+    background: 'linear-gradient(to right, rgb(147, 51, 234), rgb(37, 99, 235))',
+    color: '#ffffffff',
+    border: 'none',
+    padding: '10px 16px',
+    boxShadow: '2px 2px 5px rgba(0, 0, 0, 0.38)',
+    borderRadius: '8px',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '4px',
+    cursor: 'pointer',
+    fontSize: '16px'
+
+  }
   };
+
   export default styles;

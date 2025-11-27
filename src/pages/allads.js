@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, MapPin, Heart, Eye,Sparkles } from 'lucide-react';
+import { Search, MapPin, Heart, Eye } from 'lucide-react';
 import CardSkeleton from '../components/CardSkeleton';
-import AiISearchButton from '../components/AISearchButton';
+// import AiISearchButton from '../components/AISearchButton';
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:3001';
 const tempImageUrls = [
   'https://images.unsplash.com/photo-1558981806-ec527fa84c39?w=400&h=300&fit=crop',
@@ -20,6 +20,7 @@ const AllAds = ({ styles, setLastListView, setSelectedListing, setView, favorite
   const [selectedSubCategory, setSelectedSubCategory] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [aiSearch, setAiSearch] = useState(false);
+  const [search,setSearch] = useState(false);
 
   const [listings, setListings] = useState([]);
   const [page, setPage] = useState(1);
@@ -106,13 +107,13 @@ const AllAds = ({ styles, setLastListView, setSelectedListing, setView, favorite
         }
       })
       .finally(() => setLoading(false));
-  }, [page, searchQuery, selectedCategory, selectedSubCategory]);
+  }, [page, search,selectedCategory, selectedSubCategory]);
 
   // Reset page and listings when filters/search change
   useEffect(() => {
     setPage(1);
     setListings([]);
-  }, [searchQuery, selectedCategory, selectedSubCategory]);
+  }, [ selectedCategory, selectedSubCategory]);
 
   useEffect(() => {
     // Disable infinite scroll when searching
@@ -132,85 +133,117 @@ const AllAds = ({ styles, setLastListView, setSelectedListing, setView, favorite
 
   return (
     <div style={styles.container}>
-    <div style={styles.searchBar}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        <div style={{ ...styles.searchInputWrapper, flex: 1, minWidth: 0 }}>
-          <Search style={styles.searchIcon} />
-          <input
-            type="text"
-            placeholder={aiSearch ? "Ask AI about products, services and more… e.g., ‘Smartphone under 12,000 in Trivandrum’" : "Search for products, services and more..."}
-            style={{ ...styles.searchInput, width: '100%', minWidth: 0, flex: 1 }}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
-        {/* Toggle switch for AI search */}
-        <label style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 6,
-          marginLeft: 8,
-          userSelect: 'none',
-          cursor: 'pointer',
-        }}>
-          <img src="https://img.icons8.com/fluency/48/bard.png" alt="bard ai icon" width="25" height="25" style={{ verticalAlign: 'middle'}} />
-          <span style={{
-            display: 'inline-block',
-            width: 38,
-            height: 22,
-            background: aiSearch ? 'linear-gradient(to right, #9333ea, #2563eb)' : '#e5e7eb',
-            borderRadius: 12,
-            position: 'relative',
-            transition: 'background 0.2s',
-            verticalAlign: 'middle',
-          }}>
+      <div style={styles.searchBar}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{ ...styles.searchInputWrapper, flex: 1, minWidth: 0, position: 'relative', display: 'flex', alignItems: 'center' }}>
+            <Search style={styles.searchIcon} />
             <input
-              type="checkbox"
-              checked={aiSearch}
-              onChange={() => setAiSearch(v => !v)}
-              style={{
-                opacity: 0,
-                width: 0,
-                height: 0,
-                position: 'absolute',
-              }}
-              aria-checked={aiSearch}
+              type="text"
+              placeholder={aiSearch ? "Ask AI about products, services and more..." : "Search for products, services and more..."}
+              style={{ ...styles.searchInput, width: '100%', minWidth: 0, flex: 1, paddingRight: 80 }}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
             />
-            <span style={{
-              position: 'absolute',
-              left: aiSearch ? 18 : 2,
-              top: 2,
-              width: 18,
-              height: 18,
-              background: '#fff',
-              borderRadius: '50%',
-              boxShadow: '0 1px 4px rgba(0,0,0,0.10)',
-              transition: 'left 0.2s',
-              border: '1px solid #d1d5db',
-            }} />
-          </span>
-          <span style={{ fontSize: 13, color: aiSearch ? '#2563eb' : '#888', fontWeight: 500, marginLeft: 4 }}>{aiSearch ? 'On' : 'Off'}</span>
-        </label>
+                  <label style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 4,
+                    position: 'absolute',
+                    right: 10,
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    background: '#fff',
+                    padding: '0 4px',
+                    borderRadius: 8,
+                    userSelect: 'none',
+                    cursor: 'pointer',
+                    zIndex: 2
+                  }}>
+                    <span style={{ fontSize: 12, color: '#222', fontWeight: 500 }}>
+                    <img
+                      src="https://img.icons8.com/fluency/48/bard.png"
+                      alt="bard ai icon"
+                      title="AI Smart Search"
+                      width="20"
+                      height="20"
+                      style={{
+                      verticalAlign: 'middle',
+                      animation: 'pulse-bard 1.2s infinite',
+                      }}
+                    />
+                    {/* Pulsating animation keyframes */}
+                    <style>
+                      {`
+                      @keyframes pulse-bard {
+                        // 0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(147,51,234,0.5);}
+                        70% { transform: scale(1.15); box-shadow: 0 0 0 8px rgba(147,51,234,0);}
+                        100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(147,51,234,0);}
+                      }
+                      `}
+                    </style>
+                    </span>
+                    <span style={{
+                    display: 'inline-block',
+                    width: 36,
+                    height: 20,
+                    background: aiSearch ? 'linear-gradient(to right, rgb(147, 51, 234), rgb(37, 99, 235))' : '#e5e7eb',
+                    borderRadius: 12,
+                    position: 'relative',
+                    transition: 'background 0.2s',
+                    verticalAlign: 'middle',
+                    }}>
+                    <input
+                      type="checkbox"
+                      checked={aiSearch}
+                      onChange={() => setAiSearch(v => !v)}
+                      style={{
+                      opacity: 0,
+                      width: 0,
+                      height: 0,
+                      position: 'absolute',
+                      }}
+                      aria-checked={aiSearch}
+                    />
+                    <span style={{
+                      position: 'absolute',
+                      left: aiSearch ? 17 : 2,
+                      top: 2,
+                      width: 16,
+                      height: 16,
+                      background: '#fff',
+                      borderRadius: '50%',
+                      boxShadow: '0 1px 4px rgba(0,0,0,0.10)',
+                      transition: 'left 0.2s',
+                      border: '1px solid #d1d5db',
+                    }} />
+                    </span>
+                  </label>
+              
+                  </div>
+                      <button style={styles.smartSearch} onClick={() => {
+                    setSearch(v=>!v);
+                  }}>
+                  {isMobile ? <Search style={{ width: 20, height: 20 }} /> : "Search"}
+                  </button>        </div>
       </div>
-    </div>
-    <div style={styles.categories}>
-      {categories.map((cat, idx) => (
-        <button
-          key={cat.id || idx}
-          onClick={() => {
-            setSelectedCategory(cat.name);
-            setSubCategories(cat['subCategories'] || []);
-            setSelectedSubCategory('');
-          }}
-          style={{
-            ...styles.categoryButton,
-            ...(selectedCategory === cat.name ? styles.categoryButtonActive : styles.categoryButtonInactive)
-          }}
-        >
-          {cat.name}
-        </button>
-      ))}
-    </div>
+      <div style={styles.categories}>
+        {categories.map((cat, idx) => (
+          <button
+            key={cat.id || idx}
+            onClick={() => {
+              setSelectedCategory(cat.name);
+              setSubCategories(cat['subCategories'] || []);
+              setSelectedSubCategory('');
+            }}
+            style={{
+              ...styles.categoryButton,
+              ...(selectedCategory === cat.name ? styles.categoryButtonActive : styles.categoryButtonInactive)
+            }}
+          >
+            {cat.name}
+          </button>
+        ))}
+      </div>
     {/* Render subcategory bar below category bar */}
     {selectedCategory && subCategories && subCategories.length > 0 && (
       <div style={subCategoryBarStyle}>
@@ -295,7 +328,7 @@ const AllAds = ({ styles, setLastListView, setSelectedListing, setView, favorite
     {loading && (
       <div style={styles.loadingState}><CardSkeleton isMobile={isMobile}/></div>
     )}
-    <AiISearchButton isMobile={isMobile}/>
+    {/* <AiISearchButton isMobile={isMobile}/> */}
   </div>
   );
 };
