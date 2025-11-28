@@ -1,0 +1,41 @@
+<svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#5B9DF5;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#3D7FE6;stop-opacity:1" />
+    </linearGradient>
+    
+    <filter id="shadow">
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-opacity="0.15"/>
+    </filter>
+  </defs>
+  
+  <!-- Background with rounded corners -->
+  <rect width="512" height="512" rx="115" fill="url(#bgGradient)"/>
+  
+  <!-- Stacked cards -->
+  <g transform="translate(256, 256)">
+    <!-- Back card -->
+    <rect x="-110" y="-75" width="220" height="180" rx="12" 
+          fill="white" opacity="0.5" 
+          transform="rotate(-8)"/>
+    
+    <!-- Middle card -->
+    <rect x="-110" y="-85" width="220" height="180" rx="12" 
+          fill="white" opacity="0.7" 
+          transform="rotate(5)"/>
+    
+    <!-- Front card -->
+    <rect x="-115" y="-95" width="230" height="190" rx="12" 
+          fill="white" filter="url(#shadow)"/>
+    
+    <!-- Text on front card -->
+    <text x="0" y="30" 
+          font-family="'Arial Rounded MT Bold', 'Arial', sans-serif" 
+          font-size="75" 
+          font-weight="bold" 
+          fill="#4A8FE8" 
+          text-anchor="middle"
+          letter-spacing="-1">e4you</text>
+  </g>
+</svg>

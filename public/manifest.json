@@ -11,8 +11,14 @@
   "dir": "ltr",
   "icons": [
     {
-      "src": "https://www.e4you.store/launchericon-512-512.png",
+      "src": "https://www.e4you.store/e4yousplash.svg",
       "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "logo192.png",
+      "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     }
