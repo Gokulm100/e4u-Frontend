@@ -1,6 +1,31 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Search, MapPin, Heart, Eye } from 'lucide-react';
 import CardSkeleton from '../components/CardSkeleton';
+
+// Helper to parse and stringify query params
+function getQueryParams() {
+  const params = new URLSearchParams(window.location.search);
+  return {
+    category: params.get('category') || 'All',
+    subCategory: params.get('subCategory') || '',
+    search: params.get('search') || '',
+    aiSearch: params.get('aiSearch') === 'true',
+  };
+}
+
+function setQueryParams({ category, subCategory, search, aiSearch }) {
+  const params = new URLSearchParams(window.location.search);
+  if (category && category !== 'All') params.set('category', category);
+  else params.delete('category');
+  if (subCategory) params.set('subCategory', subCategory);
+  else params.delete('subCategory');
+  if (search) params.set('search', search);
+  else params.delete('search');
+  if (aiSearch) params.set('aiSearch', 'true');
+  else params.delete('aiSearch');
+  const newUrl = `${window.location.pathname}?${params.toString()}`;
+  window.history.replaceState({}, '', newUrl);
+}
 // import AiISearchButton from '../components/AISearchButton';
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:3001';
 const tempImageUrls = [
@@ -14,13 +39,15 @@ const tempImageUrls = [
 ];
 
 const AllAds = ({ styles, setLastListView, setSelectedListing, setView, favorites, toggleFavorite, responsiveTagStyle, subCategoryBarStyle, responsiveSubCategoryButton, responsiveSubCategoryButtonActive ,isMobile}) => {
+
+
   const [categories, setCategories] = useState([{ id: 'all', name: 'All' }]);
-  const [selectedCategory, setSelectedCategory] = useState('All');
+  const [selectedCategory, setSelectedCategory] = useState(getQueryParams().category);
   const [subCategories, setSubCategories] = useState([]);
-  const [selectedSubCategory, setSelectedSubCategory] = useState('');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [aiSearch, setAiSearch] = useState(false);
-  const [search,setSearch] = useState(false);
+  const [selectedSubCategory, setSelectedSubCategory] = useState(getQueryParams().subCategory);
+  const [searchQuery, setSearchQuery] = useState(getQueryParams().search);
+  const [aiSearch, setAiSearch] = useState(getQueryParams().aiSearch);
+  const [search, setSearch] = useState(false);
 
   const [listings, setListings] = useState([]);
   const [page, setPage] = useState(1);
@@ -114,7 +141,26 @@ const AllAds = ({ styles, setLastListView, setSelectedListing, setView, favorite
   useEffect(() => {
     setPage(1);
     setListings([]);
-  }, [ selectedCategory, selectedSubCategory]);
+  }, [selectedCategory, selectedSubCategory, searchQuery, aiSearch]);
+
+  // Sync filters to URL when they change
+  useEffect(() => {
+    setQueryParams({
+      category: selectedCategory,
+      subCategory: selectedSubCategory,
+      search: searchQuery,
+      aiSearch,
+    });
+  }, [selectedCategory, selectedSubCategory, searchQuery, aiSearch]);
+
+  // On mount, set filters from URL (if user navigates back)
+  useEffect(() => {
+    const params = getQueryParams();
+    setSelectedCategory(params.category);
+    setSelectedSubCategory(params.subCategory);
+    setSearchQuery(params.search);
+    setAiSearch(params.aiSearch);
+  }, []);
 
   useEffect(() => {
     // Disable infinite scroll when searching
@@ -144,6 +190,12 @@ const AllAds = ({ styles, setLastListView, setSelectedListing, setView, favorite
               style={{ ...styles.searchInput, width: '100%', minWidth: 0, flex: 1, paddingRight: 80 }}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
+              onBlur={() => setQueryParams({
+                category: selectedCategory,
+                subCategory: selectedSubCategory,
+                search: searchQuery,
+                aiSearch,
+              })}
             />
                   <label style={{
                     display: 'flex',
@@ -241,6 +293,12 @@ const AllAds = ({ styles, setLastListView, setSelectedListing, setView, favorite
               setSelectedCategory(cat.name);
               setSubCategories(cat['subCategories'] || []);
               setSelectedSubCategory('');
+              setQueryParams({
+                category: cat.name,
+                subCategory: '',
+                search: searchQuery,
+                aiSearch,
+              });
             }}
             style={{
               ...styles.categoryButton,
@@ -259,6 +317,12 @@ const AllAds = ({ styles, setLastListView, setSelectedListing, setView, favorite
             key={sub}
             onClick={() => {
               setSelectedSubCategory(sub);
+              setQueryParams({
+                category: selectedCategory,
+                subCategory: sub,
+                search: searchQuery,
+                aiSearch,
+              });
             }}
             style={selectedSubCategory === sub ? responsiveSubCategoryButtonActive : responsiveSubCategoryButton}
           >
@@ -273,6 +337,7 @@ const AllAds = ({ styles, setLastListView, setSelectedListing, setView, favorite
           key={listing.id || idx}
           style={styles.card}
           onClick={() => {
+            // Save scroll position before navigating to detail
             setLastListView('home');
             setSelectedListing(listing);
             setView('detail');

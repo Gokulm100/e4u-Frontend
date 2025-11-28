@@ -114,12 +114,12 @@ const Chat = ({
     wasAtBottomRef.current = atBottom;
   }, [firstMessageId]); // run when first message changes (e.g., loading older messages)
 
-  // Only scroll to bottom if user was at bottom before new messages
+  // Always scroll to bottom when chat is opened or messages change
   useEffect(() => {
-    if (wasAtBottomRef.current && chatEndRef.current) {
-      chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    if (chatOpen && chatEndRef.current) {
+      chatEndRef.current.scrollIntoView({ behavior: 'auto' });
     }
-  }, [chatMessages]);
+  }, [chatOpen, chatMessages]);
 
   // Local state for messages if needed
   // useEffect to sync chatMessages prop to state if disableAutoFetch is true

@@ -142,6 +142,9 @@ const AdDetail = ({
   setSelectedMessage,
   API_BASE_URL
 }) => {
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
   const { showToast } = useToast();
 
   // Modal state for Mark as Sold
