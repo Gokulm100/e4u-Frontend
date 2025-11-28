@@ -28,6 +28,7 @@ const AllAds = ({ styles, setLastListView, setSelectedListing, setView, favorite
   const [loading, setLoading] = useState(false);
   const observerTarget = useRef(null);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     fetch(`${API_BASE_URL}/api/ads/listCategories`)
       .then(res => res.json())
@@ -49,7 +50,6 @@ const AllAds = ({ styles, setLastListView, setSelectedListing, setView, favorite
     setLoading(true);
     let user = localStorage.getItem('user');
     let User = user ? JSON.parse(user) : {};
-    console.log(User)
     fetch(`${API_BASE_URL}/api/ads`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('authToken')}` },
@@ -59,7 +59,8 @@ const AllAds = ({ styles, setLastListView, setSelectedListing, setView, favorite
         search: searchQuery || undefined,
         category: selectedCategory !== 'All' ? selectedCategory : undefined,
         subCategory: selectedSubCategory || undefined,
-        userId:User._id || undefined
+        userId:User._id || undefined,
+        aiSearch: aiSearch || false
       })
     })
       .then(res => res.json())
@@ -107,7 +108,7 @@ const AllAds = ({ styles, setLastListView, setSelectedListing, setView, favorite
         }
       })
       .finally(() => setLoading(false));
-  }, [page, search,selectedCategory, selectedSubCategory]);
+  }, [page, search, selectedCategory, selectedSubCategory]);
 
   // Reset page and listings when filters/search change
   useEffect(() => {
@@ -220,11 +221,17 @@ const AllAds = ({ styles, setLastListView, setSelectedListing, setView, favorite
                   </label>
               
                   </div>
-                      <button style={styles.smartSearch} onClick={() => {
-                    setSearch(v=>!v);
-                  }}>
-                  {isMobile ? <Search style={{ width: 20, height: 20 }} /> : "Search"}
-                  </button>        </div>
+                      <button
+                        style={styles.smartSearch}
+                        onClick={() => {
+                          setPage(1);
+                          setListings([]);
+                          setSearch(v => !v);
+                        }}
+                      >
+                        {isMobile ? <Search style={{ width: 20, height: 20 }} /> : "Search"}
+                      </button>
+                    </div>
       </div>
       <div style={styles.categories}>
         {categories.map((cat, idx) => (
