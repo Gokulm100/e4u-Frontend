@@ -47,6 +47,20 @@ function LoaderOverlay() {
 
 const Landing = () => {
   // Ref for MessagesPage
+  // Prevent Android PWA from minimizing on swipe back (back gesture)
+  useEffect(() => {
+    // Only run on client
+    if (typeof window === 'undefined') return;
+    // Push a dummy state to prevent minimizing
+    window.history.pushState(null, '', window.location.href);
+    const handlePopState = (event) => {
+      window.history.pushState(null, '', window.location.href);
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, []);
   const messagesPageRef = useRef();
   // Responsive check for mobile view
   // const isMobile = typeof window !== 'undefined' && window.innerWidth <= 600;
