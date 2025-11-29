@@ -9,6 +9,12 @@ body {
 html,body{
   touch-action: manipulation;
   -ms-touch-action: manipulation;
+  background-color: #194983; /* match your theme-color */
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
 }
 *{
   touch-action: pan-x pan-y;
