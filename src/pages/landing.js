@@ -47,6 +47,10 @@ function LoaderOverlay() {
 
 const Landing = () => {
   // Ref for MessagesPage
+  // Ensure global Google login handler is always set
+  useEffect(() => {
+    window.handleCredentialResponse = handleCredentialResponse;
+  }, []);
   // Prevent Android PWA from minimizing on swipe back (back gesture)
   useEffect(() => {
     // Only run on client
@@ -438,15 +442,27 @@ const responsiveTagStyle = {
       }
     }
   }, [menuOpen, hasConsented]);
+  // Logout confirmation modal state
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+
   const handleLogout = () => {
+    setShowLogoutModal(true);
+  };
+
+  const confirmLogout = () => {
+    setShowLogoutModal(false);
     localStorage.removeItem("user");
     localStorage.removeItem("authToken");
     setUser(null);
-  // setMyAds([]); // removed, handled in MyAds
+    // setMyAds([]); // removed, handled in MyAds
     setSelectedMessage(null);
     setFavorites([]);
     window.location.reload();
     // Optionally, redirect to login
+  };
+
+  const cancelLogout = () => {
+    setShowLogoutModal(false);
   };
 
   const handleCredentialResponse = (response) => {
@@ -545,6 +561,38 @@ const responsiveTagStyle = {
 
   return (
     <div style={styles.app}>
+      {/* Logout Confirmation Modal */}
+      {showLogoutModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '100vh',
+          background: 'rgba(0,0,0,0.3)',
+          zIndex: 3000,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}>
+          <div style={{
+            background: '#fff',
+            borderRadius: 12,
+            padding: '32px 24px',
+            boxShadow: '0 4px 24px rgba(0,0,0,0.13)',
+            minWidth: 300,
+            textAlign: 'center',
+            zIndex: 3100
+          }}>
+            <h3 style={{marginBottom: 16}}>Confirm Logout</h3>
+            <p style={{marginBottom: 24}}>Are you sure you want to logout?</p>
+            <div style={{display: 'flex', justifyContent: 'center', gap: 16}}>
+              <button onClick={confirmLogout} style={{background: '#ef4444', color: '#fff', border: 'none', borderRadius: 6, padding: '8px 20px', fontWeight: 600, cursor: 'pointer'}}>Logout</button>
+              <button onClick={cancelLogout} style={{background: '#e5e7eb', color: '#222', border: 'none', borderRadius: 6, padding: '8px 20px', fontWeight: 600, cursor: 'pointer'}}>Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Consent Modal and overlay if not consented */}
       {!localStorage.getItem('userConsent') && (
         <>
