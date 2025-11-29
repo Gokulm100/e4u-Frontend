@@ -59,10 +59,11 @@ const tabBtnStyle = {
   background: 'none',
   border: 'none',
   fontSize: isMobile ? '1rem' : '1.15rem',
-  padding: isMobile ? '10px 0' : '14px 0',
+  padding: isMobile ? '10px 0px 10px' : '14px 0',
   cursor: 'pointer',
   color: '#374151',
   fontWeight: 500,
+  textAlign:'left',
   outline: 'none',
   borderBottom: '2.5px solid transparent',
   transition: 'color 0.2s, border-bottom 0.2s',
@@ -360,7 +361,11 @@ const MessagesPage = forwardRef(({ refetchUserMessages }, ref) => {
                   <div style={infoStyle}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                       <div style={avatarStyle}>
-                        {getInitials(chat.buyerName || chat.sellerName || chat.name || chat.fullName || (chat.firstName + ' ' + chat.lastName) || chat.email || 'U')}
+                        {getInitials(
+                          (activeTab === 'selling'
+                            ? chat.sellerName || chat.buyerName
+                            : chat.buyerName || chat.sellerName
+                          ) || chat.name || chat.fullName || (chat.firstName + ' ' + chat.lastName) || chat.email || 'U')}
                       </div>
                       <div style={{ display: 'flex', flexDirection: 'column' }}>
                         <span style={nameStyle}>{chat.buyerName}</span>
@@ -420,7 +425,13 @@ const MessagesPage = forwardRef(({ refetchUserMessages }, ref) => {
                 >
                     <div style={infoStyle}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <img src={chat.avatar} alt={chat.buyerName} style={avatarStyle} />
+                      <div style={avatarStyle}>
+                        {getInitials(
+                          (activeTab === 'selling'
+                            ? chat.sellerName || chat.buyerName
+                            : chat.buyerName || chat.sellerName
+                          ) || chat.name || chat.fullName || (chat.firstName + ' ' + chat.lastName) || chat.email || 'U')}
+                      </div>
                       <div style={{ display: 'flex', flexDirection: 'column' }}>
                       <span style={nameStyle}>{chat.buyerName}</span>
                       <span style={itemStyle}>{chat.item}</span>
