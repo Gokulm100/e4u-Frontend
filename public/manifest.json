@@ -5,37 +5,26 @@
   "start_url": "https://www.e4you.store/",
   "scope": "https://www.e4you.store/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#000000",
+  "background_color": "#194983",
+  "theme_color": "#194983",
   "orientation": "portrait-primary",
   "dir": "ltr",
   "icons": [
     {
-      "src": "https://www.e4you.store/icons/1024.png",
-      "sizes": "1024x1024",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "https://www.e4you.store/icons/512.png",
+      "src": "https://www.e4you.store/icons/android-launchericon-512-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
      {
-      "src": "https://www.e4you.store/icons/256.png",
+      "src": "https://www.e4you.store/icons/android-launchericon-256-256.png",
       "sizes": "256x256",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "https://www.e4you.store/logo192.png",
+      "src": "https://www.e4you.store/icons/android-launchericon-192-192.png",
       "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any"
-    }, {
-      "src": "https://www.e4you.store/logo512.png",
-      "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     }
