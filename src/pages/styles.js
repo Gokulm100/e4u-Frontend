@@ -5,7 +5,7 @@
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
     },
     header: {
-            background: 'linear-gradient(90deg, #194983ff 0%, #276ec6ff 100%)',
+            background: '#194983',
       boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
       position: 'sticky',
       top: 0,
