@@ -3,6 +3,14 @@ import { useSwipeable } from 'react-swipeable';
 import Chat from './chat';
 import ChatFullScreen from './ChatFullScreen';
 
+// Helper to get initials from a name string ("First Last" or just "First")
+function getInitials(name) {
+  if (!name || typeof name !== 'string') return '';
+  const parts = name.trim().split(' ');
+  if (parts.length === 1) return parts[0][0]?.toUpperCase() || '';
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+
 // Simple loader overlay component
 const ChatLoading = () => (
   <div style={{
@@ -79,12 +87,21 @@ const cardStyle = {
   transition: 'box-shadow 0.2s',
 };
 const avatarStyle = {
-  width: isMobile ? '40px' : '48px',
-  height: isMobile ? '40px' : '48px',
+  width: isMobile ? 40 : 48,
+  height: isMobile ? 40 : 48,
   borderRadius: '50%',
-  marginRight: isMobile ? '10px' : '18px',
-  marginBottom: isMobile ? '8px' : '0',
-  objectFit: 'cover',
+  marginRight: isMobile ? 10 : 18,
+  // Remove marginBottom to avoid oval effect
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  background: '#3182ba',
+  color: '#ffffff',
+  fontWeight: 700,
+  fontSize: 18,
+  objectFit: 'contain',
+  flexShrink: 0,
+  overflow: 'hidden',
 };
 const infoStyle = {
   flex: 1,
@@ -342,7 +359,9 @@ const MessagesPage = forwardRef(({ refetchUserMessages }, ref) => {
                 >
                   <div style={infoStyle}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <img src={chat.avatar} alt={chat.buyerName} style={avatarStyle} />
+                      <div style={avatarStyle}>
+                        {getInitials(chat.buyerName || chat.sellerName || chat.name || chat.fullName || (chat.firstName + ' ' + chat.lastName) || chat.email || 'U')}
+                      </div>
                       <div style={{ display: 'flex', flexDirection: 'column' }}>
                         <span style={nameStyle}>{chat.buyerName}</span>
                         <span style={itemStyle}>{chat.item}</span>
