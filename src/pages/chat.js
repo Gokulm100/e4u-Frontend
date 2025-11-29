@@ -197,7 +197,11 @@ const Chat = ({
             width: `calc(${(selectedListing?.seller || 'Seller').length}ch + 16px)`
           }}>{selectedListing?.seller || selectedListing?.buyer}</span>
         </div>
-        <button style={{ background: 'none', border: 'none', fontSize: 20, color: '#ffffffff', cursor: 'pointer', marginLeft: 8 }} onClick={() => setChatOpen(false)} aria-label="Close chat">&times;</button>
+        <button style={{ background: 'none', border: 'none', fontSize: 22, color: '#fff', cursor: 'pointer', marginLeft: 8, display: 'flex', alignItems: 'center' }} onClick={() => setChatOpen(false)} aria-label="Back">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M15.5 19L9.5 12L15.5 5" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </button>
       </div>
       <div
         ref={chatContainerRef}
