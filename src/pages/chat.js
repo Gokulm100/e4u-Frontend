@@ -1,5 +1,6 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useSwipeable } from 'react-swipeable';
+import ChatGuidelinesNotifier from '../components/ChatGuidelinesNotifier';
 const Chat = ({
   user,
   chatOpen,
@@ -18,7 +19,27 @@ const Chat = ({
   isMobile = false
 }) => {
 
-  // (Removed effect that called refreshChats on chatOpen)
+  // Notifier state: show only first time for this user/person pair
+  const [showGuidelines, setShowGuidelines] = useState(false);
+
+  // Unique key for this chat (userId + other person)
+  const chatPersonId = (() => {
+    if (!user) return '';
+    // If current user is seller, other is buyer; else other is seller
+    const isSeller = user._id === (selectedListing?.sellerId || selectedListing?.seller?._id);
+    return isSeller
+      ? (selectedListing?.buyerId || selectedListing?.buyer?._id || to || '')
+      : (selectedListing?.sellerId || selectedListing?.seller?._id || to || '');
+  })();
+
+  useEffect(() => {
+    if (!chatOpen || !user || !chatPersonId) return;
+    const key = `chat_guidelines_shown_${user._id}_${chatPersonId}`;
+    if (!localStorage.getItem(key)) {
+      setShowGuidelines(true);
+      localStorage.setItem(key, 'true');
+    }
+  }, [chatOpen, user, chatPersonId]);
   // Original effect (restored)
   // Memoize selectedListing IDs for effect dependencies
   const selectedListingId = selectedListing?.id || selectedListing?._id;
@@ -175,8 +196,9 @@ const Chat = ({
     });
 
     return (
-      <div style={chatContainerStyle} {...(isMobile ? swipeHandlers : {})}>
-      <div style={{ padding: '12px 18px',boxShadow: '0 1px 2px rgba(0,0,0,2)', borderBottomLeftRadius: 2,borderBottomRightRadius: 2, borderBottom: '1px solid #d7d6d6ff', fontWeight: 600, fontSize: 16, background: '#194983', display: 'flex', alignItems: 'center', justifyContent: 'space-between', minHeight: 0 }}>
+      <>
+        <div style={chatContainerStyle} {...(isMobile ? swipeHandlers : {})}>
+          <div style={{ padding: '12px 18px',boxShadow: '0 1px 2px rgba(0,0,0,2)', borderBottomLeftRadius: 2,borderBottomRightRadius: 2, borderBottom: '1px solid #d7d6d6ff', fontWeight: 600, fontSize: 16, background: '#194983', display: 'flex', alignItems: 'center', justifyContent: 'space-between', minHeight: 0 }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
           <span style={{ fontWeight: 700, color: '#f7f7f7ff', fontSize: 15, lineHeight: 1.2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', width: 'auto' }}>{selectedListing?.title || 'Ad'}</span>
           <span style={{
@@ -248,7 +270,11 @@ const Chat = ({
         )}
         <div ref={chatEndRef} />
       </div>
-      <div style={{ padding: '16px 24px', borderTop: '1px solid #f0f0f0', background: '#fff', display: 'flex', gap: 8 }}>
+      {/* Guidelines Notifier as pull-up */}
+      {showGuidelines && (
+        <ChatGuidelinesNotifier onClose={() => setShowGuidelines(false)} />
+      )}
+      <div style={{ padding: '16px 24px', borderTop: '1px solid #f0f0f0', background: '#fff', display: 'flex', gap: 8, position: 'relative', zIndex: 10 }}>
         <input
           type="text"
           value={chatInput}
@@ -264,8 +290,9 @@ const Chat = ({
         />
         <button onClick={handleSendMessage} style={{ background: '#346feeff', color: '#fff', border: 'none', borderRadius: 10, padding: '10px 18px', fontWeight: 600, fontSize: 15, boxShadow: '0 2px 8px rgba(37,99,235,0.08)', transition: 'background 0.2s' }}>Send</button>
       </div>
-    </div>
-  );
+      </div>
+    </>
+    );
 };
 
 export default Chat;
