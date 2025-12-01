@@ -16,7 +16,8 @@ const Chat = ({
   fromMessagesPage = false,
   to,
   chatLoading,
-  isMobile = false
+  isMobile = false,
+  fraudRecommendations: propFraudRecommendations
 }) => {
 
   // Notifier state: show only first time for this user/person pair
@@ -45,6 +46,15 @@ const Chat = ({
   const selectedListingId = selectedListing?.id || selectedListing?._id;
   const selectedSellerId = selectedListing?.sellerId || selectedListing?.seller?._id;
   const selectedBuyerId = selectedListing?.buyerId || selectedListing?.buyer?._id;
+  const [fraudRecommendations, setFraudRecommendations] = useState(null);
+  useEffect(() => {
+    if (typeof propFraudRecommendations === 'string' && propFraudRecommendations.length > 0) {
+      setFraudRecommendations(propFraudRecommendations);
+      return;
+    }else {
+      setFraudRecommendations(null);
+    }
+  }, [propFraudRecommendations]);
   useEffect(() => {
     if (disableAutoFetch) return;
     if (fromMessagesPage) return; 
@@ -58,18 +68,26 @@ const Chat = ({
       })
         .then(res => res.json())
         .then(data => {
-          // setChatLoading(false);
+          console.log('Fetched chat messages:', data);
+          if (data && data.fraudCheck && data.fraudCheck.recommendations) {
+            setFraudRecommendations(data.fraudCheck.recommendations);
+          } else {
+            setFraudRecommendations(null);
+          }
           if (Array.isArray(data)) {
             setChatMessages(data);
-          } else if (Array.isArray(data.messages)) {
-            setChatMessages(data.messages);
+          } else if (Array.isArray(data.chats)) {
+            setChatMessages(data.chats);
           } else {
             setChatMessages([]);
           }
         })
-        .catch(() => setChatMessages([]));
+        .catch(() => {
+          setChatMessages([]);
+          setFraudRecommendations(null);
+        });
     }
-  }, [chatOpen, selectedListingId,selectedBuyerId, selectedSellerId, user, API_BASE_URL, setChatMessages, disableAutoFetch, fromMessagesPage]);
+  }, [chatOpen, selectedListingId,selectedBuyerId, selectedSellerId, user, API_BASE_URL, setChatMessages, disableAutoFetch, fromMessagesPage, propFraudRecommendations]);
 
   // Removed new effect for MessagesPage modal open
   const handleSendMessage = () => {
@@ -227,7 +245,7 @@ const Chat = ({
       </div>
       <div
         ref={chatContainerRef}
-        style={{ flex: 1, minHeight: 220, maxHeight: isMobile ? 'auto' : 320, overflowY: 'auto', padding: '18px 24px', background: '#fafbfc' }}
+        style={{ flex: 1, minHeight: 220, maxHeight: isMobile ? 'auto' : 320, overflowY: 'auto', padding: '18px 24px', background: '#fafbfc', position: 'relative' }}
         onScroll={() => {
           const container = chatContainerRef.current;
           if (!container) return;
@@ -270,6 +288,66 @@ const Chat = ({
         )}
         <div ref={chatEndRef} />
       </div>
+      {/* Spam Protection Tag UI always above input, for web and mobile */}
+      {fraudRecommendations && (
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'stretch',
+          background: '#fffbe6',
+          borderTop: '1px solid #ffe58f',
+          padding: '8px 12px',
+          fontSize: 12,
+          color: '#ad6800',
+          fontWeight: 600,
+          letterSpacing: 0.05,
+          position: 'relative',
+          zIndex: 12,
+          gap: 4,
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', width: '100%', justifyContent: 'space-between' }}>
+            <span style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 4,
+              background: 'none',
+              color: '#ad6800',
+              fontWeight: 600,
+              fontSize: 13,
+              textAlign: 'left',
+              flex: 1,
+              lineHeight: 1.4
+            }}>
+              <span role="img" aria-label="warning" style={{fontSize:16,marginRight:4}}>⚠️</span>
+              Potential Fraud! Be cautious.
+            </span>
+            <button
+              style={{
+                background: '#ff7875',
+                color: '#fff',
+                border: 'none',
+                borderRadius: 5,
+                padding: '4px 16px',
+                fontWeight: 600,
+                fontSize: 13,
+                cursor: 'pointer',
+                marginLeft: 16,
+                boxShadow: '0 1px 2px rgba(255,87,87,0.08)',
+                transition: 'background 0.2s',
+                alignSelf: 'center',
+              }}
+              title="Report user"
+              aria-label="Report user"
+              onClick={() => alert('Thank you for reporting. Our team will review this user.')}
+            >
+              Report
+            </button>
+          </div>
+          <div style={{ color: '#ad6800', fontWeight: 500, fontSize: 12, marginTop: 4, marginLeft: 0, whiteSpace: 'pre-line', textAlign: 'left', lineHeight: 1.5 }}>
+            {fraudRecommendations}
+          </div>
+        </div>
+      )}
       {/* Guidelines Notifier as pull-up */}
       {showGuidelines && (
         <ChatGuidelinesNotifier onClose={() => setShowGuidelines(false)} />

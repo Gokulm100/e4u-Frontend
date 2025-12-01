@@ -152,6 +152,7 @@ const MessagesPage = forwardRef(({ refetchUserMessages }, ref) => {
   const [chatOpen, setChatOpen] = useState(false);
   const [selectedChat, setSelectedChat] = useState(null);
   const [chatMessages, setChatMessages] = useState([]);
+  const [fraudRecommendations, setFraudRecommendations] = useState(null);
   const [chatInput, setChatInput] = useState("");
   const [user, setUser] = useState(null);
   const [chatLoading, setChatLoading] = useState(false);
@@ -348,12 +349,20 @@ const MessagesPage = forwardRef(({ refetchUserMessages }, ref) => {
                       const res = await fetch(`${API_BASE_URL}/api/ads/chat?adId=${chat.adId}&sellerId=${chat.sellerId}&buyerId=${chat.buyerId}`);
                       if (res.ok) {
                         const data = await res.json();
-                        setChatMessages(data || []);
+                        setChatMessages(data.chats || []);
+                        console.log(data.fraudCheck.recommendations);
+                        if (data && data.fraudCheck && data.fraudCheck.recommendations) {
+                          setFraudRecommendations(data.fraudCheck.recommendations);
+                        } else {
+                          setFraudRecommendations(null);
+                        }
                       } else {
                         setChatMessages([]);
+                        setFraudRecommendations(null);
                       }
                     } catch {
                       setChatMessages([]);
+                      setFraudRecommendations(null);
                     }
                     setChatLoading(false);
                   }}
@@ -413,12 +422,19 @@ const MessagesPage = forwardRef(({ refetchUserMessages }, ref) => {
                       const res = await fetch(`${API_BASE_URL}/api/ads/chat?adId=${chat.adId}&buyerId=${chat.buyerId}&sellerId=${chat.sellerId}`);
                       if (res.ok) {
                         const data = await res.json();
-                        setChatMessages(data || []);
+                        setChatMessages(data.chats || []);
+                        if (data && data.fraudCheck && data.fraudCheck.recommendations) {
+                          setFraudRecommendations(data.fraudCheck.recommendations);
+                        } else {
+                          setFraudRecommendations(null);
+                        }
                       } else {
                         setChatMessages([]);
+                        setFraudRecommendations(null);
                       }
                     } catch {
                       setChatMessages([]);
+                      setFraudRecommendations(null);
                     }
                     setChatLoading(false);
                   }}
@@ -511,6 +527,7 @@ const MessagesPage = forwardRef(({ refetchUserMessages }, ref) => {
                 disableAutoFetch={true}
                 to={selectedChat.sellerId || selectedChat.buyerId}
                 refreshChats={refreshChats}
+                fraudRecommendations={fraudRecommendations}
               />
             )
           )}
