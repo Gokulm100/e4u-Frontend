@@ -27,8 +27,8 @@ export default function ChatGuidelinesNotifier({ onClose }) {
     {
       type: 'warning',
       content: <>
-        <div style={{ fontWeight: 700, fontSize: 15, color: '#713f12', marginBottom: 8 }}>Warning Signs of Potential Fraud</div>
-        <ul style={{ color: '#dd831bff', fontSize: 15, marginBottom: 10, minHeight: 32, textAlign: 'left', paddingLeft: 18 }}>
+        <div style={{ fontWeight: 700, fontSize: 15, color: '#194983', marginBottom: 8 }}>Warning Signs of Potential Fraud</div>
+        <ul style={{ color: '#000000ff', fontSize: 15, marginBottom: 10, minHeight: 32, textAlign: 'left', paddingLeft: 18 }}>
           <li style={{ marginBottom: 6 }}>Refusal to meet in person or provide additional photos</li>
           <li style={{ marginBottom: 6 }}>Requests for unconventional payment methods</li>
         </ul>
