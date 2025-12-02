@@ -150,7 +150,7 @@ const Landing = () => {
       })
         .then(res => res.json())
         .then(data => {
-          setMessageCount(Array.isArray(data) ? data.length : 0);
+          setMessageCount(Array.isArray(data.chats) ? data.chats.length : 0);
         })
         .catch(() => setMessageCount(0));
     } else {

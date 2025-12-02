@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useSwipeable } from 'react-swipeable';
 import ChatGuidelinesNotifier from '../components/ChatGuidelinesNotifier';
+import { use } from 'react';
 const Chat = ({
   user,
   chatOpen,
@@ -41,11 +42,12 @@ const Chat = ({
       localStorage.setItem(key, 'true');
     }
   }, [chatOpen, user, chatPersonId]);
+  console.log(selectedListing);
   // Original effect (restored)
   // Memoize selectedListing IDs for effect dependencies
   const selectedListingId = selectedListing?.id || selectedListing?._id;
   const selectedSellerId = selectedListing?.sellerId || selectedListing?.seller?._id;
-  const selectedBuyerId = selectedListing?.buyerId || selectedListing?.buyer?._id;
+  const selectedBuyerId = selectedListing?.buyerId || selectedListing?.buyer?._id ||user?._id;
   const [fraudRecommendations, setFraudRecommendations] = useState(null);
   useEffect(() => {
     if (typeof propFraudRecommendations === 'string' && propFraudRecommendations.length > 0) {

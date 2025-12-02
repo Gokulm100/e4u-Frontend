@@ -346,7 +346,13 @@ const MessagesPage = forwardRef(({ refetchUserMessages }, ref) => {
                     setChatOpen(true);
                     // Fetch messages before opening modal
                     try {
-                      const res = await fetch(`${API_BASE_URL}/api/ads/chat?adId=${chat.adId}&sellerId=${chat.sellerId}&buyerId=${chat.buyerId}`);
+                      const res = await fetch(`${API_BASE_URL}/api/ads/chat?adId=${chat.adId}&sellerId=${chat.sellerId}&buyerId=${chat.buyerId}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+          'Content-Type': 'application/json'
+        }
+      })
                       if (res.ok) {
                         const data = await res.json();
                         setChatMessages(data.chats || []);
@@ -419,7 +425,13 @@ const MessagesPage = forwardRef(({ refetchUserMessages }, ref) => {
                     setChatOpen(true);
                     // Fetch messages before opening modal
                     try {
-                      const res = await fetch(`${API_BASE_URL}/api/ads/chat?adId=${chat.adId}&buyerId=${chat.buyerId}&sellerId=${chat.sellerId}`);
+                      const res = await fetch(`${API_BASE_URL}/api/ads/chat?adId=${chat.adId}&buyerId=${chat.buyerId}&sellerId=${chat.sellerId}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+          'Content-Type': 'application/json'
+        }
+      })
                       if (res.ok) {
                         const data = await res.json();
                         setChatMessages(data.chats || []);
