@@ -1,0 +1,72 @@
+import React, { useState } from 'react';
+import { Search, X, PlusCircle } from 'lucide-react';
+import { useApp } from '../context/AppContext';
+
+export default function Topbar() {
+  const { user, navigate, setSearchQuery, fetchListings, setPage, setListings } = useApp();
+  const [query, setQuery] = useState('');
+
+  const handleSearch = (e) => {
+    if (e.key === 'Enter') {
+      setSearchQuery(query);
+      setPage(1);
+      setListings([]);
+      fetchListings(1, true);
+      navigate('home');
+    }
+  };
+
+  const handleClear = () => {
+    setQuery('');
+    setSearchQuery('');
+    setPage(1);
+    setListings([]);
+    fetchListings(1, true);
+  };
+
+  return (
+    <header className="topbar">
+      <div className="topbar-logo" onClick={() => navigate('home')}>
+        <span className="logo-text">Dea<span>l</span>r</span>
+        <span className="logo-sub">Deal with the Right App!</span>
+      </div>
+
+      <div className="topbar-search">
+        <Search size={16} style={{ color: 'rgba(255,255,255,0.7)', flexShrink: 0 }} />
+        <input
+          type="text"
+          placeholder="Search ads..."
+          value={query}
+          onChange={e => setQuery(e.target.value)}
+          onKeyDown={handleSearch}
+        />
+        {query && (
+          <button onClick={handleClear}>
+            <X size={16} />
+          </button>
+        )}
+      </div>
+
+      <div className="topbar-right">
+        <button className="topbar-btn" onClick={() => navigate('post')}>
+          <PlusCircle size={16} /> Post Ad
+        </button>
+        {user ? (
+          user.profilePic
+            ? <img className="topbar-avatar" src={user.profilePic} alt={user.name} onClick={() => navigate('profile')} />
+            : (
+              <div
+                className="topbar-avatar"
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.25)', color: '#fff', fontWeight: 800, fontSize: 16 }}
+                onClick={() => navigate('profile')}
+              >
+                {user.name?.charAt(0) || 'U'}
+              </div>
+            )
+        ) : (
+          <button className="topbar-btn primary" onClick={() => navigate('profile')}>Sign In</button>
+        )}
+      </div>
+    </header>
+  );
+}
