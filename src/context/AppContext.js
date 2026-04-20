@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 
-const API = 'http://localhost:3001';
+const API = 'https://e4u-backend.onrender.com';
 const LIMIT = 10;
 
 const AppContext = createContext(null);
