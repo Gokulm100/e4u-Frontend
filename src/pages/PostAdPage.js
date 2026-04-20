@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Camera, AlertCircle } from 'lucide-react';
 import { useApp } from '../context/AppContext';
+import AiTextArea from '../components/aiTextArea';
 
 export default function PostAdPage() {
   const { user, apiFetch, navigate, showToast, categories, locations, pageExtra, fetchListings } = useApp();
@@ -58,15 +59,31 @@ export default function PostAdPage() {
   const removeImage = (i) => setImages(prev => prev.filter((_, idx) => idx !== i));
   const removeExisting = (i) => setExistingImages(prev => prev.filter((_, idx) => idx !== i));
 
+  // Helper to animate text like a typewriter
+  const animateDescription = (text) => {
+    let i = 0;
+    setDescription('');
+    const interval = setInterval(() => {
+      setDescription(prev => {
+        if (i >= text.length) {
+          clearInterval(interval);
+          return prev;
+        }
+        i++;
+        return text.slice(0, i);
+      });
+    }, 12); // Adjust speed as needed
+  };
+
   const generateAiDescription = async () => {
     if (!title || !selectedCatName) { showToast('Please add a title and category first.', 'error'); return; }
     setAiLoading(true);
     try {
       const res = await apiFetch('/api/ads/generateDescriptionUsingAI', {
         method: 'POST',
-        body: JSON.stringify({ title, category: selectedCatName, subCategory: selectedSubCat || 'General' }),
+        body: JSON.stringify({ title, category: selectedCatName, subCategory: selectedSubCat || 'General',description:description || '' }),
       });
-      if (res.description) setDescription(res.description);
+      if (res.data) animateDescription(res.data);
     } catch { showToast('AI description failed.', 'error'); }
     finally { setAiLoading(false); }
   };
@@ -94,7 +111,7 @@ export default function PostAdPage() {
 
       const token = localStorage.getItem('authToken');
       const url = editingAd
-        ? `https://e4u-backend.onrender.com/api/ads/updateAdd/${editingAd.id}`
+        ? `https://e4u-backend.onrender.com/api/ads/edit/${editingAd.id}`
         : 'https://e4u-backend.onrender.com/api/ads/postAdd';
       const method = editingAd ? 'PUT' : 'POST';
       const res = await fetch(url, {
@@ -106,7 +123,7 @@ export default function PostAdPage() {
       showToast(editingAd ? 'Ad updated!' : 'Ad posted successfully!', 'success');
       fetchListings(1, true);
       navigate('my-ads');
-    } catch { showToast('Failed to submit ad.', 'error'); }
+    } catch { showToast(`Failed to ${editingAd ? 'update' : 'post'} ad.`, 'error'); }
     finally { setSubmitting(false); }
   };
 
@@ -179,12 +196,11 @@ export default function PostAdPage() {
             Description * <span className="char-count">({description.length}/150 min)</span>
           </label>
           <div className="ai-textarea-wrap">
-            <textarea
-              className="form-input form-textarea"
-              placeholder="Describe your item in detail..."
+            <AiTextArea
               value={description}
               onChange={e => setDescription(e.target.value)}
-              style={{ paddingBottom: 40 }}
+              category={selectedCatName}
+              subcategory={selectedSubCat}
             />
             <button className="ai-btn" onClick={generateAiDescription} disabled={aiLoading} type="button">
               {aiLoading ? '...' : '✦'} <span>AI Write</span>

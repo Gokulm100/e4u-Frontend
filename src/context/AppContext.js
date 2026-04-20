@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 
-const API = 'https://e4u-backend.onrender.com';
+const API = 'http://localhost:3001';
 const LIMIT = 10;
 
 const AppContext = createContext(null);
@@ -148,7 +148,7 @@ export function AppProvider({ children }) {
           'Authorization': `Bearer ${storedToken}`
         },
         })
-      const buying = Array.isArray(res?.chats) ? res.chats : [];
+      const buying = Array.isArray(res?.filteredMessages) ? res.filteredMessages : [];
       const res2 = await apiFetch('/api/ads/getSellingMessages', {
         method: 'POST',
         headers: {
@@ -157,7 +157,7 @@ export function AppProvider({ children }) {
         },
         },
            );
-      const selling = Array.isArray(res2?.chats) ? res2.chats : [];
+      const selling = Array.isArray(res2?.filteredMessages) ? res2.filteredMessages : [];
       const count = [...buying, ...selling].filter(c => c.isSeen === false).length;
       setMessageCount(count);
     } catch { /* ignore */ }

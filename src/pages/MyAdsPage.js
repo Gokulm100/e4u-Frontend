@@ -156,12 +156,12 @@ export default function MyAdsPage() {
           </div>
           <div className="my-ad-actions">
             <button className="edit-btn" onClick={e => { e.stopPropagation(); navigate('post', { ad }); }}>Edit</button>
+            {ad.isActive == true ? <button className="delete-btn" onClick={e => { e.stopPropagation(); handleDelete(ad); }}>Disable</button> : <button className="edit-btn" style={{ background: '#f0fdf4', borderColor: '#bbf7d0', color: 'var(--success)' }} onClick={e => { e.stopPropagation(); handleEnable(ad); }}>Enable</button>}
             {ad.status !== 'sold' && (
               <button className="edit-btn" style={{ background: '#e6ecf4', borderColor: '#90bcee', color: 'var(--primary)' }} onClick={e => { e.stopPropagation(); handleMarkSold(ad); }}>
                 Mark Sold
               </button>
             )}
-            {ad.isActive == true ? <button className="delete-btn" onClick={e => { e.stopPropagation(); handleDelete(ad); }}>Disable</button> : <button className="edit-btn" style={{ background: '#f0fdf4', borderColor: '#bbf7d0', color: 'var(--success)' }} onClick={e => { e.stopPropagation(); handleEnable(ad); }}>Enable</button>}
           </div>
         </div>
       ))}
