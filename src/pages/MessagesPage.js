@@ -54,8 +54,9 @@ function ChatRow({ item, isBuying, user, onClick }) {
   );
 }
 
+
 export default function MessagesPage() {
-  const { user, apiFetch, navigate, showToast } = useApp();
+  const { user, apiFetch, navigate, hasConsented } = useApp();
   const [tab, setTab] = useState(0);
   const [buying, setBuying] = useState([]);
   const [selling, setSelling] = useState([]);
@@ -67,23 +68,22 @@ export default function MessagesPage() {
     async function load() {
       setLoading(true);
       try {
-            const storedToken = localStorage.getItem("authToken");
+        const storedToken = localStorage.getItem("authToken");
         const [r1, r2] = await Promise.all([
           apiFetch('/api/ads/getBuyingMessages', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${storedToken}`
-        },
-        },
-            ),
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${storedToken}`
+            },
+          }),
           apiFetch('/api/ads/getSellingMessages ', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${storedToken}`
-        },
-            }),
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${storedToken}`
+            },
+          }),
         ]);
         if (!cancelled) {
           setBuying(Array.isArray(r1?.filteredMessages) ? r1.filteredMessages : []);
@@ -105,6 +105,20 @@ export default function MessagesPage() {
         <div className="login-title">Your Messages</div>
         <div className="login-sub">Sign in to view your chats with buyers and sellers.</div>
         <button className="google-btn" onClick={() => navigate('profile')}>Sign In</button>
+      </div>
+    );
+  }
+
+  // Show translucent overlay if user is logged in but hasConsented is false
+  if (user && hasConsented === false) {
+    return (
+      <div className="messages-page-overlay-wrap">
+        <div className="messages-page-overlay-blur" />
+        <div className="messages-page-overlay-content">
+          <h2>Please Accept Privacy & Terms</h2>
+          <p style={{margin: '16px 0 24px 0'}}>To use messaging and other features, please accept our Privacy Policy and Terms of Service.</p>
+          <button className="accept-btn" style={{minWidth: 180}} onClick={() => navigate('consent')}>Review & Accept</button>
+        </div>
       </div>
     );
   }

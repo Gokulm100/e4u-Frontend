@@ -5,7 +5,7 @@ import { useApp } from '../context/AppContext';
 const FALLBACK = 'https://images.pexels.com/photos/10703759/pexels-photo-10703759.jpeg';
 
 export default function MyAdsPage() {
-  const { user, apiFetch, navigate, showToast, showModal, mapListing, fetchListings } = useApp();
+  const { user, apiFetch, navigate, showToast, showModal, mapListing, hasConsented } = useApp();
   const [ads, setAds] = useState([]);
   const [loading, setLoading] = useState(false);
 
@@ -82,6 +82,7 @@ export default function MyAdsPage() {
     });
   };
 
+
   if (!user) {
     return (
       <div className="login-wall">
@@ -94,6 +95,20 @@ export default function MyAdsPage() {
         <div className="login-title">My Ads</div>
         <div className="login-sub">Sign in to manage your posted ads.</div>
         <button className="google-btn" onClick={() => navigate('profile')}>Sign In</button>
+      </div>
+    );
+  }
+
+  // Show translucent overlay if user is logged in but hasConsented is false
+  if (user && hasConsented === false) {
+    return (
+      <div className="messages-page-overlay-wrap">
+        <div className="messages-page-overlay-blur" />
+        <div className="messages-page-overlay-content">
+          <h2>Please Accept Privacy & Terms</h2>
+          <p style={{margin: '16px 0 24px 0'}}>To manage your ads and other features, please accept our Privacy Policy and Terms of Service.</p>
+          <button className="accept-btn" style={{minWidth: 180}} onClick={() => navigate('consent')}>Review & Accept</button>
+        </div>
       </div>
     );
   }
@@ -149,14 +164,14 @@ export default function MyAdsPage() {
             <div className="my-ad-price">₹{Number(ad.price).toLocaleString('en-IN')}</div>
             <div className="my-ad-meta">{ad.location} · {ad.posted}</div>
             <div style={{ marginTop: 6 }}>
-              <span className={`ad-status-badge ${ad.isActive == false ? 'inactive' : 'active'}`}>
-                {ad.isActive == false ? 'inactive' : 'Active'}
+              <span className={`ad-status-badge ${ad.isActive === false ? 'inactive' : 'active'}`}>
+                {ad.isActive === false ? 'inactive' : 'Active'}
               </span>
             </div>
           </div>
           <div className="my-ad-actions">
             <button className="edit-btn" onClick={e => { e.stopPropagation(); navigate('post', { ad }); }}>Edit</button>
-            {ad.isActive == true ? <button className="delete-btn" onClick={e => { e.stopPropagation(); handleDelete(ad); }}>Disable</button> : <button className="edit-btn" style={{ background: '#f0fdf4', borderColor: '#bbf7d0', color: 'var(--success)' }} onClick={e => { e.stopPropagation(); handleEnable(ad); }}>Enable</button>}
+            {ad.isActive === true ? <button className="delete-btn" onClick={e => { e.stopPropagation(); handleDelete(ad); }}>Disable</button> : <button className="edit-btn" style={{ background: '#f0fdf4', borderColor: '#bbf7d0', color: 'var(--success)' }} onClick={e => { e.stopPropagation(); handleEnable(ad); }}>Enable</button>}
             {ad.status !== 'sold' && (
               <button className="edit-btn" style={{ background: '#e6ecf4', borderColor: '#90bcee', color: 'var(--primary)' }} onClick={e => { e.stopPropagation(); handleMarkSold(ad); }}>
                 Mark Sold
