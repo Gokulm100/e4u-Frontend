@@ -538,3 +538,121 @@ body {
   .main { margin-left: 0; padding: 16px; padding-bottom: 74px; }
   .mobile-nav { display: flex; }
 }
+
+@media (max-width: 1024px) {
+  .topbar { padding: 0 16px; gap: 12px; }
+  .topbar-search { max-width: 360px; }
+  .main { padding: 20px; }
+  .ads-grid { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); }
+  .offers-row { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 768px) {
+  :root { --header-h: 112px; }
+  .topbar {
+    height: var(--header-h);
+    flex-wrap: wrap;
+    align-content: center;
+    padding: 10px 12px;
+    gap: 8px;
+  }
+  .topbar-logo { min-width: 0; }
+  .topbar-logo .logo-text { font-size: 24px; }
+  .topbar-logo .logo-sub { display: none; }
+  .topbar-search {
+    order: 3;
+    flex-basis: 100%;
+    max-width: none;
+    height: 38px;
+  }
+  .topbar-search input { font-size: 16px; }
+  .topbar-right {
+    margin-left: auto;
+    gap: 8px;
+  }
+  .topbar-right > .topbar-btn:not(.primary) { display: none; }
+  .topbar-btn.primary { padding: 7px 12px; font-size: 12px; }
+  .topbar-avatar { width: 34px; height: 34px; }
+
+  .filter-bar { padding: 12px; }
+  .ads-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .ad-card-img { height: 130px; }
+  .ad-title { font-size: 13px; height: 36px; }
+
+  .page-title { font-size: 20px; margin-bottom: 14px; }
+  .detail-back-bar { padding: 12px 14px; margin-bottom: 14px; }
+  .detail-section { padding: 14px; }
+  .detail-title { font-size: 18px; }
+  .detail-price { font-size: 24px; }
+  .analytics-insights { margin-right: -4px; padding-right: 4px; }
+
+  .chat-detail-layout { height: calc(100vh - var(--header-h) - 92px); }
+  .chat-detail-msgs { padding: 14px; }
+  .msg-bubble { max-width: 85%; }
+  .chat-detail-input { padding: 10px 12px; }
+  .chat-detail-input .form-textarea { min-height: 40px; max-height: 90px; }
+
+  .messages-split-layout { gap: 12px; }
+  .messages-list-panel { min-height: 260px; }
+  .messages-chat-panel { min-height: 360px; }
+  .chat-row { padding: 12px; gap: 10px; }
+  .chat-avatar { width: 44px; height: 44px; font-size: 16px; }
+  .chat-preview, .chat-ad-title { font-size: 12px; }
+
+  .my-ad-row { flex-direction: column; gap: 12px; }
+  .my-ad-img { width: 100%; height: 180px; }
+  .my-ad-actions {
+    width: 100%;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    align-items: center;
+  }
+
+  .post-form, .consent-layout { max-width: 100%; }
+  .form-card { padding: 14px; }
+  .consent-header-card { padding: 16px; }
+  .consent-brand { gap: 10px; }
+  .consent-title { font-size: 18px; }
+
+  .user-card {
+    flex-direction: column;
+    align-items: flex-start;
+    text-align: left;
+    gap: 10px;
+  }
+
+  .login-wall {
+    margin: 24px auto;
+    padding: 28px 16px;
+  }
+  .login-icon-circle {
+    width: 84px;
+    height: 84px;
+    margin-bottom: 18px;
+  }
+
+  .modal {
+    width: calc(100% - 24px);
+    padding: 20px 16px;
+  }
+  .modal-btns { grid-template-columns: 1fr; }
+  .toast-wrap {
+    left: 12px;
+    right: 12px;
+    bottom: 84px;
+  }
+  .toast { width: 100%; }
+}
+
+@media (max-width: 480px) {
+  .main { padding: 12px; padding-bottom: 78px; }
+  .topbar { padding: 10px; }
+  .topbar-search { height: 36px; padding: 0 10px; }
+  .ads-grid { grid-template-columns: 1fr; }
+  .my-ad-img { height: 150px; }
+  .detail-meta { gap: 10px; }
+  .detail-tag { font-size: 11px; }
+  .messages-tabs { margin-bottom: 12px; }
+  .chat-detail-layout { height: calc(100vh - var(--header-h) - 88px); }
+}

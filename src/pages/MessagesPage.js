@@ -103,6 +103,11 @@ function formatDateLabel(dateStr) {
   return d.toLocaleDateString([], { month: 'short', day: 'numeric' });
 }
 
+function isSameConversation(item, chatInfo, isBuying, user) {
+  const itemInfo = getListChatInfo(item, isBuying, user);
+  return toChatKey(itemInfo) === toChatKey(chatInfo);
+}
+
 
 export default function MessagesPage() {
   const { user, apiFetch, navigate, hasConsented, showToast, fetchMessageCount } = useApp();
@@ -116,7 +121,20 @@ export default function MessagesPage() {
   const [input, setInput] = useState('');
   const [fraud, setFraud] = useState(null);
   const [showFraud, setShowFraud] = useState(true);
+  const [isMobileView, setIsMobileView] = useState(() => window.matchMedia('(max-width: 768px)').matches);
   const msgsRef = useRef(null);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(max-width: 768px)');
+    const onChange = (e) => setIsMobileView(e.matches);
+    setIsMobileView(mediaQuery.matches);
+    if (typeof mediaQuery.addEventListener === 'function') {
+      mediaQuery.addEventListener('change', onChange);
+      return () => mediaQuery.removeEventListener('change', onChange);
+    }
+    mediaQuery.addListener(onChange);
+    return () => mediaQuery.removeListener(onChange);
+  }, []);
 
   useEffect(() => {
     if (!user) return;
@@ -172,6 +190,19 @@ export default function MessagesPage() {
   }, [tab, list, user, loading, selectedKey]);
 
   const openChat = (chatInfo, otherName, isSeller) => {
+    if (isSeller) {
+      setSelling(prev => prev.map(item => (
+        isSameConversation(item, chatInfo, false, user) ? { ...item, isSeen: true } : item
+      )));
+    } else {
+      setBuying(prev => prev.map(item => (
+        isSameConversation(item, chatInfo, true, user) ? { ...item, isSeen: true } : item
+      )));
+    }
+    if (isMobileView) {
+      navigate('chat', { chatInfo, otherName, isSeller });
+      return;
+    }
     setMessages([]);
     setChatLoading(true);
     setSelectedChat({ chatInfo, otherName, isSeller });
@@ -316,6 +347,7 @@ export default function MessagesPage() {
         )}
       </div>
 
+      {!isMobileView && (
       <div className="messages-chat-panel">
         {!selectedChat?.chatInfo && (
           <div className="messages-chat-placeholder">
@@ -391,6 +423,7 @@ export default function MessagesPage() {
           </>
         )}
       </div>
+      )}
     </div>
   );
 }
