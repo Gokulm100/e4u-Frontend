@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Send } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 
 function getInitials(name) {
@@ -7,7 +8,7 @@ function getInitials(name) {
   return p.length === 1 ? p[0].substring(0, 2).toUpperCase() : (p[0][0] + p[p.length - 1][0]).toUpperCase();
 }
 
-function ChatRow({ item, isBuying, user, onClick }) {
+function ChatRow({ item, isBuying, user, onClick, isSelected }) {
   const otherName = isBuying
     ? (item.sellerName || item.seller?.name || 'Seller')
     : (item.buyerName || item.buyer?.name || 'Buyer');
@@ -29,7 +30,7 @@ function ChatRow({ item, isBuying, user, onClick }) {
 
   return (
     <div
-      className={`chat-row${isUnread ? ' unread' : ''}`}
+      className={`chat-row${isUnread ? ' unread' : ''}${isSelected ? ' selected' : ''}`}
       onClick={() => onClick({ adId, buyerId, sellerId, adTitle }, otherName, !isBuying)}
     >
       <div className="chat-avatar-wrap">
@@ -54,13 +55,68 @@ function ChatRow({ item, isBuying, user, onClick }) {
   );
 }
 
+function FraudBanner({ fraud, onClose }) {
+  if (!fraud?.fraudIndicators?.length) return null;
+  return (
+    <div className="fraud-banner">
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+        <div className="fraud-title">⚠ Safety Insight</div>
+        <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)' }} onClick={onClose}>✕</button>
+      </div>
+      <div className="fraud-indicators">
+        {fraud.fraudIndicators.map((ind, i) => (
+          <div key={i} className="fraud-indicator-row">
+            <div className="fraud-dot" />
+            <div className="fraud-text">{ind}</div>
+          </div>
+        ))}
+      </div>
+      {fraud.recommendations && (
+        <div className="fraud-rec-box">
+          <div className="fraud-rec-label">Recommendation:</div>
+          <div className="fraud-rec-text">{fraud.recommendations}</div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function toChatKey({ adId, buyerId, sellerId }) {
+  return `${adId || ''}-${buyerId || ''}-${sellerId || ''}`;
+}
+
+function getListChatInfo(item, isBuying, user) {
+  const buyerId = item.buyerId || item.buyer?._id || (isBuying ? user?._id : null);
+  const sellerId = item.sellerId || item.seller?._id || (!isBuying ? user?._id : null);
+  const adId = item.adId?._id || item.adId || item.ad?._id || item._id;
+  const adTitle = item.item || item.adTitle || item.adId?.title || item.ad?.title || '';
+  return { adId, buyerId, sellerId, adTitle };
+}
+
+function formatDateLabel(dateStr) {
+  const d = new Date(dateStr);
+  const now = new Date();
+  const yesterday = new Date();
+  yesterday.setDate(now.getDate() - 1);
+  if (d.toDateString() === now.toDateString()) return 'Today';
+  if (d.toDateString() === yesterday.toDateString()) return 'Yesterday';
+  return d.toLocaleDateString([], { month: 'short', day: 'numeric' });
+}
+
 
 export default function MessagesPage() {
-  const { user, apiFetch, navigate, hasConsented } = useApp();
+  const { user, apiFetch, navigate, hasConsented, showToast, fetchMessageCount } = useApp();
   const [tab, setTab] = useState(0);
   const [buying, setBuying] = useState([]);
   const [selling, setSelling] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [selectedChat, setSelectedChat] = useState(null);
+  const [messages, setMessages] = useState([]);
+  const [chatLoading, setChatLoading] = useState(false);
+  const [input, setInput] = useState('');
+  const [fraud, setFraud] = useState(null);
+  const [showFraud, setShowFraud] = useState(true);
+  const msgsRef = useRef(null);
 
   useEffect(() => {
     if (!user) return;
@@ -77,7 +133,7 @@ export default function MessagesPage() {
               'Authorization': `Bearer ${storedToken}`
             },
           }),
-          apiFetch('/api/ads/getSellingMessages ', {
+          apiFetch('/api/ads/getSellingMessages', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -95,6 +151,101 @@ export default function MessagesPage() {
     load();
     return () => { cancelled = true; };
   }, [user, apiFetch]);
+
+  const buyingUnread = buying.filter(c => c.isSeen === false).length;
+  const sellingUnread = selling.filter(c => c.isSeen === false).length;
+  const list = tab === 0 ? buying : selling;
+  const selectedKey = selectedChat?.chatInfo ? toChatKey(selectedChat.chatInfo) : '';
+
+  useEffect(() => {
+    if (!user || loading) return;
+    if (list.length === 0) {
+      setSelectedChat(null);
+      setMessages([]);
+      return;
+    }
+    const keys = new Set(list.map(item => toChatKey(getListChatInfo(item, tab === 0, user))));
+    if (selectedKey && !keys.has(selectedKey)) {
+      setSelectedChat(null);
+      setMessages([]);
+    }
+  }, [tab, list, user, loading, selectedKey]);
+
+  const openChat = (chatInfo, otherName, isSeller) => {
+    setMessages([]);
+    setChatLoading(true);
+    setSelectedChat({ chatInfo, otherName, isSeller });
+  };
+
+  const fetchSelectedChat = async () => {
+    const info = selectedChat?.chatInfo;
+    if (!info?.adId || !info?.buyerId || !info?.sellerId) return;
+    setChatLoading(true);
+    try {
+      const data = await apiFetch(`/api/ads/chat?adId=${info.adId}&buyerId=${info.buyerId}&sellerId=${info.sellerId}`);
+      if (data.fraudCheck) {
+        setFraud(data.fraudCheck);
+        setShowFraud(true);
+      }
+      const msgs = Array.isArray(data) ? data : (Array.isArray(data.chats) ? data.chats : []);
+      setMessages(msgs);
+    } catch { /* ignore */ }
+    finally { setChatLoading(false); }
+  };
+
+  const markSelectedSeen = async () => {
+    const info = selectedChat?.chatInfo;
+    if (!info?.adId || !user?._id) return;
+    try {
+      const senderId = selectedChat.isSeller ? info.buyerId : info.sellerId;
+      await apiFetch('/api/ads/markMessagesAsSeen', {
+        method: 'POST',
+        body: JSON.stringify({ adId: info.adId, reader: user._id, sender: senderId }),
+      });
+      fetchMessageCount();
+    } catch { /* ignore */ }
+  };
+
+  useEffect(() => {
+    if (!selectedChat?.chatInfo) return;
+    fetchSelectedChat();
+    markSelectedSeen();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedChat]);
+
+  useEffect(() => {
+    if (!selectedChat?.chatInfo) return undefined;
+    const interval = setInterval(fetchSelectedChat, 10000);
+    return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedChat]);
+
+  useEffect(() => {
+    if (msgsRef.current) msgsRef.current.scrollTop = msgsRef.current.scrollHeight;
+  }, [messages]);
+
+  const send = async () => {
+    const msg = input.trim();
+    const info = selectedChat?.chatInfo;
+    if (!msg || !info?.adId) return;
+    setInput('');
+    try {
+      await apiFetch('/api/ads/chat', {
+        method: 'POST',
+        body: JSON.stringify({
+          adId: info.adId,
+          from: selectedChat.isSeller ? info.sellerId : info.buyerId,
+          to: selectedChat.isSeller ? info.buyerId : info.sellerId,
+          message: msg,
+        }),
+      });
+      fetchSelectedChat();
+    } catch {
+      showToast('Could not send message.', 'error');
+    }
+  };
+
+  let lastDate = null;
 
   if (!user) {
     return (
@@ -123,49 +274,123 @@ export default function MessagesPage() {
     );
   }
 
-  const buyingUnread = buying.filter(c => c.isSeen === false).length;
-  const sellingUnread = selling.filter(c => c.isSeen === false).length;
-  const list = tab === 0 ? buying : selling;
-
-  const openChat = (chatInfo, otherName, isSeller) => {
-    navigate('chat', { chatInfo, otherName, isSeller });
-  };
-
   return (
-    <div>
-      <div className="messages-tabs">
-        <button className={`msg-tab${tab === 0 ? ' active' : ''}`} onClick={() => setTab(0)}>
-          Buying {buyingUnread > 0 && <span className="msg-badge">{buyingUnread}</span>}
-        </button>
-        <button className={`msg-tab${tab === 1 ? ' active' : ''}`} onClick={() => setTab(1)}>
-          Selling {sellingUnread > 0 && <span className="msg-badge">{sellingUnread}</span>}
-        </button>
+    <div className="messages-split-layout">
+      <div className="messages-list-panel">
+        <div className="messages-tabs">
+          <button className={`msg-tab${tab === 0 ? ' active' : ''}`} onClick={() => setTab(0)}>
+            Buying {buyingUnread > 0 && <span className="msg-badge">{buyingUnread}</span>}
+          </button>
+          <button className={`msg-tab${tab === 1 ? ' active' : ''}`} onClick={() => setTab(1)}>
+            Selling {sellingUnread > 0 && <span className="msg-badge">{sellingUnread}</span>}
+          </button>
+        </div>
+
+        {loading && (
+          <div className="empty-state"><div className="spinner" /></div>
+        )}
+
+        {!loading && list.length === 0 && (
+          <div className="empty-state">
+            <span className="empty-title">No chats yet</span>
+            <span className="empty-sub">{tab === 0 ? 'Start a conversation by messaging a seller.' : 'Buyers will appear here when they message you.'}</span>
+          </div>
+        )}
+
+        {!loading && list.length > 0 && (
+          <div className="chat-list">
+            {list.map((item, i) => {
+              const itemKey = toChatKey(getListChatInfo(item, tab === 0, user));
+              return (
+                <ChatRow
+                  key={i}
+                  item={item}
+                  isBuying={tab === 0}
+                  user={user}
+                  onClick={openChat}
+                  isSelected={itemKey === selectedKey}
+                />
+              );
+            })}
+          </div>
+        )}
       </div>
 
-      {loading && (
-        <div className="empty-state"><div className="spinner" /></div>
-      )}
+      <div className="messages-chat-panel">
+        {!selectedChat?.chatInfo && (
+          <div className="messages-chat-placeholder">
+            <span className="empty-title">Select a conversation</span>
+            <span className="empty-sub">Choose a chat from Buying or Selling to view messages.</span>
+          </div>
+        )}
 
-      {!loading && list.length === 0 && (
-        <div className="empty-state">
-          <span className="empty-title">No chats yet</span>
-          <span className="empty-sub">{tab === 0 ? 'Start a conversation by messaging a seller.' : 'Buyers will appear here when they message you.'}</span>
-        </div>
-      )}
+        {selectedChat?.chatInfo && (
+          <>
+            <div className="messages-chat-header">
+              <div className="detail-header-title">{selectedChat.otherName}</div>
+              {selectedChat.chatInfo.adTitle && (
+                <div className="messages-chat-subtitle">{selectedChat.chatInfo.adTitle}</div>
+              )}
+            </div>
 
-      {!loading && list.length > 0 && (
-        <div className="chat-list">
-          {list.map((item, i) => (
-            <ChatRow
-              key={i}
-              item={item}
-              isBuying={tab === 0}
-              user={user}
-              onClick={openChat}
-            />
-          ))}
-        </div>
-      )}
+            <div className="chat-detail-msgs" ref={msgsRef}>
+              {chatLoading && (
+                <div className="empty-state"><div className="spinner" /></div>
+              )}
+              {!chatLoading && messages.length === 0 && (
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--muted)' }}>
+                  No messages yet. Say hi! 👋
+                </div>
+              )}
+              {messages.map((m, i) => {
+                const fromId = m.from?._id || m.from;
+                const isMe = fromId === user?._id;
+                let separator = null;
+                if (m.createdAt) {
+                  const d = new Date(m.createdAt).toDateString();
+                  if (d !== lastDate) {
+                    lastDate = d;
+                    separator = (
+                      <div key={`sep-${i}`} className="date-separator">
+                        <div className="date-line" />
+                        <div className="date-label">{formatDateLabel(m.createdAt)}</div>
+                        <div className="date-line" />
+                      </div>
+                    );
+                  }
+                }
+                return (
+                  <React.Fragment key={i}>
+                    {separator}
+                    <div className={`msg-bubble${isMe ? ' me' : ''}`}>
+                      <div className="msg-text">{m.message}</div>
+                      {m.createdAt && (
+                        <div className="msg-time">
+                          {new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </div>
+                      )}
+                    </div>
+                  </React.Fragment>
+                );
+              })}
+            </div>
+
+            {showFraud && <FraudBanner fraud={fraud} onClose={() => setShowFraud(false)} />}
+
+            <div className="chat-detail-input">
+              <textarea
+                className="form-input form-textarea"
+                style={{ minHeight: 42, maxHeight: 100, padding: '10px 14px' }}
+                value={input}
+                onChange={e => setInput(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } }}
+                placeholder="Type a message..."
+              />
+              <button className="send-btn" onClick={send}><Send size={18} /></button>
+            </div>
+          </>
+        )}
+      </div>
     </div>
   );
 }

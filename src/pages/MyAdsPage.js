@@ -7,23 +7,25 @@ const FALLBACK = 'https://images.pexels.com/photos/10703759/pexels-photo-1070375
 export default function MyAdsPage() {
   const { user, apiFetch, navigate, showToast, showModal, mapListing, hasConsented } = useApp();
   const [ads, setAds] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const load = async () => {
-    if (!user) return;
+    if (!user) {
+      setAds([]);
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     try {
-      apiFetch(`/api/ads/listUserAds`, {
+      const result = await apiFetch(`/api/ads/listUserAds`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({ id: user._id })
-      }) 
-        .then(result => {
-            const data = Array.isArray(result) ? result : (result.ads || result.data || []);
-            setAds(data.map(mapListing));
-        });
+      });
+      const data = Array.isArray(result) ? result : (result.ads || result.data || []);
+      setAds(data.map(mapListing));
     } catch { /* ignore */ }
     finally { setLoading(false); }
   };

@@ -101,18 +101,18 @@ export default function ChatDetailPage() {
 
   return (
     <div>
-      <div className="detail-back-bar">
+      <div className="detail-back-bar chat-header-bar">
         <button className="back-btn" onClick={() => navigate('messages')}><ArrowLeft size={18} /></button>
-        <div>
+        <div className="chat-header-info">
           <div className="detail-header-title">{otherName}</div>
-          {adTitle && <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)' }}>{adTitle}</div>}
+          {adTitle && <div className="chat-header-subtitle">{adTitle}</div>}
         </div>
       </div>
 
       <div className="chat-detail-layout">
         <div className="chat-detail-msgs" ref={msgsRef}>
           {messages.length === 0
-            ? <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--muted)' }}>No messages yet. Say hi! 👋</div>
+            ? <div className="chat-empty-state">No messages yet. Say hi! 👋</div>
             : messages.map((m, i) => {
               const fromId = m.from?._id || m.from;
               const isMe = fromId === user?._id;
@@ -157,7 +157,7 @@ export default function ChatDetailPage() {
             onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } }}
             placeholder="Type a message..."
           />
-          <button className="send-btn" onClick={send}><Send size={18} /></button>
+          <button className="send-btn" onClick={send} disabled={!input.trim()}><Send size={18} /></button>
         </div>
       </div>
     </div>

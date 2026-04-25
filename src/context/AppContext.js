@@ -128,11 +128,9 @@ export function AppProvider({ children }) {
 
   const fetchLocations = useCallback(async () => {
     try {
-      const res = await fetch('https://api.countrystatecity.in/v1/countries/IN/states/KL/cities', {
-        headers: { 'X-CSCAPI-KEY': 'NTJPRVA2dFdZTWl6ZUhCSXRzVmdWem5BRk1tdE1VbE5KUlBubGVPQg==' }
-      });
-      const data = await res.json();
-      if (Array.isArray(data)) setLocations(data.map(c => ({ id: c.id, name: c.name })));
+        const res = await apiFetch('/api/users/locations');
+      const data = Array.isArray(res) ? res : (res.data || []);
+      if (Array.isArray(data)) setLocations(data.map(c => ({ id: c._id, name: c.name })));
     } catch { /* ignore */ }
   }, []);
 
