@@ -69,6 +69,13 @@ function PriceInsights({ listing, apiFetch }) {
   const [highest, setHighest] = useState(null);
   const [best, setBest] = useState(null);
 
+  const formatOfferValue = (value) => {
+    if (value === null || value === undefined || value === '') return '₹-';
+    const numericValue = Number(value);
+    if (!Number.isFinite(numericValue)) return '₹-';
+    return `₹${numericValue.toLocaleString('en-IN')}`;
+  };
+
   useEffect(() => {
     async function load() {
       try {
@@ -90,12 +97,12 @@ function PriceInsights({ listing, apiFetch }) {
     <div className="offers-row">
       <div className="offer-card">
         <div className="offer-badge">↗ Highest Offer</div>
-        <div className="offer-price">{highest?.value ? `₹${Number(highest.value).toLocaleString('en-IN')}` : '₹-'}</div>
+        <div className="offer-price">{formatOfferValue(highest?.value)}</div>
         <div className="offer-desc">{highest?.description || (highest ? '' : <div className="spinner" style={{ width: 18, height: 18, margin: '8px 0' }} />)}</div>
       </div>
       <div className="offer-card">
         <div className="offer-badge orange">🏆 Best Offer</div>
-        <div className="offer-price">{best?.value ? `₹${Number(best.value).toLocaleString('en-IN')}` : '₹-'}</div>
+        <div className="offer-price">{formatOfferValue(best?.value)}</div>
         <div className="offer-desc">{best?.description || (best ? '' : <div className="spinner" style={{ width: 18, height: 18, margin: '8px 0' }} />)}</div>
       </div>
     </div>

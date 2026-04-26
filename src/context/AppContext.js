@@ -130,7 +130,7 @@ export function AppProvider({ children }) {
     try {
         const res = await apiFetch('/api/users/locations');
       const data = Array.isArray(res) ? res : (res.data || []);
-      if (Array.isArray(data)) setLocations(data.map(c => ({ id: c._id, name: c.name })));
+      if (Array.isArray(data)) setLocations(data.map(c => ({ id: c._id, name: c.locality+', '+c.city})));
     } catch { /* ignore */ }
   }, []);
 
