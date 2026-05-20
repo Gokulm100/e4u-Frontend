@@ -1,4 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createOptimisticMessage, mergeWithPending, removeOptimistic } from '../utils/chatMessages';
+import {
+  parseChatPayload,
+  payloadToMessage,
+  payloadMatchesChat,
+  payloadMatchesAd,
+  appendIncomingMessage,
+  normalizeId,
+} from '../utils/chatSocket';
+import { emitJoin } from '../utils/socket';
 import { ArrowLeft, MapPin, Eye, Clock, Tag, User, Send } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 
@@ -186,15 +196,18 @@ function AiAnalytics({ listing, apiFetch }) {
 }
 
 function DetailChatBox({ listing, user, apiFetch, showToast, navigate }) {
+  const { subscribeChatMessages } = useApp();
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const msgsRef = useRef(null);
+  const chatInfo = { adId: listing.id, buyerId: user?._id, sellerId: listing.sellerId };
 
-  const fetchMsgs = async () => {
+  const fetchMsgs = async (silent = false) => {
     try {
       const data = await apiFetch(`/api/ads/chat?adId=${listing.id}&sellerId=${listing.sellerId}&buyerId=${user._id}`);
-      setMessages(Array.isArray(data.chats) ? data.chats : []);
+      const msgs = Array.isArray(data.chats) ? data.chats : [];
+      setMessages(prev => (silent ? mergeWithPending(msgs, prev) : msgs));
     } catch { /* ignore */ }
   };
 
@@ -205,20 +218,44 @@ function DetailChatBox({ listing, user, apiFetch, showToast, navigate }) {
   };
 
   const send = async () => {
-    if (!input.trim()) return;
-    const msg = input.trim(); setInput('');
+    if (!input.trim() || !user?._id) return;
+    const msg = input.trim();
+    const optimistic = createOptimisticMessage(msg, user._id);
+    const optId = optimistic._optimisticId;
+    setInput('');
+    setMessages(prev => [...prev, optimistic]);
     try {
       await apiFetch('/api/ads/chat', {
         method: 'POST',
         body: JSON.stringify({ adId: listing.id, from: user._id, to: listing.sellerId, message: msg }),
       });
-      await fetchMsgs();
-    } catch { showToast('Could not send message.', 'error'); }
+      await fetchMsgs(true);
+    } catch {
+      setMessages(prev => removeOptimistic(prev, optId));
+      setInput(msg);
+      showToast('Could not send message.', 'error');
+    }
   };
 
   useEffect(() => {
     if (msgsRef.current) msgsRef.current.scrollTop = msgsRef.current.scrollHeight;
   }, [messages]);
+
+  useEffect(() => {
+    if (!open || !user?._id) return undefined;
+    emitJoin(user._id);
+    return subscribeChatMessages((payload) => {
+      const parsed = parseChatPayload(payload);
+      if (!parsed.message) return;
+      if (!payloadMatchesChat(payload, chatInfo) && !payloadMatchesAd(payload, chatInfo.adId)) return;
+      const fromMe = normalizeId(parsed.from) === normalizeId(user._id);
+      const incoming = payloadToMessage(parsed);
+      setMessages(prev => appendIncomingMessage(
+        prev.filter(m => !(m._optimisticId && fromMe && m.message === incoming.message)),
+        incoming,
+      ));
+    });
+  }, [open, user?._id, listing.id, listing.sellerId, subscribeChatMessages]);
 
   if (!open) return (
     <button className="chat-trigger-btn" onClick={openChat}>
@@ -235,7 +272,7 @@ function DetailChatBox({ listing, user, apiFetch, showToast, navigate }) {
           : messages.map((m, i) => {
             const isMe = m.from === user?._id || m.from?._id === user?._id;
             return (
-              <div key={i} className={`bubble${isMe ? ' me' : ''}`}>
+              <div key={m._id || m._optimisticId || i} className={`bubble${isMe ? ' me' : ''}${m.pending ? ' pending' : ''}`}>
                 <div className="bubble-text">{m.message}</div>
               </div>
             );
@@ -258,6 +295,7 @@ function DetailChatBox({ listing, user, apiFetch, showToast, navigate }) {
 export default function AdDetailPage() {
   const { pageExtra, navigate, user, apiFetch, showToast } = useApp();
   const listing = pageExtra.listing;
+  const returnTo = pageExtra.returnTo || 'home';
 
   if (!listing) return null;
 
@@ -266,7 +304,7 @@ export default function AdDetailPage() {
   return (
     <div>
       <div className="detail-back-bar">
-        <button className="back-btn" onClick={() => navigate('my-ads')}><ArrowLeft size={18} /></button>
+        <button className="back-btn" onClick={() => navigate(returnTo)}><ArrowLeft size={18} /></button>
         <div className="detail-header-title">{listing.title}</div>
       </div>
 

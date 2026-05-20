@@ -1,6 +1,9 @@
-import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react';
+import { fetchPendingReportCount } from '../services/adminApi';
+import { initSocket, disconnectSocket, getSocket, subscribeChatMessages, emitJoin } from '../utils/socket';
+import { parseChatPayload } from '../utils/chatSocket';
 
-const API = 'https://e4u-backend.onrender.com';
+const API = process.env.REACT_APP_API_BASE_URL || 'https://e4u-backend.onrender.com';
 const LIMIT = 10;
 
 const AppContext = createContext(null);
@@ -16,6 +19,7 @@ export function AppProvider({ children }) {
 
   const [currentPage, setCurrentPage] = useState('home');
   const [pageExtra, setPageExtra] = useState({});
+  const currentPageRef = useRef('home');
 
   const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('All');
@@ -23,12 +27,16 @@ export function AppProvider({ children }) {
   const [subCategories, setSubCategories] = useState([]);
   const [selectedSubCategory, setSelectedSubCategory] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [filterLocation, setFilterLocation] = useState('');
+  const [priceMin, setPriceMin] = useState('');
+  const [priceMax, setPriceMax] = useState('');
   const [listings, setListings] = useState([]);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [loading, setLoading] = useState(false);
 
   const [messageCount, setMessageCount] = useState(0);
+  const [adminPendingCount, setAdminPendingCount] = useState(0);
   const [locations, setLocations] = useState([]);
 
   const [toast, setToast] = useState([]);
@@ -56,8 +64,16 @@ export function AppProvider({ children }) {
   const closeModal = useCallback(() => setModal(null), []);
 
   const navigate = useCallback((page, extra = {}) => {
+    const prevPage = currentPageRef.current;
+    const nextExtra = { ...extra };
+    const isDetailPage = page === 'detail' || page === 'ad-detail';
+    if (isDetailPage && !nextExtra.returnTo) {
+      const prevIsDetail = prevPage === 'detail' || prevPage === 'ad-detail';
+      nextExtra.returnTo = prevIsDetail ? 'home' : prevPage;
+    }
+    currentPageRef.current = page;
     setCurrentPage(page);
-    setPageExtra(extra);
+    setPageExtra(nextExtra);
     window.scrollTo(0, 0);
   }, []);
 
@@ -68,6 +84,7 @@ export function AppProvider({ children }) {
   }, []);
 
   const logout = useCallback(() => {
+    disconnectSocket();
     localStorage.removeItem('authToken');
     localStorage.removeItem('user');
     setToken(null);
@@ -86,6 +103,7 @@ export function AppProvider({ children }) {
     location: item.location?.name || item.location || '',
     views: item.views || 0,
     posted: item.createdAt ? new Date(item.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : '',
+    createdAt: item.createdAt || item.posted || '',
     description: item.description || '',
     seller: item.seller?.name || item.sellerName || 'Unknown',
     sellerPic: item.seller?.profilePic || item.sellerPic || null,
@@ -94,20 +112,33 @@ export function AppProvider({ children }) {
     isActive:item.isActive == false ? false : true,
   });
 
+  const buildListingsQuery = useCallback(() => {
+    const catObj = categories.find(c => c.name === selectedCategory);
+    const min = priceMin !== '' ? Number(priceMin) : undefined;
+    const max = priceMax !== '' ? Number(priceMax) : undefined;
+    return {
+      limit: LIMIT,
+      search: searchQuery || undefined,
+      category: selectedCategory !== 'All' ? catObj?.id : undefined,
+      subCategory: selectedSubCategory || undefined,
+      userId: user?._id || undefined,
+      location: filterLocation || undefined,
+      priceMin: min != null && !Number.isNaN(min) ? min : undefined,
+      priceMax: max != null && !Number.isNaN(max) ? max : undefined,
+    };
+  }, [
+    categories, selectedCategory, selectedSubCategory, searchQuery, user,
+    filterLocation, priceMin, priceMax,
+  ]);
+
   const fetchListings = useCallback(async (pageNum = 1, reset = false) => {
     if (loading) return;
     setLoading(true);
     try {
-      const catObj = categories.find(c => c.name === selectedCategory);
+      const query = buildListingsQuery();
       const result = await apiFetch('/api/ads', {
         method: 'POST',
-        body: JSON.stringify({
-          page: pageNum, limit: LIMIT,
-          search: searchQuery || undefined,
-          category: selectedCategory !== 'All' ? catObj?.id : undefined,
-          subCategory: selectedSubCategory || undefined,
-          userId: user?._id || undefined,
-        }),
+        body: JSON.stringify({ ...query, page: pageNum }),
       });
       const data = result?.ads || [];
       const mapped = data.map(mapListing);
@@ -115,8 +146,7 @@ export function AppProvider({ children }) {
       setListings(prev => (reset || pageNum === 1) ? mapped : [...prev, ...mapped]);
     } catch { /* ignore */ }
     finally { setLoading(false); }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loading, categories, selectedCategory, selectedSubCategory, searchQuery, user, apiFetch]);
+  }, [loading, apiFetch, buildListingsQuery]);
 
   const fetchCategories = useCallback(async () => {
     try {
@@ -132,6 +162,25 @@ export function AppProvider({ children }) {
       const data = Array.isArray(res) ? res : (res.data || []);
       if (Array.isArray(data)) setLocations(data.map(c => ({ id: c._id, name: c.locality+', '+c.city})));
     } catch { /* ignore */ }
+  }, []);
+
+  const activeFilterCount = [
+    selectedCategory !== 'All',
+    selectedSubCategory,
+    filterLocation,
+    priceMin !== '',
+    priceMax !== '',
+  ].filter(Boolean).length;
+
+  const clearAllFilters = useCallback(() => {
+    setSelectedCategory('All');
+    setSelectedCategoryId('');
+    setSubCategories([]);
+    setSelectedSubCategory('');
+    setFilterLocation('');
+    setPriceMin('');
+    setPriceMax('');
+    setPage(1);
   }, []);
 
   const fetchMessageCount = useCallback(async () => {
@@ -167,17 +216,65 @@ export function AppProvider({ children }) {
   }, [fetchCategories, fetchLocations]);
 
   useEffect(() => {
+    setPage(1);
     fetchListings(1, true);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedCategory, selectedSubCategory]);
+  }, [
+    selectedCategory,
+    selectedSubCategory,
+    filterLocation,
+    priceMin,
+    priceMax,
+    searchQuery,
+  ]);
+
+  const fetchAdminPendingCount = useCallback(async () => {
+    if (!user?.isAdmin) {
+      setAdminPendingCount(0);
+      return;
+    }
+    try {
+      const count = await fetchPendingReportCount(apiFetch);
+      setAdminPendingCount(count);
+    } catch {
+      setAdminPendingCount(0);
+    }
+  }, [user, apiFetch]);
+
+  useEffect(() => {
+    if (user?._id) {
+      initSocket(user._id);
+      emitJoin(user._id);
+    } else {
+      disconnectSocket();
+    }
+  }, [user?._id]);
+
+  useEffect(() => {
+    if (!user?._id) return undefined;
+    return subscribeChatMessages((payload) => {
+      const parsed = parseChatPayload(payload);
+      const fromMe = String(parsed.from) === String(user._id);
+      if (!fromMe) fetchMessageCount();
+    });
+  }, [user?._id, fetchMessageCount]);
 
   useEffect(() => {
     if (user) {
       fetchMessageCount();
-      const interval = setInterval(fetchMessageCount, 30000);
+      const interval = setInterval(fetchMessageCount, 60000);
       return () => clearInterval(interval);
     }
   }, [user, fetchMessageCount]);
+
+  useEffect(() => {
+    if (user?.isAdmin) {
+      fetchAdminPendingCount();
+      const interval = setInterval(fetchAdminPendingCount, 60000);
+      return () => clearInterval(interval);
+    }
+    setAdminPendingCount(0);
+  }, [user, fetchAdminPendingCount]);
 
   return (
     <AppContext.Provider value={{
@@ -189,11 +286,17 @@ export function AppProvider({ children }) {
       subCategories, setSubCategories,
       selectedSubCategory, setSelectedSubCategory,
       searchQuery, setSearchQuery,
+      filterLocation, setFilterLocation,
+      priceMin, setPriceMin, priceMax, setPriceMax,
+      activeFilterCount, clearAllFilters,
       listings, setListings, page, setPage, hasMore, loading,
       messageCount, fetchMessageCount,
+      adminPendingCount, fetchAdminPendingCount,
       locations,
       apiFetch, mapListing,
       fetchListings,
+      getSocket: () => getSocket(user?._id),
+      subscribeChatMessages,
       login, logout,
       showToast, showModal, modal, closeModal,
       toast,

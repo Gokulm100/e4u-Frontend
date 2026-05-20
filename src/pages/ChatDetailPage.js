@@ -1,6 +1,16 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { ArrowLeft, Send } from 'lucide-react';
 import { useApp } from '../context/AppContext';
+import { createOptimisticMessage, mergeWithPending, removeOptimistic } from '../utils/chatMessages';
+import {
+  parseChatPayload,
+  payloadToMessage,
+  payloadMatchesChat,
+  payloadMatchesAd,
+  appendIncomingMessage,
+  normalizeId,
+} from '../utils/chatSocket';
+import { emitJoin } from '../utils/socket';
 
 function FraudBanner({ fraud, onClose }) {
   if (!fraud?.fraudIndicators?.length) return null;
@@ -29,25 +39,30 @@ function FraudBanner({ fraud, onClose }) {
 }
 
 export default function ChatDetailPage() {
-  const { pageExtra, navigate, user, apiFetch, showToast, fetchMessageCount } = useApp();
+  const { pageExtra, navigate, user, apiFetch, showToast, fetchMessageCount, subscribeChatMessages } = useApp();
   const { chatInfo, otherName, isSeller } = pageExtra;
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [fraud, setFraud] = useState(null);
   const [showFraud, setShowFraud] = useState(true);
   const msgsRef = useRef(null);
+  const chatInfoRef = useRef(chatInfo);
+  const fetchMsgsRef = useRef(null);
+  chatInfoRef.current = chatInfo;
 
   const { adId, buyerId, sellerId, adTitle } = chatInfo || {};
 
-  const fetchMsgs = async (silent = false) => {
+  const fetchMsgs = useCallback(async (silent = false) => {
     if (!adId || !buyerId || !sellerId) return;
     try {
       const data = await apiFetch(`/api/ads/chat?adId=${adId}&buyerId=${buyerId}&sellerId=${sellerId}`);
       if (data.fraudCheck) { setFraud(data.fraudCheck); setShowFraud(true); }
       const msgs = Array.isArray(data) ? data : (Array.isArray(data.chats) ? data.chats : []);
-      setMessages(msgs);
+      setMessages(prev => (silent ? mergeWithPending(msgs, prev) : msgs));
     } catch { /* ignore */ }
-  };
+  }, [adId, buyerId, sellerId, apiFetch]);
+
+  fetchMsgsRef.current = fetchMsgs;
 
   const markSeen = async () => {
     if (!adId || !user?._id) return;
@@ -68,12 +83,45 @@ export default function ChatDetailPage() {
   }, [chatInfo]);
 
   useEffect(() => {
+    if (!user?._id) return undefined;
+    emitJoin(user._id);
+    return subscribeChatMessages((payload) => {
+      const info = chatInfoRef.current;
+      if (!info?.adId) return;
+      const parsed = parseChatPayload(payload);
+      if (!parsed.message) return;
+
+      const matchesThread = payloadMatchesChat(payload, info)
+        || payloadMatchesAd(payload, info.adId);
+      if (!matchesThread) return;
+
+      const fromMe = normalizeId(parsed.from) === normalizeId(user._id);
+      const incoming = payloadToMessage(parsed);
+      setMessages(prev => appendIncomingMessage(
+        prev.filter(m => !(m._optimisticId && fromMe && m.message === incoming.message)),
+        incoming,
+      ));
+      if (!fromMe) markSeen();
+    });
+  }, [user?._id, subscribeChatMessages]);
+
+  useEffect(() => {
+    if (!adId || !buyerId || !sellerId) return undefined;
+    const interval = setInterval(() => fetchMsgsRef.current?.(true), 15000);
+    return () => clearInterval(interval);
+  }, [adId, buyerId, sellerId]);
+
+  useEffect(() => {
     if (msgsRef.current) msgsRef.current.scrollTop = msgsRef.current.scrollHeight;
   }, [messages]);
 
   const send = async () => {
-    if (!input.trim()) return;
-    const msg = input.trim(); setInput('');
+    if (!input.trim() || !user?._id) return;
+    const msg = input.trim();
+    const optimistic = createOptimisticMessage(msg, user._id);
+    const optId = optimistic._optimisticId;
+    setInput('');
+    setMessages(prev => [...prev, optimistic]);
     try {
       await apiFetch('/api/ads/chat', {
         method: 'POST',
@@ -85,7 +133,11 @@ export default function ChatDetailPage() {
         }),
       });
       fetchMsgs(true);
-    } catch { showToast('Could not send message.', 'error'); }
+    } catch {
+      setMessages(prev => removeOptimistic(prev, optId));
+      setInput(msg);
+      showToast('Could not send message.', 'error');
+    }
   };
 
   const formatDate = (dateStr) => {
@@ -131,9 +183,9 @@ export default function ChatDetailPage() {
                 }
               }
               return (
-                <React.Fragment key={i}>
+                <React.Fragment key={m._id || m._optimisticId || i}>
                   {separator}
-                  <div className={`msg-bubble${isMe ? ' me' : ''}`}>
+                  <div className={`msg-bubble${isMe ? ' me' : ''}${m.pending ? ' pending' : ''}`}>
                     <div className="msg-text">{m.message}</div>
                     {m.createdAt && (
                       <div className="msg-time">

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, MessageCircle, PlusCircle, Volume2, User } from 'lucide-react';
+import { Home, MessageCircle, PlusCircle, Volume2, User, Shield } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 
 const navItems = [
@@ -11,7 +11,8 @@ const navItems = [
 ];
 
 export default function MobileNav() {
-  const { currentPage, navigate, messageCount } = useApp();
+  const { user, currentPage, navigate, messageCount, adminPendingCount } = useApp();
+  const isAdmin = !!(user?.isAdmin);
 
   return (
     <nav className="mobile-nav">
@@ -29,6 +30,19 @@ export default function MobileNav() {
           )}
         </button>
       ))}
+      {isAdmin && (
+        <button
+          type="button"
+          className={`mobile-nav-item${currentPage === 'admin' ? ' active' : ''}`}
+          onClick={() => navigate('admin')}
+        >
+          <Shield size={22} />
+          Admin
+          {adminPendingCount > 0 && (
+            <span className="mob-badge">{adminPendingCount}</span>
+          )}
+        </button>
+      )}
     </nav>
   );
 }

@@ -3,27 +3,70 @@ import { MapPin, Eye } from 'lucide-react';
 
 const FALLBACK = 'https://images.pexels.com/photos/10703759/pexels-photo-10703759.jpeg';
 
+function formatPrice(price) {
+  const n = Number(price);
+  if (!n || Number.isNaN(n)) return 'Price on request';
+  return `₹${n.toLocaleString('en-IN')}`;
+}
+
+function shortLocation(location) {
+  if (!location) return 'Location not set';
+  const parts = String(location).split(',');
+  if (parts.length <= 2) return location;
+  return `${parts[0].trim()}, ${parts[parts.length - 1].trim()}`;
+}
+
 export default function AdCard({ listing, onClick }) {
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      onClick(listing);
+    }
+  };
+
   return (
-    <div className="ad-card" onClick={() => onClick(listing)}>
-      <div className="ad-card-img-wrap">
+    <article
+      className="ad-card"
+      onClick={() => onClick(listing)}
+      onKeyDown={handleKeyDown}
+      role="button"
+      tabIndex={0}
+      aria-label={`${listing.title}, ${formatPrice(listing.price)}`}
+    >
+      <div className="ad-card-media">
         <img
           className="ad-card-img"
           src={listing.images[0]}
-          alt={listing.title}
+          alt=""
+          loading="lazy"
           onError={e => { e.target.src = FALLBACK; }}
         />
-        <div className="ad-cat-tag">{listing.category}</div>
+        {listing.category && (
+          <span className="ad-card-category">{listing.category}</span>
+        )}
       </div>
+
       <div className="ad-card-body">
-        <div className="ad-title">{listing.title}</div>
-        <div className="ad-price">₹{Number(listing.price).toLocaleString('en-IN')}</div>
-        <div className="ad-meta">
-          <div className="ad-meta-item"><MapPin size={12} /> {listing.location}</div>
-          <div className="ad-meta-item"><Eye size={12} /> {listing.views}</div>
+        <h3 className="ad-card-title">{listing.title}</h3>
+        <p className="ad-card-price">{formatPrice(listing.price)}</p>
+
+        <div className="ad-card-meta">
+          <span className="ad-card-location" title={listing.location}>
+            <MapPin size={13} strokeWidth={2.25} aria-hidden />
+            <span className="ad-card-location-text">{shortLocation(listing.location)}</span>
+          </span>
+          {listing.views > 0 && (
+            <span className="ad-card-views">
+              <Eye size={13} strokeWidth={2.25} aria-hidden />
+              {listing.views}
+            </span>
+          )}
         </div>
-        <div className="ad-posted">{listing.posted}</div>
+
+        {listing.posted && (
+          <span className="ad-card-date">{listing.posted}</span>
+        )}
       </div>
-    </div>
+    </article>
   );
 }

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, MessageCircle, PlusCircle, Volume2, User, Lock } from 'lucide-react';
+import { Home, MessageCircle, PlusCircle, Volume2, User, Lock, Shield } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 
 const navItems = [
@@ -11,7 +11,8 @@ const navItems = [
 ];
 
 export default function Sidebar() {
-  const { currentPage, navigate, messageCount } = useApp();
+  const { user, currentPage, navigate, messageCount, adminPendingCount } = useApp();
+  const isAdmin = !!(user?.isAdmin);
 
   return (
     <nav className="sidebar">
@@ -29,6 +30,19 @@ export default function Sidebar() {
             )}
           </button>
         ))}
+        {isAdmin && (
+          <button
+            type="button"
+            className={`nav-item nav-item-admin${currentPage === 'admin' ? ' active' : ''}`}
+            onClick={() => navigate('admin')}
+          >
+            <Shield size={18} />
+            Admin
+            {adminPendingCount > 0 && (
+              <span className="nav-badge">{adminPendingCount}</span>
+            )}
+          </button>
+        )}
       </div>
       <div className="sidebar-footer">
         <button

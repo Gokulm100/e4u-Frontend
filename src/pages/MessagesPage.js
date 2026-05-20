@@ -1,6 +1,17 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Send } from 'lucide-react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { Send, MessageCircle, X, ShieldAlert } from 'lucide-react';
 import { useApp } from '../context/AppContext';
+import { createOptimisticMessage, mergeWithPending, removeOptimistic } from '../utils/chatMessages';
+import {
+  parseChatPayload,
+  payloadToMessage,
+  payloadMatchesChat,
+  payloadMatchesAd,
+  appendIncomingMessage,
+  patchConversationList,
+  normalizeId,
+} from '../utils/chatSocket';
+import { emitJoin } from '../utils/socket';
 
 function getInitials(name) {
   if (!name || name === 'Seller' || name === 'Buyer') return '??';
@@ -23,6 +34,7 @@ function ChatRow({ item, isBuying, user, onClick, isSelected }) {
   const lastMsgFrom = item.lastMessage?.from?._id || item.lastMessage?.from || item.lastMessageFrom;
   const isMe = lastMsgFrom && user?._id && String(lastMsgFrom) === String(user._id);
   const isUnread = item.isSeen === false && !isMe;
+  const lastMsgTime = getLastMessageTime(item);
 
   const buyerId = item.buyerId || item.buyer?._id || (isBuying ? user._id : null);
   const sellerId = item.sellerId || item.seller?._id || (!isBuying ? user._id : null);
@@ -35,20 +47,20 @@ function ChatRow({ item, isBuying, user, onClick, isSelected }) {
     >
       <div className="chat-avatar-wrap">
         {otherPic
-          ? <img className="chat-avatar" src={otherPic} alt={otherName} style={{ objectFit: 'cover' }} />
+          ? <img className="chat-avatar chat-avatar-img" src={otherPic} alt="" />
           : <div className="chat-avatar">{getInitials(otherName)}</div>}
-        {isUnread && <div className="unread-dot" />}
+        {isUnread && <span className="unread-dot" aria-hidden />}
       </div>
       <div className="chat-info">
         <div className="chat-header-row">
           <span className={`chat-name${isUnread ? ' unread' : ''}`}>{otherName}</span>
-          <span className="chat-time">{item.updatedAt || ''}</span>
+          {lastMsgTime && <span className="chat-time">{formatChatTime(lastMsgTime)}</span>}
         </div>
-        <div className="chat-ad-title">{adTitle.substring(0, 30)}{adTitle.length > 30 ? '...' : ''}</div>
-        <div className={`chat-preview${isUnread ? ' unread' : ''}`}>
-          {isMe && <span style={{ color: 'var(--muted)' }}>You: </span>}
-          {(lastMsg || '').substring(0, 40)}{lastMsg?.length > 40 ? '...' : ''}
-        </div>
+        {adTitle && <span className="chat-ad-pill" title={adTitle}>{adTitle}</span>}
+        <p className={`chat-preview${isUnread ? ' unread' : ''}`}>
+          {isMe && <span className="chat-preview-you">You: </span>}
+          {lastMsg || 'No messages yet'}
+        </p>
       </div>
       {adImage && <img className="ad-thumb" src={adImage} alt="" />}
     </div>
@@ -59,9 +71,14 @@ function FraudBanner({ fraud, onClose }) {
   if (!fraud?.fraudIndicators?.length) return null;
   return (
     <div className="fraud-banner">
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-        <div className="fraud-title">⚠ Safety Insight</div>
-        <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)' }} onClick={onClose}>✕</button>
+      <div className="fraud-banner-head">
+        <div className="fraud-title">
+          <ShieldAlert size={15} />
+          Safety insight
+        </div>
+        <button type="button" className="fraud-banner-close" onClick={onClose} aria-label="Dismiss">
+          <X size={16} />
+        </button>
       </div>
       <div className="fraud-indicators">
         {fraud.fraudIndicators.map((ind, i) => (
@@ -93,6 +110,29 @@ function getListChatInfo(item, isBuying, user) {
   return { adId, buyerId, sellerId, adTitle };
 }
 
+function getLastMessageTime(item) {
+  const lm = item?.lastMessage;
+  if (lm && typeof lm === 'object') {
+    return lm.createdAt || lm.updatedAt || lm.timestamp || null;
+  }
+  return item?.updatedAt || item?.lastMessageAt || item?.lastMessageTime || item?.createdAt || null;
+}
+
+function formatChatTime(value) {
+  if (!value) return '';
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return String(value);
+  const now = new Date();
+  const diff = now - d;
+  if (diff < 86400000 && d.toDateString() === now.toDateString()) {
+    return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  }
+  if (diff < 604800000) {
+    return d.toLocaleDateString([], { weekday: 'short' });
+  }
+  return d.toLocaleDateString([], { month: 'short', day: 'numeric' });
+}
+
 function formatDateLabel(dateStr) {
   const d = new Date(dateStr);
   const now = new Date();
@@ -110,7 +150,7 @@ function isSameConversation(item, chatInfo, isBuying, user) {
 
 
 export default function MessagesPage() {
-  const { user, apiFetch, navigate, hasConsented, showToast, fetchMessageCount } = useApp();
+  const { user, apiFetch, navigate, hasConsented, showToast, fetchMessageCount, subscribeChatMessages } = useApp();
   const [tab, setTab] = useState(0);
   const [buying, setBuying] = useState([]);
   const [selling, setSelling] = useState([]);
@@ -123,6 +163,10 @@ export default function MessagesPage() {
   const [showFraud, setShowFraud] = useState(true);
   const [isMobileView, setIsMobileView] = useState(() => window.matchMedia('(max-width: 768px)').matches);
   const msgsRef = useRef(null);
+  const selectedChatRef = useRef(selectedChat);
+  const fetchSelectedChatRef = useRef(null);
+  const reloadListsRef = useRef(null);
+  selectedChatRef.current = selectedChat;
 
   useEffect(() => {
     const mediaQuery = window.matchMedia('(max-width: 768px)');
@@ -136,39 +180,38 @@ export default function MessagesPage() {
     return () => mediaQuery.removeListener(onChange);
   }, []);
 
-  useEffect(() => {
+  const reloadLists = useCallback(async (showSpinner = false) => {
     if (!user) return;
-    let cancelled = false;
-    async function load() {
-      setLoading(true);
-      try {
-        const storedToken = localStorage.getItem("authToken");
-        const [r1, r2] = await Promise.all([
-          apiFetch('/api/ads/getBuyingMessages', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${storedToken}`
-            },
-          }),
-          apiFetch('/api/ads/getSellingMessages', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${storedToken}`
-            },
-          }),
-        ]);
-        if (!cancelled) {
-          setBuying(Array.isArray(r1?.filteredMessages) ? r1.filteredMessages : []);
-          setSelling(Array.isArray(r2?.filteredMessages) ? r2.filteredMessages : []);
-        }
-      } catch { /* ignore */ }
-      finally { if (!cancelled) setLoading(false); }
-    }
-    load();
-    return () => { cancelled = true; };
+    if (showSpinner) setLoading(true);
+    try {
+      const storedToken = localStorage.getItem('authToken');
+      const [r1, r2] = await Promise.all([
+        apiFetch('/api/ads/getBuyingMessages', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${storedToken}`,
+          },
+        }),
+        apiFetch('/api/ads/getSellingMessages', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${storedToken}`,
+          },
+        }),
+      ]);
+      setBuying(Array.isArray(r1?.filteredMessages) ? r1.filteredMessages : []);
+      setSelling(Array.isArray(r2?.filteredMessages) ? r2.filteredMessages : []);
+    } catch { /* ignore */ }
+    finally { if (showSpinner) setLoading(false); }
   }, [user, apiFetch]);
+
+  reloadListsRef.current = reloadLists;
+
+  useEffect(() => {
+    reloadLists(true);
+  }, [reloadLists]);
 
   const buyingUnread = buying.filter(c => c.isSeen === false).length;
   const sellingUnread = selling.filter(c => c.isSeen === false).length;
@@ -208,10 +251,10 @@ export default function MessagesPage() {
     setSelectedChat({ chatInfo, otherName, isSeller });
   };
 
-  const fetchSelectedChat = async () => {
+  const fetchSelectedChat = async (silent = false) => {
     const info = selectedChat?.chatInfo;
     if (!info?.adId || !info?.buyerId || !info?.sellerId) return;
-    setChatLoading(true);
+    if (!silent) setChatLoading(true);
     try {
       const data = await apiFetch(`/api/ads/chat?adId=${info.adId}&buyerId=${info.buyerId}&sellerId=${info.sellerId}`);
       if (data.fraudCheck) {
@@ -219,10 +262,12 @@ export default function MessagesPage() {
         setShowFraud(true);
       }
       const msgs = Array.isArray(data) ? data : (Array.isArray(data.chats) ? data.chats : []);
-      setMessages(msgs);
+      setMessages(prev => (silent ? mergeWithPending(msgs, prev) : msgs));
     } catch { /* ignore */ }
-    finally { setChatLoading(false); }
+    finally { if (!silent) setChatLoading(false); }
   };
+
+  fetchSelectedChatRef.current = fetchSelectedChat;
 
   const markSelectedSeen = async () => {
     const info = selectedChat?.chatInfo;
@@ -245,21 +290,85 @@ export default function MessagesPage() {
   }, [selectedChat]);
 
   useEffect(() => {
+    if (!user?._id) return undefined;
+    emitJoin(user._id);
+    return subscribeChatMessages((payload) => {
+      const parsed = parseChatPayload(payload);
+      if (!parsed.message) return;
+
+      const fromMe = normalizeId(parsed.from) === normalizeId(user._id);
+      const incoming = payloadToMessage(parsed);
+      const sel = selectedChatRef.current;
+
+      if (sel?.chatInfo) {
+        const matchesThread = payloadMatchesChat(payload, sel.chatInfo)
+          || payloadMatchesAd(payload, sel.chatInfo.adId);
+        if (matchesThread) {
+          setMessages(prev => appendIncomingMessage(
+            prev.filter(m => !(m._optimisticId && fromMe && m.message === incoming.message)),
+            incoming,
+          ));
+          if (!fromMe) {
+            const info = sel.chatInfo;
+            const senderId = sel.isSeller ? info.buyerId : info.sellerId;
+            apiFetch('/api/ads/markMessagesAsSeen', {
+              method: 'POST',
+              body: JSON.stringify({ adId: info.adId, reader: user._id, sender: senderId }),
+            }).then(() => fetchMessageCount()).catch(() => {});
+          }
+        } else {
+          fetchSelectedChatRef.current?.(true);
+        }
+      }
+
+      setBuying(prev => {
+        const buyingPatch = patchConversationList(prev, parsed, user._id, true, fromMe);
+        setSelling(sp => {
+          const sellingPatch = patchConversationList(sp, parsed, user._id, false, fromMe);
+          if (!fromMe && !buyingPatch.found && !sellingPatch.found) {
+            reloadListsRef.current?.(false);
+          }
+          return sellingPatch.list;
+        });
+        return buyingPatch.list;
+      });
+    });
+  }, [user?._id, subscribeChatMessages, apiFetch, fetchMessageCount]);
+
+  useEffect(() => {
     if (!selectedChat?.chatInfo) return undefined;
-    const interval = setInterval(fetchSelectedChat, 10000);
+    const interval = setInterval(() => fetchSelectedChatRef.current?.(true), 15000);
     return () => clearInterval(interval);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedChat]);
 
   useEffect(() => {
     if (msgsRef.current) msgsRef.current.scrollTop = msgsRef.current.scrollHeight;
   }, [messages]);
 
+  const bumpListLastMessage = (chatInfo, message, isSeller) => {
+    const now = new Date().toISOString();
+    const patch = (item) => {
+      if (!isSameConversation(item, chatInfo, !isSeller, user)) return item;
+      const prevLm = typeof item.lastMessage === 'object' && item.lastMessage ? item.lastMessage : {};
+      return {
+        ...item,
+        updatedAt: now,
+        lastMessage: { ...prevLm, message, createdAt: now, from: user._id },
+      };
+    };
+    if (isSeller) setSelling(prev => prev.map(patch));
+    else setBuying(prev => prev.map(patch));
+  };
+
   const send = async () => {
     const msg = input.trim();
     const info = selectedChat?.chatInfo;
-    if (!msg || !info?.adId) return;
+    if (!msg || !info?.adId || !user?._id) return;
+    const optimistic = createOptimisticMessage(msg, user._id);
+    const optId = optimistic._optimisticId;
     setInput('');
+    setMessages(prev => [...prev, optimistic]);
+    bumpListLastMessage(info, msg, selectedChat.isSeller);
     try {
       await apiFetch('/api/ads/chat', {
         method: 'POST',
@@ -270,8 +379,10 @@ export default function MessagesPage() {
           message: msg,
         }),
       });
-      fetchSelectedChat();
+      fetchSelectedChat(true);
     } catch {
+      setMessages(prev => removeOptimistic(prev, optId));
+      setInput(msg);
       showToast('Could not send message.', 'error');
     }
   };
@@ -306,8 +417,15 @@ export default function MessagesPage() {
   }
 
   return (
-    <div className="messages-split-layout">
-      <div className="messages-list-panel">
+    <div className="messages-page">
+      <header className="messages-page-header">
+        <h1 className="messages-page-title">Messages</h1>
+        <p className="messages-page-subtitle">Stay in touch with buyers and sellers</p>
+      </header>
+
+      <div className="messages-split-layout">
+        <div className="messages-list-panel">
+          <div className="messages-list-card">
         <div className="messages-tabs">
           <button className={`msg-tab${tab === 0 ? ' active' : ''}`} onClick={() => setTab(0)}>
             Buying {buyingUnread > 0 && <span className="msg-badge">{buyingUnread}</span>}
@@ -345,24 +463,33 @@ export default function MessagesPage() {
             })}
           </div>
         )}
-      </div>
+          </div>
+        </div>
 
       {!isMobileView && (
       <div className="messages-chat-panel">
         {!selectedChat?.chatInfo && (
           <div className="messages-chat-placeholder">
+            <div className="messages-placeholder-icon">
+              <MessageCircle size={32} strokeWidth={1.75} />
+            </div>
             <span className="empty-title">Select a conversation</span>
-            <span className="empty-sub">Choose a chat from Buying or Selling to view messages.</span>
+            <span className="empty-sub">Pick a chat from Buying or Selling to start messaging.</span>
           </div>
         )}
 
         {selectedChat?.chatInfo && (
           <>
             <div className="messages-chat-header">
-              <div className="detail-header-title">{selectedChat.otherName}</div>
-              {selectedChat.chatInfo.adTitle && (
-                <div className="messages-chat-subtitle">{selectedChat.chatInfo.adTitle}</div>
-              )}
+              <div className="messages-chat-header-main">
+                <div className="messages-chat-header-avatar">{getInitials(selectedChat.otherName)}</div>
+                <div className="messages-chat-header-text">
+                  <div className="messages-chat-name">{selectedChat.otherName}</div>
+                  {selectedChat.chatInfo.adTitle && (
+                    <div className="messages-chat-subtitle">{selectedChat.chatInfo.adTitle}</div>
+                  )}
+                </div>
+              </div>
             </div>
 
             <div className="chat-detail-msgs" ref={msgsRef}>
@@ -370,8 +497,9 @@ export default function MessagesPage() {
                 <div className="empty-state"><div className="spinner" /></div>
               )}
               {!chatLoading && messages.length === 0 && (
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--muted)' }}>
-                  No messages yet. Say hi! 👋
+                <div className="messages-empty-chat">
+                  <MessageCircle size={28} strokeWidth={1.75} />
+                  <span>No messages yet — say hi!</span>
                 </div>
               )}
               {messages.map((m, i) => {
@@ -392,9 +520,9 @@ export default function MessagesPage() {
                   }
                 }
                 return (
-                  <React.Fragment key={i}>
+                  <React.Fragment key={m._id || m._optimisticId || i}>
                     {separator}
-                    <div className={`msg-bubble${isMe ? ' me' : ''}`}>
+                    <div className={`msg-bubble${isMe ? ' me' : ''}${m.pending ? ' pending' : ''}`}>
                       <div className="msg-text">{m.message}</div>
                       {m.createdAt && (
                         <div className="msg-time">
@@ -411,19 +539,22 @@ export default function MessagesPage() {
 
             <div className="chat-detail-input">
               <textarea
-                className="form-input form-textarea"
-                style={{ minHeight: 42, maxHeight: 100, padding: '10px 14px' }}
+                className="messages-compose-input"
                 value={input}
                 onChange={e => setInput(e.target.value)}
                 onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } }}
-                placeholder="Type a message..."
+                placeholder="Write a message..."
+                rows={1}
               />
-              <button className="send-btn" onClick={send}><Send size={18} /></button>
+              <button type="button" className="messages-send-btn" onClick={send} aria-label="Send message">
+                <Send size={18} />
+              </button>
             </div>
           </>
         )}
       </div>
       )}
+      </div>
     </div>
   );
 }

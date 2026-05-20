@@ -12,6 +12,7 @@ import PostAdPage from './pages/PostAdPage';
 import MyAdsPage from './pages/MyAdsPage';
 import ProfilePage from './pages/ProfilePage';
 import ConsentPage from './pages/ConsentPage';
+import AdminPage from './pages/AdminPage';
 
 function PageRouter() {
   const { currentPage } = useApp();
@@ -26,6 +27,7 @@ function PageRouter() {
     'my-ads': <MyAdsPage />,
     profile: <ProfilePage />,
     consent: <ConsentPage />,
+    admin: <AdminPage />,
   };
 
   return pages[currentPage] || <HomePage />;

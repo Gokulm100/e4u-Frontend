@@ -3,15 +3,13 @@ import { Search, X, PlusCircle } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 
 export default function Topbar() {
-  const { user, navigate, setSearchQuery, fetchListings, setPage, setListings } = useApp();
+  const { user, navigate, setSearchQuery, setPage } = useApp();
   const [query, setQuery] = useState('');
 
   const handleSearch = (e) => {
     if (e.key === 'Enter') {
       setSearchQuery(query);
       setPage(1);
-      setListings([]);
-      fetchListings(1, true);
       navigate('home');
     }
   };
@@ -20,8 +18,6 @@ export default function Topbar() {
     setQuery('');
     setSearchQuery('');
     setPage(1);
-    setListings([]);
-    fetchListings(1, true);
   };
 
   return (
