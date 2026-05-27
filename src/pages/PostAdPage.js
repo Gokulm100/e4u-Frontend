@@ -21,6 +21,7 @@ export default function PostAdPage() {
   const [existingImages, setExistingImages] = useState(editingAd?.images || []);
   const [submitting, setSubmitting] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
+  const [descInsights, setDescInsights] = useState({ total: 0, completed: 0, missing: 0, progress: 0, nextMissingLabel: '' });
   const fileRef = useRef(null);
 
   const filteredLocations = locations.filter(l =>
@@ -108,6 +109,7 @@ export default function PostAdPage() {
         method: 'POST',
         body: JSON.stringify({
           title,
+          price: price || '',
           category: selectedCatName,
           subCategory: selectedSubCat || 'General',
           description: description || '',
@@ -118,6 +120,11 @@ export default function PostAdPage() {
     } catch { showToast('AI description failed.', 'error'); }
     finally { setAiLoading(false); }
   };
+
+  const aiButtonLabel = (() => {
+    if (aiLoading) return '...';
+    return 'AI Write';
+  })();
 
   const handleSubmit = async () => {
     if (!user) { showToast('Please sign in to post an ad.', 'error'); return; }
@@ -246,9 +253,10 @@ export default function PostAdPage() {
               onChange={e => setDescription(e.target.value)}
               category={selectedCatName}
               subcategory={selectedSubCat}
+              onInsightsChange={setDescInsights}
             />
             <button className="ai-btn" onClick={generateAiDescription} disabled={aiLoading} type="button">
-              {aiLoading ? '...' : '✦'} <span>AI Write</span>
+              <span>{aiButtonLabel}</span>
             </button>
           </div>
 
