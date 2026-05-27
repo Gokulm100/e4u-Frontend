@@ -27,6 +27,29 @@ export default function PostAdPage() {
     l.name.toLowerCase().includes(locationQuery.toLowerCase())
   ).slice(0, 20);
 
+  const resolveLocation = () => {
+    if (selectedLocation?.name) return selectedLocation;
+    const q = locationQuery.trim();
+    if (!q) return null;
+    const match = locations.find(l => l.name.toLowerCase() === q.toLowerCase());
+    return match || { id: null, name: q };
+  };
+
+  useEffect(() => {
+    if (!editingAd?.location || !locations.length) return;
+    const match = locations.find(
+      l => l.name === editingAd.location
+        || l.name.toLowerCase() === editingAd.location.toLowerCase(),
+    );
+    if (match) {
+      setSelectedLocation(match);
+      setLocationQuery(match.name);
+    } else {
+      setLocationQuery(editingAd.location);
+      setSelectedLocation({ id: null, name: editingAd.location });
+    }
+  }, [editingAd, locations]);
+
   useEffect(() => {
     if (editingAd) {
       const cat = categories.find(c => c.id === editingAd.categoryId || c.name === editingAd.category);
@@ -77,11 +100,19 @@ export default function PostAdPage() {
 
   const generateAiDescription = async () => {
     if (!title || !selectedCatName) { showToast('Please add a title and category first.', 'error'); return; }
+    const loc = resolveLocation();
+    if (!loc?.name) { showToast('Please select or enter a location first.', 'error'); return; }
     setAiLoading(true);
     try {
       const res = await apiFetch('/api/ads/generateDescriptionUsingAI', {
         method: 'POST',
-        body: JSON.stringify({ title, category: selectedCatName, subCategory: selectedSubCat || 'General',description:description || '' }),
+        body: JSON.stringify({
+          title,
+          category: selectedCatName,
+          subCategory: selectedSubCat || 'General',
+          description: description || '',
+          location: loc.name,
+        }),
       });
       if (res.data) animateDescription(res.data);
     } catch { showToast('AI description failed.', 'error'); }
@@ -93,7 +124,8 @@ export default function PostAdPage() {
     if (!title.trim()) { showToast('Please enter a title.', 'error'); return; }
     if (!selectedCatId) { showToast('Please select a category.', 'error'); return; }
     if (!price) { showToast('Please enter a price.', 'error'); return; }
-    if (!selectedLocation && !locationQuery) { showToast('Please select a location.', 'error'); return; }
+    const loc = resolveLocation();
+    if (!loc?.name) { showToast('Please select a location.', 'error'); return; }
     if (description.length < 150) { showToast('Description must be at least 150 characters.', 'error'); return; }
 
     setSubmitting(true);
@@ -104,7 +136,6 @@ export default function PostAdPage() {
       formData.append('description', description);
       formData.append('category', selectedCatId);
       if (selectedSubCat) formData.append('subCategory', selectedSubCat);
-      const loc = selectedLocation || { name: locationQuery };
       formData.append('location', loc.name);
       if (existingImages.length) formData.append('existingImages', JSON.stringify(existingImages));
       images.forEach(img => formData.append('images', img));
@@ -177,9 +208,23 @@ export default function PostAdPage() {
               placeholder="Search city..."
               autoComplete="off"
               value={locationQuery}
-              onChange={e => { setLocationQuery(e.target.value); setLocationDropdown(true); setSelectedLocation(null); }}
+              onChange={e => {
+                const q = e.target.value;
+                setLocationQuery(q);
+                setLocationDropdown(true);
+                const match = locations.find(l => l.name.toLowerCase() === q.trim().toLowerCase());
+                setSelectedLocation(match || null);
+              }}
               onFocus={() => setLocationDropdown(true)}
-              onBlur={() => setTimeout(() => setLocationDropdown(false), 200)}
+              onBlur={() => {
+                setTimeout(() => {
+                  setLocationDropdown(false);
+                  const q = locationQuery.trim();
+                  if (!q) return;
+                  const match = locations.find(l => l.name.toLowerCase() === q.toLowerCase());
+                  if (match) setSelectedLocation(match);
+                }, 200);
+              }}
             />
             {locationDropdown && filteredLocations.length > 0 && (
               <div className="location-list">
