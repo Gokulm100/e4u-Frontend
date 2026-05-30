@@ -76,21 +76,25 @@ function MetricExplorer({ insights }) {
     return <p className="aa-muted">No metrics available yet.</p>;
   }
 
+  const scrollable = insights.length > 4;
+
   return (
     <div className="aa-metrics">
-      <div className="aa-metric-grid">
-        {insights.map((insight, idx) => (
-          <button
-            key={idx}
-            type="button"
-            className={`aa-metric-tile${selectedIdx === idx ? ' active' : ''}`}
-            style={accentStyle(idx)}
-            onClick={() => setSelectedIdx(idx)}
-          >
-            <span className="aa-metric-label">{insight.title}</span>
-            <span className="aa-metric-value">{insight.value}</span>
-          </button>
-        ))}
+      <div className={scrollable ? 'aa-metric-scroll-wrap' : undefined}>
+        <div className={`aa-metric-grid${scrollable ? ' aa-metric-grid--scroll' : ''}`}>
+          {insights.map((insight, idx) => (
+            <button
+              key={idx}
+              type="button"
+              className={`aa-metric-tile${selectedIdx === idx ? ' active' : ''}`}
+              style={accentStyle(idx)}
+              onClick={() => setSelectedIdx(idx)}
+            >
+              <span className="aa-metric-label">{insight.title}</span>
+              <span className="aa-metric-value">{insight.value}</span>
+            </button>
+          ))}
+        </div>
       </div>
       {selected && (
         <div className="aa-metric-detail" style={accentStyle(selectedIdx)}>

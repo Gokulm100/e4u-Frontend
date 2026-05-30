@@ -221,15 +221,23 @@ export default function AdDetailPage() {
   const { pageExtra, navigate, user, apiFetch, showToast } = useApp();
   const listing = pageExtra.listing;
   const returnTo = pageExtra.returnTo || 'home';
+  const [headerOpaque, setHeaderOpaque] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setHeaderOpaque(window.scrollY > 64);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   if (!listing) return null;
 
   const isOwner = user?._id && (user._id === listing.sellerId || user._id === listing.seller?._id);
 
   return (
-    <div>
-      <div className="detail-back-bar">
-        <button className="back-btn" onClick={() => navigate(returnTo)}><ArrowLeft size={18} /></button>
+    <div className="detail-page">
+      <div className={`detail-sticky-header${headerOpaque ? ' detail-sticky-header--opaque' : ''}`}>
+        <button className="back-btn" type="button" onClick={() => navigate(returnTo)}><ArrowLeft size={18} /></button>
         <div className="detail-header-title">{listing.title}</div>
       </div>
 

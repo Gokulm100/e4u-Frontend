@@ -852,6 +852,39 @@ body {
 @keyframes spin { to { transform: rotate(360deg); } }
 
 /* ── AD DETAIL ── */
+.detail-page { position: relative; }
+.detail-sticky-header {
+  position: sticky;
+  top: var(--header-h);
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+  padding: 14px 20px;
+  border-radius: var(--radius-lg);
+  background: var(--primary);
+  color: #fff;
+  transition: background 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+}
+.detail-sticky-header--opaque {
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: var(--text);
+  box-shadow: var(--shadow-sm);
+  border-bottom: 1px solid var(--border);
+}
+.detail-sticky-header--opaque .back-btn {
+  background: var(--bg);
+  color: var(--text);
+}
+.detail-sticky-header--opaque .back-btn:hover {
+  background: #e5e7eb;
+}
+.detail-sticky-header--opaque .detail-header-title {
+  color: var(--text);
+}
 .detail-back-bar {
   display: flex; align-items: center; gap: 12px;
   background: var(--primary); padding: 14px 24px; border-radius: var(--radius-lg);
@@ -877,7 +910,8 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.detail-layout { display: grid; grid-template-columns: 1fr 360px; gap: 24px; }
+.detail-layout { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 24px; }
+.detail-layout > * { min-width: 0; }
 
 .img-carousel-wrap { position: relative; border-radius: var(--radius-lg); overflow: hidden; margin-bottom: 20px; background: var(--border); }
 .img-carousel { display: flex; overflow: hidden; }
@@ -930,7 +964,12 @@ body {
 .offer-desc { font-size: 12px; color: var(--muted); line-height: 1.5; }
 
 /* AI Analytics (My Ads detail — web app style) */
-.aa-analytics { border: 1px solid #e0e7ff; }
+.aa-analytics {
+  border: 1px solid #e0e7ff;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: clip;
+}
 .aa-analytics .ai-header { margin-bottom: 0; }
 .aa-header {
   display: flex;
@@ -1120,36 +1159,53 @@ body {
   background: rgba(255, 255, 255, 0.25);
   color: #fff;
 }
-.aa-panel { min-height: 48px; }
+.aa-panel {
+  min-height: 48px;
+  min-width: 0;
+  max-width: 100%;
+}
+.aa-metrics {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+.aa-metric-scroll-wrap {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
+}
 .aa-metric-grid {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
   gap: 12px;
+  margin-bottom: 14px;
+}
+.aa-metric-grid--scroll {
+  display: flex;
+  flex-wrap: nowrap;
+  grid-template-columns: unset;
+  width: 100%;
+  max-width: 100%;
   overflow-x: auto;
   overflow-y: hidden;
-  margin-bottom: 14px;
+  overscroll-behavior-x: contain;
   padding-bottom: 6px;
-  margin-left: -2px;
-  margin-right: -2px;
-  padding-left: 2px;
-  padding-right: 2px;
   scroll-snap-type: x proximity;
   scrollbar-width: thin;
   scrollbar-color: #cbd5e1 transparent;
   -webkit-overflow-scrolling: touch;
+  touch-action: pan-x pinch-zoom;
 }
-.aa-metric-grid::-webkit-scrollbar {
+.aa-metric-grid--scroll::-webkit-scrollbar {
   height: 6px;
 }
-.aa-metric-grid::-webkit-scrollbar-thumb {
+.aa-metric-grid--scroll::-webkit-scrollbar-thumb {
   background: #cbd5e1;
   border-radius: 3px;
 }
 .aa-metric-tile {
-  flex: 0 0 148px;
-  width: 148px;
-  min-width: 148px;
-  max-width: 148px;
-  scroll-snap-align: start;
+  min-width: 0;
   text-align: left;
   padding: 14px;
   border-radius: var(--radius-md);
@@ -1193,6 +1249,13 @@ body {
 }
 .aa-metric-tile.active .aa-metric-value {
   color: var(--aa-accent, var(--primary));
+}
+.aa-metric-grid--scroll .aa-metric-tile {
+  flex: 0 0 148px;
+  width: 148px;
+  min-width: 148px;
+  max-width: 148px;
+  scroll-snap-align: start;
 }
 .aa-metric-detail {
   min-width: 0;
@@ -2524,7 +2587,12 @@ body {
   .detail-section { padding: 14px; }
   .detail-title { font-size: 18px; }
   .detail-price { font-size: 24px; }
-  .aa-metric-tile { flex-basis: 140px; width: 140px; min-width: 140px; max-width: 140px; }
+  .aa-metric-grid--scroll .aa-metric-tile {
+    flex-basis: 140px;
+    width: 140px;
+    min-width: 140px;
+    max-width: 140px;
+  }
 
   .chat-detail-layout { height: calc(100vh - var(--header-h) - 92px); }
   .chat-detail-msgs { padding: 14px; }
