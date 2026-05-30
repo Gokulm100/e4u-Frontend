@@ -123,6 +123,7 @@ export default function PostAdPage() {
 
   const aiButtonLabel = (() => {
     if (aiLoading) return '...';
+    if (descInsights.total > 0 && descInsights.missing === 0) return 'Refine with AI';
     return 'AI Write';
   })();
 
@@ -247,18 +248,19 @@ export default function PostAdPage() {
           <label className="form-label">
             Description * <span className="char-count">({description.length}/150 min)</span>
           </label>
-          <div className="ai-textarea-wrap">
-            <AiTextArea
-              value={description}
-              onChange={e => setDescription(e.target.value)}
-              category={selectedCatName}
-              subcategory={selectedSubCat}
-              onInsightsChange={setDescInsights}
-            />
-            <button className="ai-btn" onClick={generateAiDescription} disabled={aiLoading} type="button">
-              <span>{aiButtonLabel}</span>
-            </button>
-          </div>
+          <AiTextArea
+            value={description}
+            onChange={e => setDescription(e.target.value)}
+            category={selectedCatName}
+            subcategory={selectedSubCat}
+            title={title}
+            price={price}
+            location={selectedLocation?.name || locationQuery}
+            onInsightsChange={setDescInsights}
+            onAiWrite={generateAiDescription}
+            aiLoading={aiLoading}
+            aiButtonLabel={aiButtonLabel}
+          />
 
           <label className="form-label">Images (optional)</label>
           <button className="img-picker-btn" type="button" onClick={() => fileRef.current?.click()}>

@@ -11,6 +11,7 @@ import {
 import { emitJoin } from '../utils/socket';
 import { ArrowLeft, MapPin, Eye, Clock, Tag, User, Send } from 'lucide-react';
 import { useApp } from '../context/AppContext';
+import AiAnalytics from '../components/AiAnalytics';
 
 const FALLBACK = 'https://images.pexels.com/photos/10703759/pexels-photo-10703759.jpeg';
 
@@ -115,82 +116,6 @@ function PriceInsights({ listing, apiFetch }) {
         <div className="offer-price">{formatOfferValue(best?.value)}</div>
         <div className="offer-desc">{best?.description || (best ? '' : <div className="spinner" style={{ width: 18, height: 18, margin: '8px 0' }} />)}</div>
       </div>
-    </div>
-  );
-}
-
-function AiAnalytics({ listing, apiFetch }) {
-  const [state, setState] = useState('prompt'); // prompt | loading | done | error
-  const [data, setData] = useState(null);
-
-  const generate = async () => {
-    setState('loading');
-    try {
-      const res = await apiFetch('/api/ai/provideAiAnalytics', {
-        method: 'POST',
-        body: JSON.stringify({ adId: listing.id, category: listing.categoryId || '', subCategory: listing.subCategory || '' }),
-      });
-      setData(res.data);
-      setState('done');
-    } catch { setState('error'); }
-  };
-
-  if (state === 'prompt') return (
-    <div className="analytics-prompt">
-      <div className="ai-powered-badge">AI POWERED</div>
-      <div className="analytics-title">Boost your Ad Performance</div>
-      <div className="analytics-desc">Get AI driven insights and smart tips to sell your item 2x faster.</div>
-      <button className="generate-btn" onClick={generate}>✦ Generate Analysis</button>
-    </div>
-  );
-
-  if (state === 'loading') return (
-    <div className="analytics-prompt">
-      <div className="spinner" />
-      <div className="analytics-desc" style={{ marginTop: 12 }}>Analyzing market trends...</div>
-    </div>
-  );
-
-  if (state === 'error') return (
-    <div className="analytics-prompt">
-      <div style={{ color: 'var(--error)' }}>Could not load AI analytics.</div>
-      <button className="generate-btn" style={{ marginTop: 12 }} onClick={generate}>Try Again</button>
-    </div>
-  );
-
-  const insights = Array.isArray(data?.analysis) ? data.analysis : [];
-  const suggestions = Array.isArray(data?.recommendations) ? data.recommendations : [];
-
-  return (
-    <div className="detail-section">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{ width: 30, height: 30, borderRadius: '50%', background: '#f0f7ff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✦</div>
-          <div className="section-title" style={{ margin: 0 }}>AI Insights</div>
-        </div>
-        <button onClick={() => setState('prompt')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)' }}>↺</button>
-      </div>
-      <div className="analytics-insights">
-        {insights.map((item, i) => (
-          <div key={i} className="insight-card">
-            <div className="insight-title">{item.title}</div>
-            <div className="insight-value">{item.value}</div>
-            <div className="insight-divider" />
-            <div className="insight-desc">{item.description}</div>
-          </div>
-        ))}
-      </div>
-      {suggestions.length > 0 && (
-        <div className="suggestions-box">
-          <div className="suggestions-header">Optimization Tips</div>
-          {suggestions.map((s, i) => (
-            <div key={i} className="suggestion-row">
-              <div className="suggestion-bullet" />
-              <div><div className="s-title">{s.title}</div><div className="s-desc">{s.description}</div></div>
-            </div>
-          ))}
-        </div>
-      )}
     </div>
   );
 }

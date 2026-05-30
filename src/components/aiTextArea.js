@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Sparkles } from 'lucide-react';
 
 
 // Field definitions for each category/subcategory
@@ -100,49 +101,113 @@ function getRequiredFieldDefs(category, subcategory) {
   const catFields = FIELD_MAP[c] || {};
   const key = subcategory || 'DEFAULT';
   const fieldKeys = catFields[key] || catFields.DEFAULT || FIELD_MAP.Electronics.DEFAULT;
-  return fieldKeys.map((k) => FIELD_DEFS[k]).filter(Boolean);
+  return fieldKeys
+    .filter((k) => FIELD_DEFS[k])
+    .map((k) => ({ key: k, ...FIELD_DEFS[k] }));
 }
 
+const BRAND_KEYWORDS = {
+  mobiles: [
+    'samsung', 'apple', 'iphone', 'xiaomi', 'redmi', 'poco', 'mi', 'oneplus', 'one plus',
+    'vivo', 'oppo', 'realme', 'nokia', 'motorola', 'moto', 'google', 'pixel', 'sony',
+    'asus', 'infinix', 'tecno', 'lava', 'micromax', 'honor', 'nothing', 'iqoo', 'lenovo',
+    'htc', 'blackberry', 'gionee', 'coolpad', 'alcatel', 'huawei', 'zte', 'leeco', 'itel',
+  ],
+  computers: [
+    'dell', 'hp', 'lenovo', 'asus', 'acer', 'apple', 'macbook', 'msi', 'microsoft',
+    'surface', 'samsung', 'lg', 'gigabyte', 'razer', 'alienware', 'hcl', 'toshiba',
+    'fujitsu', 'vaio', 'intel', 'amd', 'nvidia',
+  ],
+  tv: [
+    'samsung', 'lg', 'sony', 'panasonic', 'tcl', 'mi', 'xiaomi', 'oneplus', 'vu', 'onida',
+    'videocon', 'philips', 'hisense', 'toshiba', 'sansui', 'blaupunkt', 'kodak', 'thomson',
+    'akai', 'intex', 'bpl', 'sanyo', 'lloyd', 'realme', 'motorola', 'nokia', 'acer',
+  ],
+  appliances: [
+    'lg', 'samsung', 'whirlpool', 'ifb', 'bosch', 'haier', 'godrej', 'voltas', 'blue star',
+    'daikin', 'hitachi', 'panasonic', 'sanyo', 'lloyd', 'carrier', 'mitsubishi', 'o general',
+    'electrolux', 'kelvinator', 'videocon', 'onida', 'siemens', 'kenstar', 'crompton',
+    'bajaj', 'havells', 'usha', 'orient', 'symphony', 'morphy richards', 'prestige', 'pigeon',
+  ],
+  camera: [
+    'canon', 'nikon', 'sony', 'fujifilm', 'panasonic', 'olympus', 'gopro', 'dji', 'leica',
+    'pentax', 'sigma', 'kodak', 'lumix', 'insta360',
+  ],
+  audio: [
+    'sony', 'bose', 'jbl', 'boat', 'sennheiser', 'skullcandy', 'beats', 'marshall', 'noise',
+    'boult', 'realme', 'oneplus', 'samsung', 'apple', 'airpods', 'jabra', 'soundcore',
+    'philips', 'zebronics', 'portronics', 'ambrane',
+  ],
+  cars: [
+    'maruti', 'suzuki', 'hyundai', 'tata', 'mahindra', 'toyota', 'honda', 'kia', 'ford',
+    'renault', 'nissan', 'volkswagen', 'vw', 'skoda', 'mg', 'jeep', 'bmw', 'mercedes',
+    'benz', 'audi', 'volvo', 'jaguar', 'datsun', 'fiat', 'chevrolet', 'isuzu', 'citroen',
+    'lexus', 'land rover', 'porsche', 'mini', 'ssangyong', 'force', 'premier', 'ambassador',
+    'mitsubishi', 'opel', 'tesla', 'byd',
+  ],
+  bikes: [
+    'hero', 'honda', 'bajaj', 'tvs', 'yamaha', 'royal enfield', 'enfield', 'ktm', 'suzuki',
+    'kawasaki', 'jawa', 'harley', 'harley davidson', 'triumph', 'ducati', 'aprilia', 'vespa',
+    'ather', 'ola', 'revolt', 'benelli', 'hero electric', 'bgauss', 'okinawa', 'ampere',
+    'tork', 'yezdi', 'husqvarna', 'kymco', 'mahindra', 'bmw', 'cfmoto',
+  ],
+  fashion: [
+    'nike', 'adidas', 'puma', 'reebok', 'levis', "levi's", 'zara', 'h&m', 'gucci', 'prada',
+    'woodland', 'bata', 'allen solly', 'peter england', 'van heusen', 'louis philippe',
+    'raymond', 'fastrack', 'titan', 'fossil', 'tommy hilfiger', 'jack & jones', 'us polo',
+    'wrangler', 'lee', 'biba', 'fabindia', 'max', 'lifestyle', 'gap', 'uniqlo',
+    'calvin klein', 'armani', 'versace', 'ray-ban', 'rayban', 'crocs', 'sketchers', 'skechers',
+  ],
+  gaming: [
+    'sony', 'playstation', 'microsoft', 'xbox', 'nintendo', 'steam', 'valve', 'logitech',
+    'razer', 'rog', 'msi', 'dualshock', 'dualsense', 'redgear', 'cosmic byte',
+  ],
+};
 
-// Field presence checkers for each key
+const BRAND_REGEX = new RegExp(
+  '\\b(' +
+    [...new Set(Object.values(BRAND_KEYWORDS).flat())].join('|') +
+    '|brand)\\b',
+);
+
 const FIELD_CHECKERS = {
-  brand: text => /samsung|apple|xiaomi|oneplus|vivo|oppo|realme|nokia|motorola|google|sony|lg|brand/.test(text),
-  model: text => /model|iphone|galaxy|pixel|note|pro|plus|ultra|edge|series|[a-z]{2,}\d{1,}/.test(text),
-  storage: text => /\d+\s?gb|\d+\s?tb|storage/.test(text),
-  condition: text => /new|used|like new|condition/.test(text),
-  warranty: text => /warranty|guarantee/.test(text),
-  accessories: text => /accessories|charger|box|earphones|case|cover/.test(text),
-	size: text => /\d+\s?(inches|inch|")|size/.test(text),
-  type: text => /type|led|lcd|oled|front load|top load|controller|gaming rig/.test(text),
-  capacity: text => /\d+\s?kg|capacity/.test(text),
-  location: text => /location|city|area|address/.test(text),
-  bedrooms: text => /bedroom|bhk|room/.test(text),
-  bathrooms: text => /bathroom|toilet|washroom/.test(text),
-  area: text => /\d+\s?sqft|area|plot/.test(text),
-  furnishing: text => /furnishing|furnished|unfurnished|semi-furnished/.test(text),
-  rent: text => /rent|monthly|per month/.test(text),
-  price: text => /price|rs|inr|lakh|crore|amount/.test(text),
-  year: text => /\b(19|20)\d{2}\b|year/.test(text),
-  mileage: text => /\d+\s?(km|kms|kilometers|mileage)/.test(text),
-  fuel: text => /fuel|petrol|diesel|cng|electric/.test(text),
-  transmission: text => /transmission|manual|automatic/.test(text),
-  title: text => /title|game|playstation|ps4|ps5/.test(text),
-  platform: text => /platform|console|ps4|ps5|xbox|pc/.test(text),
-  cpu: text => /cpu|processor|i3|i5|i7|i9|ryzen/.test(text),
-  gpu: text => /gpu|graphics|nvidia|amd|rtx|gtx/.test(text),
-  ram: text => /ram|memory|gb/.test(text),
-  color: text => /color|red|blue|green|black|white|yellow|pink|purple|orange|silver|gold/.test(text),
-  battery: text => /battery|mah|battery health|backup|hours/.test(text),
-  screen: text => /screen|display|resolution|4k|hd|uhd/.test(text),
-  processor: text => /processor|chip|snapdragon|mediatek|intel|amd|m1|m2/.test(text),
-  owner: text => /owner|first owner|1st owner|second owner|single owner/.test(text),
-  insurance: text => /insurance|comprehensive|third party|valid till/.test(text),
-  material: text => /material|wood|metal|plastic|leather|fabric/.test(text),
-  dimensions: text => /dimension|length|width|height|inch|cm|ft/.test(text),
-  age: text => /age|year old|months old|used for/.test(text),
-  salary: text => /salary|ctc|lpa|per annum|package/.test(text),
-  experience: text => /experience|fresher|years|yr/.test(text),
-  availability: text => /available|immediate|possession|move in|vacant/.test(text),
+  brand: t => BRAND_REGEX.test(t),
+  model: t => /\b(model|iphone|galaxy|pixel|note|pro|plus|ultra|edge|series|swift|baleno|dzire|wagonr|alto|celerio|brezza|ertiga|ciaz|creta|venue|verna|santro|aura|nexon|harrier|safari|tiago|tigor|punch|altroz|scorpio|thar|bolero|city|amaze|jazz|civic|wrv|seltos|sonet|carens|fortuner|innova|glanza|fronx|polo|vento|virtus|taigun|kushaq|slavia|rapid|kwid|triber|kiger|duster|magnite|splendor|passion|glamour|pulsar|platina|avenger|apache|jupiter|ntorq|raider|fascino|classic|bullet|hunter|meteor|himalayan|duke|access|activa|dio|shine|unicorn)\b|[a-z]{2,}\s?\d{2,}/.test(t),
+  storage: t => /\b(\d+\s?(gb|tb)|storage|rom|internal memory)\b/.test(t),
+  condition: t => /\b(brand new|like new|gently used|barely used|new|used|condition|mint|excellent|good|fair|scratch)\b/.test(t),
+  warranty: t => /\b(warranty|guarantee|warrant)\b/.test(t),
+  accessories: t => /\b(accessories|charger|adapter|box|earphones|headphones|case|cover|cable|original box|bill)\b/.test(t),
+  size: t => /\b(\d+\s?(inch|inches|"|cm)|size)\b/.test(t),
+  type: t => /\b(type|led|lcd|oled|qled|smart tv|front load|top load|semi automatic|fully automatic|controller|gaming rig)\b/.test(t),
+  capacity: t => /\b(\d+\s?(kg|kgs|litre|liter|l)|capacity)\b/.test(t),
+  location: t => /\b(location|city|area|address|near|locality|sector|colony|nagar|road|pincode|landmark)\b/.test(t),
+  bedrooms: t => /\b(\d+\s?(bhk|bedroom|bedrooms|rk)|bedroom|bhk|room)\b/.test(t),
+  bathrooms: t => /\b(bathroom|bathrooms|toilet|washroom|attached bath)\b/.test(t),
+  area: t => /\b(\d+\s?(sqft|sq ft|square feet|sqyd|sq yards|acre|cent)|area|carpet|built up|plot)\b/.test(t),
+  furnishing: t => /\b(furnishing|furnished|unfurnished|semi.?furnished|fully furnished)\b/.test(t),
+  rent: t => /\b(rent|monthly|per month|deposit|advance)\b/.test(t),
+  price: t => /\b(price|rs|inr|₹|rupees|lakh|lakhs|crore|cr|negotiable|fixed|amount|cost)\b|\d{4,}/.test(t),
+  year: t => /\b((19|20)\d{2}|year|registration year)\b/.test(t),
+  mileage: t => /\b(\d+\s?(km|kms|kilometers|kmpl|mileage)|odometer|driven)\b/.test(t),
+  fuel: t => /\b(fuel|petrol|diesel|cng|lpg|electric|ev|hybrid)\b/.test(t),
+  transmission: t => /\b(transmission|manual|automatic|amt|cvt|dct|gear)\b/.test(t),
+  title: t => /\b(title|game|playstation|ps4|ps5|xbox|edition)\b/.test(t),
+  platform: t => /\b(platform|console|ps4|ps5|xbox|pc|nintendo|switch)\b/.test(t),
+  cpu: t => /\b(cpu|processor|i3|i5|i7|i9|ryzen|core|intel|amd)\b/.test(t),
+  gpu: t => /\b(gpu|graphics|nvidia|amd|rtx|gtx|radeon|geforce)\b/.test(t),
+  ram: t => /\b(\d+\s?gb\s?ram|ram|memory|ddr)\b/.test(t),
+  color: t => /\b(colou?r|red|blue|green|black|white|yellow|pink|purple|orange|grey|gray|silver|gold|midnight|brown|maroon)\b/.test(t),
+  battery: t => /\b(battery|mah|battery health|backup|hours)\b/.test(t),
+  screen: t => /\b(screen|display|resolution|4k|hd|uhd|amoled|lcd|inch)\b/.test(t),
+  processor: t => /\b(processor|chip|snapdragon|mediatek|dimensity|exynos|bionic|intel|amd|i3|i5|i7|i9|ryzen|m1|m2|m3)\b/.test(t),
+  owner: t => /\b(owner|first owner|1st owner|second owner|2nd owner|single owner|third owner)\b/.test(t),
+  insurance: t => /\b(insurance|comprehensive|third party|valid till|valid upto|expired)\b/.test(t),
+  material: t => /\b(material|wood|wooden|metal|steel|plastic|leather|fabric|glass|marble)\b/.test(t),
+  dimensions: t => /\b(dimension|dimensions|length|width|height|inch|cm|ft|feet)\b/.test(t),
+  age: t => /\b(age|year old|years old|month old|months old|used for|bought)\b/.test(t),
+  salary: t => /\b(salary|ctc|lpa|per annum|per month|package|stipend)\b/.test(t),
+  experience: t => /\b(experience|fresher|years|yrs|yr)\b/.test(t),
+  availability: t => /\b(available|immediate|possession|move in|vacant|ready to move)\b/.test(t),
 };
 
 const FIELD_TEMPLATES = {
@@ -212,70 +277,71 @@ const FIELD_EXAMPLES = {
   availability: 'e.g. Immediate',
 };
 
-function getCaretPosition(textarea, cursorPos) {
-  const div = document.createElement('div');
-  const style = window.getComputedStyle(textarea);
-  const props = [
-    'boxSizing', 'width', 'height', 'overflowX', 'overflowY', 'borderTopWidth', 'borderRightWidth',
-    'borderBottomWidth', 'borderLeftWidth', 'paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft',
-    'fontStyle', 'fontVariant', 'fontWeight', 'fontStretch', 'fontSize', 'fontSizeAdjust', 'lineHeight',
-    'fontFamily', 'textAlign', 'textTransform', 'textIndent', 'textDecoration', 'letterSpacing', 'wordSpacing',
-    'tabSize', 'MozTabSize',
-  ];
-  props.forEach((prop) => { div.style[prop] = style[prop]; });
-
-  div.style.position = 'absolute';
-  div.style.visibility = 'hidden';
-  div.style.whiteSpace = 'pre-wrap';
-  div.style.wordWrap = 'break-word';
-  div.style.left = '-9999px';
-
-  div.textContent = textarea.value.substring(0, cursorPos);
-  const span = document.createElement('span');
-  span.textContent = textarea.value.substring(cursorPos) || '.';
-  div.appendChild(span);
-  document.body.appendChild(div);
-
-  const top = span.offsetTop - textarea.scrollTop;
-  const left = span.offsetLeft - textarea.scrollLeft;
-  document.body.removeChild(div);
-  return { top, left };
+function escapeRegex(s) {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-function checkFieldPresent(text, field) {
+function hasLabelWithValue(text, fieldKey) {
+  const template = FIELD_TEMPLATES[fieldKey];
+  if (!template) return false;
+  const label = template.trim().replace(/:$/, '');
+  const re = new RegExp(`${escapeRegex(label)}\\s*:\\s*\\S`, 'i');
+  return re.test(text);
+}
+
+function isFormFieldSatisfied(fieldKey, { price, location, adTitle }) {
+  if (fieldKey === 'price') {
+    const p = String(price || '').trim();
+    return p.length > 0 && /\d/.test(p);
+  }
+  if (fieldKey === 'location') {
+    return String(location || '').trim().length >= 2;
+  }
+  if (fieldKey === 'title') {
+    return String(adTitle || '').trim().length >= 2;
+  }
+  return false;
+}
+
+function checkFieldPresent(text, field, formContext = {}) {
+  if (isFormFieldSatisfied(field.key, formContext)) return true;
   const lower = (text || '').toLowerCase();
+  if (hasLabelWithValue(lower, field.key)) return true;
   const checker = FIELD_CHECKERS[field.key];
   return checker ? checker(lower) : false;
 }
 
+function buildDetectionText({ title, price, location, value }) {
+  return [title, price, location, value].filter(Boolean).join(' ');
+}
 
 // Accept category and subcategory as props
-const AiTextArea = ({ value, onChange, category, subcategory, onInsightsChange }) => {
+const AiTextArea = ({
+  value,
+  onChange,
+  category,
+  subcategory,
+  onInsightsChange,
+  title,
+  price,
+  location,
+  onAiWrite,
+  aiLoading = false,
+  aiButtonLabel = 'AI Write',
+}) => {
 	const [touched, setTouched] = useState(false);
   const [showTypingTip, setShowTypingTip] = useState(false);
   const [tipIndex, setTipIndex] = useState(0);
-  const [tipPos, setTipPos] = useState({ top: 8, left: 8 });
-  const [tipPinnedTop, setTipPinnedTop] = useState(false);
-  const textareaRef = React.useRef(null);
 	const requiredFields = getRequiredFieldDefs(category, subcategory);
-	const completedFields = requiredFields.filter(f => checkFieldPresent(value || '', f));
-	const missingFields = requiredFields.filter(f => !checkFieldPresent(value || '', f));
+  const detectionText = buildDetectionText({ title, price, location, value });
+  const formContext = { price, location, adTitle: title };
+	const completedFields = requiredFields.filter(f => checkFieldPresent(detectionText, f, formContext));
+	const missingFields = requiredFields.filter(f => !checkFieldPresent(detectionText, f, formContext));
 	const progress = Math.round((completedFields.length / requiredFields.length) * 100);
 	const nextMissing = missingFields[0];
 
 	const handleChange = e => {
 		setTouched(true);
-    if (textareaRef.current) {
-      const cursorPos = e.target.selectionStart || 0;
-      try {
-        const { top, left } = getCaretPosition(textareaRef.current, cursorPos);
-        setTipPos({ top: Math.max(6, top - 34), left: Math.max(10, left + 14) });
-        setTipPinnedTop(top < 38);
-      } catch {
-        setTipPos({ top: 8, left: 8 });
-        setTipPinnedTop(false);
-      }
-    }
 		onChange && onChange(e);
 	};
 
@@ -301,7 +367,7 @@ const AiTextArea = ({ value, onChange, category, subcategory, onInsightsChange }
     setShowTypingTip(false);
     const debounce = setTimeout(() => setShowTypingTip(true), 650);
     return () => clearTimeout(debounce);
-  }, [value, touched, missingFields.length]);
+  }, [detectionText, touched, missingFields.length]);
 
   useEffect(() => {
     if (!showTypingTip || missingFields.length <= 1) return undefined;
@@ -322,130 +388,100 @@ const AiTextArea = ({ value, onChange, category, subcategory, onInsightsChange }
   };
 
   const activeTipField = missingFields[Math.min(tipIndex, Math.max(missingFields.length - 1, 0))];
+  const allComplete = requiredFields.length > 0 && missingFields.length === 0;
 
-		return (
-			<div style={{  maxWidth: 520, background: '#fff', borderRadius: 10, boxShadow: '0 1px 6px rgba(0,0,0,0.04)', padding: 18, border: '1px solid #f1f5f9' }}>
-				<div style={{ marginBottom: 10 }}>
-					<div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-          </div>
-				</div>
-            <div style={{ position: 'relative' }}>
-				   <textarea
-              ref={textareaRef}
-					   value={value}
-					   onChange={handleChange}
-					   rows={6}
-					   style={{
-						   width: '-webkit-fill-available',
-						   fontSize: 15,
-						   fontFamily: 'inherit',
-						   borderColor: missingFields.length && touched ? '#e11d48' : '#e5e7eb',
-						   borderRadius: 7,
-						   outline: 'none',
-						   boxShadow: '0 1px 2px rgba(0,0,0,0.02)',
-						   marginBottom: 6,
-						   background: '#f8fafc',
-						   minHeight: 100,
-						   resize: 'vertical',
-						   transition: 'border-color 0.2s',
-						   padding: '12px 12px 12px 22px'
-					   }}
-					   placeholder={`Describe your ${subcategory || category || 'item'} in detail...`}
-				   />
-          {showTypingTip && activeTipField && (
-            <div style={{
-              position: 'absolute',
-              top: tipPinnedTop ? 8 : tipPos.top,
-              left: tipPinnedTop ? 12 : tipPos.left,
-              maxWidth: 270,
-              zIndex: 3,
-              padding: '10px 11px',
-              background: '#fffef7',
-              border: '1px solid #f8e7a3',
-              borderRadius: 12,
-              color: '#3f3a22',
-              fontSize: 12,
-              fontWeight: 500,
-              lineHeight: 1.35,
-              boxShadow: '0 8px 18px rgba(146, 118, 38, 0.12)',
-              pointerEvents: 'none',
-              opacity: 1,
-              transform: 'translateY(0)',
-              animation: 'tipFadeIn 180ms ease-out',
-            }}>
-              <style>{`
-                @keyframes tipFadeIn {
-                  from {
-                    opacity: 0;
-                    transform: translateY(8px) scale(0.98);
-                  }
-                  to {
-                    opacity: 1;
-                    transform: translateY(0) scale(1);
-                  }
-                }
-              `}</style>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-                <span style={{ fontSize: 13 }}>💡</span>
-                <span style={{
-                  fontSize: 11,
-                  fontWeight: 700,
-                  letterSpacing: 0.2,
-                  color: '#7c5a10',
-                  textTransform: 'uppercase',
-                }}>
-                  Suggestion
-                </span>
-              </div>
-              Add <strong>{activeTipField.label}</strong> {FIELD_EXAMPLES[activeTipField.key] || 'to improve listing quality'}.
-            </div>
-          )}
-          </div>
-                                    				<div style={{ marginTop: 6 }}>
-					{touched && missingFields.length > 0 && (
-						<div style={{ color: '#4c64efff',padding:'5px' ,marginBottom: 4, textAlign: 'left', fontWeight: 500, fontSize: 13 }}>
-																							<span style={{ fontSize: 15, color: '#fbbf24', marginTop: 1, display: 'inline-flex', alignItems: 'center' }} aria-label="tip" title="Tip">
-																	{/* Bulb icon SVG */}
-																	<svg width="1em" height="1em" viewBox="0 0 20 20" fill="currentColor" style={{ display: 'inline', verticalAlign: 'middle' }}><path d="M10 2a6 6 0 0 0-3.98 10.47c.13.12.21.29.21.47v.06c0 .28.22.5.5.5h6.54c.28 0 .5-.22.5-.5v-.06c0-.18.08-.35.21-.47A6 6 0 0 0 10 2zm-2 14a1 1 0 1 0 4 0h-4z"/></svg>
-																</span>
-                            Consider adding: {missingFields.map(f => f.label).join(', ')}
-						</div>
-					)}
-          {!touched && nextMissing && (
-            <div style={{ color: '#334155', padding: '5px', marginBottom: 4, fontWeight: 500, fontSize: 13 }}>
-              Tip: Start with <strong>{nextMissing.label}</strong> for better visibility.
-            </div>
-          )}
+  return (
+    <div className="ai-insights">
+      <div className="ai-insights-header">
+        <span className="ai-insights-title">Detail checklist</span>
+        <span className="ai-insights-count">
+          {completedFields.length}/{requiredFields.length} added
+        </span>
+      </div>
 
-				</div>
-<div style={{ display: 'flex', flexWrap: 'wrap',paddingTop: 6,paddingBottom: 6, gap: 6, marginBottom: 6 }}>
-						{requiredFields.map(f => (
-							<button type="button" key={f.key} onClick={() => addTemplate(f)} style={{
-								display: 'inline-flex',
-								alignItems: 'center',
-								padding: '2px 9px',
-								borderRadius: 12,
-								background: checkFieldPresent(value || '', f) ? f.color : '#f3f4f6',
-								color: checkFieldPresent(value || '', f) ? '#fff' : '#6b7280',
-								fontWeight: 500,
-								fontSize: 12,
-								border: checkFieldPresent(value || '', f) ? 'none' : `1px solid ${f.color}`,
-								opacity: checkFieldPresent(value || '', f) ? 1 : 0.7,
-								marginBottom: 2,
-								transition: 'all 0.2s',
-                cursor: 'pointer'
-							}}>
-								{f.label}
-								{checkFieldPresent(value || '', f) ? <span style={{ marginLeft: 4, fontSize: 13 }}>✓</span> : null}
-							</button>
-						))}
-					</div>
-                    					<div style={{ height: 5, background: '#f3f4f6', borderRadius: 3, marginBottom: 10, overflow: 'hidden' }}>
-						<div style={{ width: `${progress}%`, height: '100%', background: progress === 100 ? '#22c55e' : '#2563eb', transition: 'width 0.3s' }} />
-					</div>
-			</div>
-            
-		);
+      {showTypingTip && activeTipField && (
+        <div className="ai-insights-suggestion">
+          <div className="ai-insights-suggestion-head">
+            <span className="ai-insights-suggestion-icon" aria-hidden>💡</span>
+            <span className="ai-insights-suggestion-label">Suggestion</span>
+          </div>
+          <p className="ai-insights-suggestion-text">
+            Add <strong>{activeTipField.label}</strong>{' '}
+            {FIELD_EXAMPLES[activeTipField.key] || 'to improve listing quality'}.
+          </p>
+        </div>
+      )}
+
+      <div className="ai-insights-input-wrap">
+        <textarea
+          value={value}
+          onChange={handleChange}
+          rows={6}
+          className={`ai-insights-input${missingFields.length && touched ? ' ai-insights-input--warn' : ''}`}
+          placeholder={`Describe your ${subcategory || category || 'item'} in detail...`}
+        />
+        {onAiWrite && (
+          <button
+            type="button"
+            className={`ai-insights-ai-btn${allComplete ? ' ai-insights-ai-btn--refine' : ''}`}
+            onClick={onAiWrite}
+            disabled={aiLoading}
+          >
+            {aiLoading ? (
+              <span className="ai-insights-ai-btn-loading">...</span>
+            ) : (
+              <>
+                <Sparkles size={14} strokeWidth={2.25} aria-hidden />
+                <span>{aiButtonLabel}</span>
+              </>
+            )}
+          </button>
+        )}
+      </div>
+
+      {touched && missingFields.length > 0 && (
+        <div className="ai-insights-hint">
+          <span className="ai-insights-hint-icon" aria-hidden>💡</span>
+          <span className="ai-insights-hint-text">
+            Consider adding: {missingFields.map(f => f.label).join(', ')}
+          </span>
+        </div>
+      )}
+
+      {!touched && nextMissing && (
+        <p className="ai-insights-start-tip">
+          Tip: Start with <strong>{nextMissing.label}</strong> for better visibility.
+        </p>
+      )}
+
+      <div className="ai-insights-chips">
+        {requiredFields.map(f => {
+          const done = checkFieldPresent(detectionText, f, formContext);
+          return (
+            <button
+              type="button"
+              key={f.key}
+              className={`ai-insights-chip${done ? ' ai-insights-chip--done' : ''}`}
+              style={done ? { backgroundColor: f.color, borderColor: f.color } : { borderColor: f.color }}
+              onClick={() => addTemplate(f)}
+            >
+              {f.label}{done ? ' ✓' : ''}
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="ai-insights-progress-track">
+        <div
+          className={`ai-insights-progress-fill${progress === 100 ? ' ai-insights-progress-fill--complete' : ''}`}
+          style={{ width: `${progress}%` }}
+        />
+      </div>
+      <p className="ai-insights-progress-label">
+        {completedFields.length}/{requiredFields.length} fields mentioned
+      </p>
+    </div>
+  );
 };
 
 export default AiTextArea;
