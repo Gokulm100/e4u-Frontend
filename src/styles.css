@@ -937,6 +937,104 @@ body {
 .section-title { font-size: 15px; font-weight: 700; margin-bottom: 10px; }
 .description-text { font-size: 14px; line-height: 1.7; color: var(--text); }
 
+/* Similar ads (detail page) */
+.similar-ads-section { overflow: hidden; }
+.similar-ads-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 4px;
+}
+.similar-ads-title { margin-bottom: 0; }
+.similar-ads-loading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.similar-ads-refresh {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--white);
+  color: var(--primary);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.similar-ads-refresh:hover {
+  background: #f0f4ff;
+  border-color: #bfdbfe;
+}
+.similar-ads-spinner {
+  width: 16px;
+  height: 16px;
+  border-width: 2px;
+}
+.similar-ads-muted {
+  margin: 12px 0 0;
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+.similar-ads-retry {
+  border: none;
+  background: none;
+  padding: 0;
+  color: var(--primary);
+  font-weight: 600;
+  font-size: inherit;
+  font-family: inherit;
+  cursor: pointer;
+  text-decoration: underline;
+}
+.similar-ads-rail-wrap {
+  margin-top: 14px;
+  margin-left: -4px;
+  margin-right: -4px;
+  overflow: hidden;
+}
+.similar-ads-rail {
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 4px 4px 10px;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x proximity;
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+  -webkit-overflow-scrolling: touch;
+}
+.similar-ads-rail::-webkit-scrollbar { height: 6px; }
+.similar-ads-rail::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+.similar-ads-item {
+  flex: 0 0 220px;
+  width: 220px;
+  min-width: 220px;
+  scroll-snap-align: start;
+}
+.similar-ads-item .ad-card {
+  height: 100%;
+}
+.similar-ads-item .ad-card-media {
+  aspect-ratio: 4 / 3;
+}
+.similar-ads-item .ad-card-title {
+  font-size: 13px;
+  min-height: 2.5em;
+}
+
 /* Seller card */
 .seller-card { display: flex; align-items: center; gap: 14px; background: var(--white); border-radius: var(--radius-lg); padding: 16px; box-shadow: var(--shadow-sm); margin-bottom: 16px; }
 .seller-avatar { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; }

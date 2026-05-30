@@ -12,6 +12,7 @@ import { emitJoin } from '../utils/socket';
 import { ArrowLeft, MapPin, Eye, Clock, Tag, User, Send } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import AiAnalytics from '../components/AiAnalytics';
+import SimilarAds from '../components/SimilarAds';
 
 const FALLBACK = 'https://images.pexels.com/photos/10703759/pexels-photo-10703759.jpeg';
 
@@ -267,7 +268,13 @@ export default function AdDetailPage() {
             <div className="description-text">{listing.description || 'No description provided.'}</div>
           </div>
 
-          {/* Move AiAnalytics to the bottom of main column */}
+          <SimilarAds
+            listing={listing}
+            navigate={navigate}
+            returnTo={returnTo}
+            user={user}
+          />
+
           {isOwner && <AiAnalytics listing={listing} apiFetch={apiFetch} />}
         </div>
 
