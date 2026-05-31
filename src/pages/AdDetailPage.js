@@ -9,12 +9,18 @@ import {
   normalizeId,
 } from '../utils/chatSocket';
 import { emitJoin } from '../utils/socket';
-import { ArrowLeft, MapPin, Eye, Clock, Tag, User, Send } from 'lucide-react';
+import { ArrowLeft, MapPin, Eye, Clock, Tag, User, Send, Shield, Flag, MessageCircle } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import AiAnalytics from '../components/AiAnalytics';
 import SimilarAds from '../components/SimilarAds';
 
 const FALLBACK = 'https://images.pexels.com/photos/10703759/pexels-photo-10703759.jpeg';
+
+const SAFETY_TIPS = [
+  'Meet the seller in a public place',
+  'Check the item before you buy',
+  'Pay only after collecting the item',
+];
 
 function ImageCarousel({ images }) {
   const [idx, setIdx] = useState(0);
@@ -121,6 +127,22 @@ function PriceInsights({ listing, apiFetch }) {
   );
 }
 
+function getChatInitials(name) {
+  if (!name || name === 'Seller' || name === 'Buyer') return '??';
+  const p = String(name).trim().split(/\s+/);
+  return p.length === 1 ? p[0].substring(0, 2).toUpperCase() : (p[0][0] + p[p.length - 1][0]).toUpperCase();
+}
+
+function formatChatDateLabel(dateStr) {
+  const d = new Date(dateStr);
+  const now = new Date();
+  const yesterday = new Date();
+  yesterday.setDate(now.getDate() - 1);
+  if (d.toDateString() === now.toDateString()) return 'Today';
+  if (d.toDateString() === yesterday.toDateString()) return 'Yesterday';
+  return d.toLocaleDateString([], { month: 'short', day: 'numeric' });
+}
+
 function DetailChatBox({ listing, user, apiFetch, showToast, navigate }) {
   const { subscribeChatMessages } = useApp();
   const [open, setOpen] = useState(false);
@@ -128,6 +150,7 @@ function DetailChatBox({ listing, user, apiFetch, showToast, navigate }) {
   const [input, setInput] = useState('');
   const msgsRef = useRef(null);
   const chatInfo = { adId: listing.id, buyerId: user?._id, sellerId: listing.sellerId };
+  const sellerName = listing.seller || 'Seller';
 
   const fetchMsgs = async (silent = false) => {
     try {
@@ -183,36 +206,98 @@ function DetailChatBox({ listing, user, apiFetch, showToast, navigate }) {
     });
   }, [open, user?._id, listing.id, listing.sellerId, subscribeChatMessages]);
 
-  if (!open) return (
-    <button className="chat-trigger-btn" onClick={openChat}>
-      <Send size={18} /> Chat with Seller
-    </button>
-  );
+  if (!open) {
+    return (
+      <button type="button" className="detail-chat-launch" onClick={openChat}>
+        <span className="detail-chat-launch-icon">
+          <MessageCircle size={20} strokeWidth={2} />
+        </span>
+        <span className="detail-chat-launch-text">
+          <span className="detail-chat-launch-title">Chat with seller</span>
+          <span className="detail-chat-launch-sub">Message {sellerName} about this listing</span>
+        </span>
+        <span className="detail-chat-launch-send" aria-hidden>
+          <Send size={18} />
+        </span>
+      </button>
+    );
+  }
+
+  let lastDate = null;
 
   return (
-    <div className="chat-box">
-      <div className="section-title">Chat with Seller</div>
-      <div className="chat-messages-area" ref={msgsRef}>
-        {messages.length === 0
-          ? <div className="chat-empty">No messages yet. Say hello!</div>
-          : messages.map((m, i) => {
-            const isMe = m.from === user?._id || m.from?._id === user?._id;
-            return (
-              <div key={m._id || m._optimisticId || i} className={`bubble${isMe ? ' me' : ''}${m.pending ? ' pending' : ''}`}>
-                <div className="bubble-text">{m.message}</div>
-              </div>
-            );
-          })}
+    <div className="detail-chat-panel messages-chat-panel">
+      <div className="messages-chat-header">
+        <div className="messages-chat-header-main">
+          <div className="messages-chat-header-avatar">{getChatInitials(sellerName)}</div>
+          <div className="messages-chat-header-text">
+            <div className="messages-chat-name">{sellerName}</div>
+            {listing.title && (
+              <div className="messages-chat-subtitle" title={listing.title}>{listing.title}</div>
+            )}
+          </div>
+        </div>
       </div>
-      <div className="chat-input-row">
+
+      <div className="chat-detail-msgs detail-chat-msgs" ref={msgsRef}>
+        {messages.length === 0 ? (
+          <div className="messages-empty-chat">
+            <MessageCircle size={28} strokeWidth={1.75} />
+            <span>No messages yet — say hi!</span>
+          </div>
+        ) : (
+          messages.map((m, i) => {
+            const fromId = m.from?._id || m.from;
+            const isMe = fromId === user?._id;
+            let separator = null;
+            if (m.createdAt) {
+              const d = new Date(m.createdAt).toDateString();
+              if (d !== lastDate) {
+                lastDate = d;
+                separator = (
+                  <div key={`sep-${i}`} className="date-separator">
+                    <div className="date-line" />
+                    <div className="date-label">{formatChatDateLabel(m.createdAt)}</div>
+                    <div className="date-line" />
+                  </div>
+                );
+              }
+            }
+            return (
+              <React.Fragment key={m._id || m._optimisticId || i}>
+                {separator}
+                <div className={`msg-bubble${isMe ? ' me' : ''}${m.pending ? ' pending' : ''}`}>
+                  <div className="msg-text">{m.message}</div>
+                  {m.createdAt && (
+                    <div className="msg-time">
+                      {new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </div>
+                  )}
+                </div>
+              </React.Fragment>
+            );
+          })
+        )}
+      </div>
+
+      <div className="chat-detail-input">
         <textarea
-          className="chat-input"
+          className="messages-compose-input"
           value={input}
           onChange={e => setInput(e.target.value)}
           onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } }}
-          placeholder="Type a message..."
+          placeholder="Write a message..."
+          rows={1}
         />
-        <button className="send-btn" onClick={send}><Send size={18} /></button>
+        <button
+          type="button"
+          className="messages-send-btn"
+          onClick={send}
+          disabled={!input.trim()}
+          aria-label="Send message"
+        >
+          <Send size={18} />
+        </button>
       </div>
     </div>
   );
@@ -222,14 +307,6 @@ export default function AdDetailPage() {
   const { pageExtra, navigate, user, apiFetch, showToast } = useApp();
   const listing = pageExtra.listing;
   const returnTo = pageExtra.returnTo || 'home';
-  const [headerOpaque, setHeaderOpaque] = useState(false);
-
-  useEffect(() => {
-    const onScroll = () => setHeaderOpaque(window.scrollY > 64);
-    window.addEventListener('scroll', onScroll, { passive: true });
-    onScroll();
-    return () => window.removeEventListener('scroll', onScroll);
-  }, []);
 
   if (!listing) return null;
 
@@ -237,7 +314,7 @@ export default function AdDetailPage() {
 
   return (
     <div className="detail-page">
-      <div className={`detail-sticky-header${headerOpaque ? ' detail-sticky-header--opaque' : ''}`}>
+      <div className="detail-back-bar">
         <button className="back-btn" type="button" onClick={() => navigate(returnTo)}><ArrowLeft size={18} /></button>
         <div className="detail-header-title">{listing.title}</div>
       </div>
@@ -268,20 +345,51 @@ export default function AdDetailPage() {
             <div className="description-text">{listing.description || 'No description provided.'}</div>
           </div>
 
+          <AiSummary listing={listing} apiFetch={apiFetch} />
+
+          {isOwner && <AiAnalytics listing={listing} apiFetch={apiFetch} />}
+
           <SimilarAds
             listing={listing}
             navigate={navigate}
             returnTo={returnTo}
-            user={user}
           />
-
-          {isOwner && <AiAnalytics listing={listing} apiFetch={apiFetch} />}
         </div>
 
         {/* Aside column */}
         <div>
-          {/* Move AiSummary to the right column */}
-          <AiSummary listing={listing} apiFetch={apiFetch} />
+          {!isOwner && (
+            <div className="detail-safety-card">
+              <div className="detail-safety-header">
+                <div className="detail-safety-title-row">
+                  <Shield size={16} />
+                  <span className="detail-safety-title">Safety Tips</span>
+                </div>
+                <button type="button" className="detail-safety-report" onClick={() => showToast('Report submitted. We will review this ad.', 'success')}>
+                  <Flag size={12} /> Report Ad
+                </button>
+              </div>
+              <ul className="detail-safety-tips">
+                {SAFETY_TIPS.map((tip) => (
+                  <li key={tip}>{tip}</li>
+                ))}
+              </ul>
+              <div className="detail-safety-seller">
+                <div className="detail-safety-seller-eyebrow">Posted by</div>
+                <div className="detail-safety-seller-row">
+                  {listing.sellerPic
+                    ? <img className="detail-safety-avatar" src={listing.sellerPic} alt={listing.seller} />
+                    : <div className="detail-safety-avatar-fallback"><User size={20} /></div>}
+                  <div className="detail-safety-seller-info">
+                    <div className="detail-safety-seller-name">{listing.seller}</div>
+                    {listing.sellerSince && (
+                      <div className="detail-safety-seller-since">Member since {listing.sellerSince}</div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           {isOwner ? (
             <>
@@ -305,15 +413,6 @@ export default function AdDetailPage() {
                 showToast={showToast}
                 navigate={navigate}
               />
-              <div className="seller-card">
-                {listing.sellerPic
-                  ? <img className="seller-avatar" src={listing.sellerPic} alt={listing.seller} />
-                  : <div className="seller-avatar-fallback"><User size={20} /></div>}
-                <div>
-                  <div className="seller-label">Posted by</div>
-                  <div className="seller-name">{listing.seller}</div>
-                </div>
-              </div>
             </>
           )}
         </div>

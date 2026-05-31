@@ -3,17 +3,8 @@ import { RefreshCw } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import AdCard from './AdCard';
 
-function isPostedByOthers(item, listing, viewerUserId) {
-  const sellerId = item.seller?._id || item.sellerId || '';
-  if (!sellerId) return true;
-  if (sellerId === listing.sellerId) return false;
-  if (viewerUserId && sellerId === viewerUserId) return false;
-  return true;
-}
-
-export default function SimilarAds({ listing, navigate, returnTo = 'home', user }) {
+export default function SimilarAds({ listing, navigate, returnTo = 'home' }) {
   const { apiFetch, mapListing, categories } = useApp();
-  const viewerUserId = user?._id || null;
 
   const categoryId = listing.categoryId
     || categories.find((c) => c.name === listing.category)?.id
@@ -37,7 +28,7 @@ export default function SimilarAds({ listing, navigate, returnTo = 'home', user 
         }),
       });
       const ads = (result?.ads || [])
-        .filter((item) => item._id !== listing.id && isPostedByOthers(item, listing, viewerUserId))
+        .filter((item) => item._id !== listing.id)
         .map(mapListing);
       setSimilarAds(ads);
     } catch {
@@ -46,7 +37,7 @@ export default function SimilarAds({ listing, navigate, returnTo = 'home', user 
     } finally {
       setLoading(false);
     }
-  }, [apiFetch, mapListing, listing, viewerUserId, categoryId]);
+  }, [apiFetch, mapListing, listing, categoryId]);
 
   useEffect(() => {
     let cancelled = false;
@@ -68,7 +59,7 @@ export default function SimilarAds({ listing, navigate, returnTo = 'home', user 
         });
         if (cancelled) return;
         const ads = (result?.ads || [])
-          .filter((item) => item._id !== listing.id && isPostedByOthers(item, listing, viewerUserId))
+          .filter((item) => item._id !== listing.id)
           .map(mapListing);
         setSimilarAds(ads);
       } catch {
@@ -83,12 +74,12 @@ export default function SimilarAds({ listing, navigate, returnTo = 'home', user 
 
     run();
     return () => { cancelled = true; };
-  }, [listing.id, categoryId, listing.subCategory, listing.sellerId, viewerUserId, apiFetch, mapListing]);
+  }, [listing.id, categoryId, listing.subCategory, apiFetch, mapListing]);
 
   const hasCategory = Boolean(categoryId);
 
   return (
-    <div className="detail-section similar-ads-section">
+    <div className="similar-ads-section">
       <div className="similar-ads-head">
         <h2 className="section-title similar-ads-title">Similar listings</h2>
         {!loading && (
@@ -125,7 +116,7 @@ export default function SimilarAds({ listing, navigate, returnTo = 'home', user 
       )}
 
       {hasCategory && !loading && !error && similarAds.length === 0 && (
-        <p className="similar-ads-muted">No similar ads from other sellers in this category right now.</p>
+        <p className="similar-ads-muted">No similar ads in this category right now.</p>
       )}
 
       {hasCategory && !loading && similarAds.length > 0 && (
