@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useApp } from '../context/AppContext';
 import {
   Sparkles,
@@ -9,6 +9,10 @@ import {
   AlertCircle,
   ChevronDown,
   ChevronRight,
+  Eye,
+  Clock,
+  IndianRupee,
+  BarChart3,
 } from 'lucide-react';
 
 const CARD_ACCENTS = ['#378cf6', '#8b5cf6', '#10b981', '#f59e0b', '#ec4899', '#06b6d4'];
@@ -21,6 +25,240 @@ const FEATURES = [
 
 function accentStyle(index) {
   return { '--aa-accent': CARD_ACCENTS[index % CARD_ACCENTS.length] };
+}
+
+function parseMetricNumber(value) {
+  if (value == null || value === '') return null;
+  const s = String(value).trim();
+  const pct = s.match(/([\d.]+)\s*%/);
+  if (pct) return { num: parseFloat(pct[1]), max: 100 };
+  const cleaned = s.replace(/[,₹\s]/g, '');
+  const numMatch = cleaned.match(/([\d.]+)/);
+  if (numMatch) {
+    const num = parseFloat(numMatch[1]);
+    if (!Number.isFinite(num)) return null;
+    return { num, max: null };
+  }
+  return null;
+}
+
+function scoreFromValue(value) {
+  const parsed = parseMetricNumber(value);
+  if (parsed) {
+    const cap = parsed.max ?? Math.max(parsed.num * 1.15, parsed.num);
+    return Math.min(100, Math.max(8, (parsed.num / cap) * 100));
+  }
+  const lower = String(value).toLowerCase();
+  if (/excellent|outstanding|high|strong|great|good|fast/.test(lower)) return 88;
+  if (/medium|average|moderate|fair|normal/.test(lower)) return 55;
+  if (/low|poor|weak|bad|slow/.test(lower)) return 28;
+  let h = 0;
+  for (let i = 0; i < lower.length; i += 1) h = (h + lower.charCodeAt(i) * 7) % 45;
+  return 42 + h;
+}
+
+function getMetricStatus(score) {
+  if (score >= 75) return { label: 'Strong', tone: 'strong' };
+  if (score >= 50) return { label: 'Good', tone: 'good' };
+  if (score >= 30) return { label: 'Fair', tone: 'fair' };
+  return { label: 'Needs attention', tone: 'low' };
+}
+
+function getOverallMessage(score) {
+  if (score >= 75) return 'Your listing is performing well overall.';
+  if (score >= 50) return 'Solid start — a few tweaks could help you sell faster.';
+  return 'There’s room to improve — check the tips below.';
+}
+
+function pickMetricIcon(title) {
+  const t = String(title || '').toLowerCase();
+  if (/price|cost|₹|rupee|value/.test(t)) return IndianRupee;
+  if (/view|traffic|reach|impression|click/.test(t)) return Eye;
+  if (/time|speed|day|hour|posted|duration/.test(t)) return Clock;
+  if (/compet|market|compare|rank|demand/.test(t)) return Award;
+  if (/trend|growth|performance/.test(t)) return TrendingUp;
+  return BarChart3;
+}
+
+function buildGlanceMetrics(insights) {
+  return insights.map((insight, idx) => {
+    const score = Math.round(scoreFromValue(insight.value));
+    return {
+      title: insight.title,
+      value: insight.value,
+      accent: CARD_ACCENTS[idx % CARD_ACCENTS.length],
+      score,
+      status: getMetricStatus(score),
+      Icon: pickMetricIcon(insight.title),
+    };
+  });
+}
+
+function OverallScoreRing({ score, accent }) {
+  const pct = Math.min(100, Math.max(0, score));
+  const status = getMetricStatus(pct);
+  const r = 42;
+  const c = 2 * Math.PI * r;
+  const offset = c - (pct / 100) * c;
+
+  return (
+    <div className="aa-glance-ring" role="img" aria-label={`Overall performance: ${status.label}`}>
+      <svg viewBox="0 0 100 100" className="aa-glance-ring-svg">
+        <circle cx="50" cy="50" r={r} className="aa-glance-ring-bg" />
+        <circle
+          cx="50"
+          cy="50"
+          r={r}
+          className="aa-glance-ring-fill"
+          stroke={accent}
+          strokeDasharray={c}
+          strokeDashoffset={offset}
+        />
+      </svg>
+      <div className="aa-glance-ring-center">
+        <span className={`aa-ring-status-icon aa-glance-status--${status.tone}`} aria-hidden />
+      </div>
+    </div>
+  );
+}
+
+function scoreLevel(score) {
+  if (score >= 75) return 4;
+  if (score >= 50) return 3;
+  if (score >= 30) return 2;
+  return 1;
+}
+
+function LevelMeter({ score }) {
+  const level = scoreLevel(score);
+  const status = getMetricStatus(score);
+
+  return (
+    <div
+      className="aa-level-meter"
+      role="img"
+      aria-label={`${status.label} performance`}
+    >
+      {[0, 1, 2, 3].map((i) => (
+        <span
+          key={i}
+          className={`aa-level-seg aa-level-seg--${status.tone}${i < level ? ' aa-level-seg--on' : ''}`}
+        />
+      ))}
+    </div>
+  );
+}
+
+function GlanceLegend() {
+  return (
+    <div className="aa-glance-legend" aria-label="Score legend">
+      <span className="aa-glance-legend-item">
+        <span className="aa-glance-legend-dot aa-glance-status--strong" /> Strong
+      </span>
+      <span className="aa-glance-legend-item">
+        <span className="aa-glance-legend-dot aa-glance-status--good" /> Good
+      </span>
+      <span className="aa-glance-legend-item">
+        <span className="aa-glance-legend-dot aa-glance-status--fair" /> Fair
+      </span>
+      <span className="aa-glance-legend-item">
+        <span className="aa-glance-legend-dot aa-glance-status--low" /> Needs work
+      </span>
+    </div>
+  );
+}
+
+function MetricGlanceCard({ metric, onClick, active }) {
+  const { Icon, title, value, accent, score, status } = metric;
+  const className = [
+    'aa-glance-card',
+    onClick ? 'aa-glance-card--btn' : '',
+    active ? 'active' : '',
+  ].filter(Boolean).join(' ');
+
+  const inner = (
+    <>
+      <div className="aa-glance-card-head">
+        <span className="aa-glance-card-icon" aria-hidden>
+          <Icon size={18} strokeWidth={2.25} />
+        </span>
+        <div className="aa-glance-card-title">{title}</div>
+        <LevelMeter score={score} />
+      </div>
+      <div className="aa-glance-card-value">{value}</div>
+      <span className={`aa-glance-status aa-glance-status--${status.tone}`}>
+        {status.label}
+      </span>
+      <div className="aa-glance-card-meter" aria-hidden>
+        <div
+          className="aa-glance-card-meter-fill"
+          style={{ width: `${score}%`, backgroundColor: accent }}
+        />
+      </div>
+    </>
+  );
+
+  if (onClick) {
+    return (
+      <button
+        type="button"
+        className={className}
+        style={{ '--aa-accent': accent }}
+        onClick={onClick}
+        aria-pressed={active}
+        aria-label={`${title}: ${value}. ${active ? 'Selected' : 'View details'}`}
+      >
+        {inner}
+      </button>
+    );
+  }
+
+  return (
+    <div className={className} style={{ '--aa-accent': accent }}>
+      {inner}
+    </div>
+  );
+}
+
+function AtAGlancePanel({ insights, suggestions }) {
+  const metrics = buildGlanceMetrics(insights);
+  const overallScore = metrics.length
+    ? Math.round(metrics.reduce((sum, m) => sum + m.score, 0) / metrics.length)
+    : 0;
+  const overallStatus = getMetricStatus(overallScore);
+  const headline = insights[0];
+
+  return (
+    <div className="aa-highlight aa-glance">
+      <div className="aa-glance-head">
+        <span className="aa-highlight-label">At a glance</span>
+        <p className="aa-glance-intro">A quick visual snapshot of how your listing is doing.</p>
+      </div>
+
+      <div className="aa-glance-summary">
+        <OverallScoreRing score={overallScore} accent={CARD_ACCENTS[0]} />
+        <div className="aa-glance-summary-text">
+          <span className={`aa-glance-overall-badge aa-glance-status--${overallStatus.tone}`}>
+            {overallStatus.label}
+          </span>
+          <p className="aa-glance-summary-msg">{getOverallMessage(overallScore)}</p>
+          {headline && (
+            <div className="aa-glance-spotlight">
+              <span className="aa-glance-spotlight-label">Top highlight</span>
+              <span className="aa-glance-spotlight-value">{headline.value}</span>
+              <span className="aa-glance-spotlight-title">{headline.title}</span>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <p className="aa-highlight-meta">
+        {suggestions.length > 0
+          ? `Open Metrics to explore each score · ${suggestions.length} tip${suggestions.length > 1 ? 's' : ''} to improve your ad`
+          : 'Open the Metrics tab below to explore each score in detail'}
+      </p>
+    </div>
+  );
 }
 
 function AnalyticsHeader({ onRefresh, showRefresh }) {
@@ -68,43 +306,84 @@ function SegmentTabs({ segments, activeKey, onChange }) {
   );
 }
 
+function MetricDetailPopover({ insight, metric, style }) {
+  return (
+    <div
+      className="aa-metric-popover"
+      style={style}
+      role="dialog"
+      aria-label={`${insight.title} analysis`}
+      onMouseDown={(e) => e.stopPropagation()}
+      onClick={(e) => e.stopPropagation()}
+    >
+      <div className="aa-metric-popover-caret" aria-hidden />
+      <span className={`aa-metric-detail-badge aa-glance-status aa-glance-status--${metric.status.tone}`}>
+        {metric.status.label}
+      </span>
+      <div className="aa-metric-detail-value">{insight.value}</div>
+      <div className="aa-metric-detail-title">{insight.title}</div>
+      {!!insight.description && (
+        <p className="aa-metric-detail-desc">{insight.description}</p>
+      )}
+    </div>
+  );
+}
+
 function MetricExplorer({ insights }) {
-  const [selectedIdx, setSelectedIdx] = useState(0);
-  const selected = insights[selectedIdx];
+  const [selectedIdx, setSelectedIdx] = useState(null);
+  const gridRef = useRef(null);
+  const metrics = buildGlanceMetrics(insights);
+
+  useEffect(() => {
+    if (selectedIdx === null) return undefined;
+
+    const onPointerDown = (e) => {
+      if (gridRef.current?.contains(e.target)) return;
+      setSelectedIdx(null);
+    };
+    const onKeyDown = (e) => {
+      if (e.key === 'Escape') setSelectedIdx(null);
+    };
+
+    document.addEventListener('mousedown', onPointerDown);
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', onPointerDown);
+      document.removeEventListener('keydown', onKeyDown);
+    };
+  }, [selectedIdx]);
 
   if (!insights.length) {
     return <p className="aa-muted">No metrics available yet.</p>;
   }
 
-  const scrollable = insights.length > 4;
-
   return (
     <div className="aa-metrics">
-      <div className={scrollable ? 'aa-metric-scroll-wrap' : undefined}>
-        <div className={`aa-metric-grid${scrollable ? ' aa-metric-grid--scroll' : ''}`}>
-          {insights.map((insight, idx) => (
-            <button
-              key={idx}
-              type="button"
-              className={`aa-metric-tile${selectedIdx === idx ? ' active' : ''}`}
-              style={accentStyle(idx)}
-              onClick={() => setSelectedIdx(idx)}
-            >
-              <span className="aa-metric-label">{insight.title}</span>
-              <span className="aa-metric-value">{insight.value}</span>
-            </button>
-          ))}
-        </div>
+      <p className="aa-glance-grid-label">Key metrics</p>
+      <p className="aa-metrics-hint">Click a card to open its analysis. Click outside or press Esc to close.</p>
+      <div className="aa-glance-grid aa-metrics-grid" ref={gridRef}>
+        {metrics.map((metric, idx) => {
+          const open = selectedIdx === idx;
+          const insight = insights[idx];
+          return (
+            <div key={`${metric.title}-${idx}`} className={`aa-metric-card-wrap${open ? ' aa-metric-card-wrap--open' : ''}`}>
+              <MetricGlanceCard
+                metric={metric}
+                active={open}
+                onClick={() => setSelectedIdx((prev) => (prev === idx ? null : idx))}
+              />
+              {open && insight && (
+                <MetricDetailPopover
+                  insight={insight}
+                  metric={metric}
+                  style={accentStyle(idx)}
+                />
+              )}
+            </div>
+          );
+        })}
       </div>
-      {selected && (
-        <div className="aa-metric-detail" style={accentStyle(selectedIdx)}>
-          <div className="aa-metric-detail-value">{selected.value}</div>
-          <div className="aa-metric-detail-title">{selected.title}</div>
-          {!!selected.description && (
-            <p className="aa-metric-detail-desc">{selected.description}</p>
-          )}
-        </div>
-      )}
+      <GlanceLegend />
     </div>
   );
 }
@@ -248,22 +527,12 @@ export default function AiAnalytics({ ad, listing, apiFetch: apiFetchProp }) {
     { key: 'metrics', label: 'Metrics', count: insights.length },
     { key: 'tips', label: 'Tips', count: suggestions.length },
   ];
-  const headlineMetric = insights[0];
-
   return (
     <div className="detail-section aa-analytics">
       <AnalyticsHeader onRefresh={handleGenerate} showRefresh />
 
-      {headlineMetric && (
-        <div className="aa-highlight">
-          <span className="aa-highlight-label">At a glance</span>
-          <div className="aa-highlight-value">{headlineMetric.value}</div>
-          <p className="aa-highlight-meta">
-            {headlineMetric.title}
-            {insights.length > 1 && ` · ${insights.length - 1} more metric${insights.length > 2 ? 's' : ''}`}
-            {suggestions.length > 0 && ` · ${suggestions.length} tip${suggestions.length > 1 ? 's' : ''}`}
-          </p>
-        </div>
+      {insights.length > 0 && (
+        <AtAGlancePanel insights={insights} suggestions={suggestions} />
       )}
 
       <SegmentTabs segments={segments} activeKey={activeTab} onChange={setActiveTab} />

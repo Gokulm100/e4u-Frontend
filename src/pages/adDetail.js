@@ -9,7 +9,22 @@ import AiAnalytics from '../components/AiAnalytics';
 const SoldModal = ({ open, onClose, users, loading, onConfirm }) => {
   const [dealSource, setDealSource] = useState(''); // 'app', 'elsewhere', ''
   const [selectedUser, setSelectedUser] = useState('');
+  const [buyerDropdownOpen, setBuyerDropdownOpen] = useState(false);
+
+  useEffect(() => {
+    if (!open) {
+      setBuyerDropdownOpen(false);
+      setDealSource('');
+      setSelectedUser('');
+    }
+  }, [open]);
+
   if (!open) return null;
+
+  const selectedBuyer = users?.find(u => u._id === selectedUser);
+  const buyerLabel = selectedBuyer
+    ? (selectedBuyer.name || selectedBuyer.email || selectedBuyer._id)
+    : '-- Select User --';
   return (
     <div style={{
       position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
@@ -57,24 +72,86 @@ const SoldModal = ({ open, onClose, users, loading, onConfirm }) => {
             {loading ? (
               <div style={{ color: '#64748b', fontSize: '1rem', padding: '8px 0 0 2px' }}>Loading users...</div>
             ) : (
-              <select value={selectedUser} onChange={e => setSelectedUser(e.target.value)} style={{
-                padding: '10px 14px',
-                borderRadius: 8,
-                border: '1.5px solid #cbd5e1',
-                fontSize: '1.04rem',
-                width: '100%',
-                background: '#f8fafc',
-                color: '#22223b',
-                fontWeight: 500,
-                marginTop: 2,
-                outline: 'none',
-                boxShadow: '0 1px 4px rgba(30,41,59,0.04)'
-              }}>
-                <option value="">-- Select User --</option>
-                {users && users.length > 0 && users.map(u => (
-                  <option key={u._id} value={u._id}>{u.name || u.email || u._id}</option>
-                ))}
-              </select>
+              <div style={{ position: 'relative', marginTop: 2 }}>
+                <button
+                  type="button"
+                  onClick={() => setBuyerDropdownOpen(v => !v)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    width: '100%',
+                    padding: '10px 14px',
+                    borderRadius: 8,
+                    border: '1.5px solid #cbd5e1',
+                    fontSize: '1.04rem',
+                    background: '#f8fafc',
+                    color: selectedUser ? '#22223b' : '#64748b',
+                    fontWeight: 500,
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    boxShadow: '0 1px 4px rgba(30,41,59,0.04)',
+                  }}
+                >
+                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', paddingRight: 8 }}>
+                    {buyerLabel}
+                  </span>
+                  <span style={{ color: '#64748b', fontSize: '0.85rem' }}>{buyerDropdownOpen ? '▲' : '▼'}</span>
+                </button>
+                {buyerDropdownOpen && (
+                  <div
+                    role="listbox"
+                    style={{
+                      position: 'absolute',
+                      left: 0,
+                      right: 0,
+                      top: 'calc(100% + 6px)',
+                      zIndex: 10,
+                      background: '#fff',
+                      border: '1.5px solid #cbd5e1',
+                      borderRadius: 8,
+                      maxHeight: 200,
+                      overflowY: 'auto',
+                      boxShadow: '0 8px 24px rgba(30,41,59,0.12)',
+                    }}
+                  >
+                    {users && users.length > 0 ? users.map(u => {
+                      const active = selectedUser === u._id;
+                      return (
+                        <button
+                          key={u._id}
+                          type="button"
+                          role="option"
+                          aria-selected={active}
+                          onClick={() => {
+                            setSelectedUser(u._id);
+                            setBuyerDropdownOpen(false);
+                          }}
+                          style={{
+                            display: 'block',
+                            width: '100%',
+                            padding: '11px 14px',
+                            border: 'none',
+                            borderBottom: '1px solid #f1f5f9',
+                            background: active ? '#eff6ff' : '#fff',
+                            color: '#22223b',
+                            fontSize: '1rem',
+                            fontWeight: active ? 700 : 500,
+                            textAlign: 'left',
+                            cursor: 'pointer',
+                          }}
+                        >
+                          {u.name || u.email || u._id}
+                        </button>
+                      );
+                    }) : (
+                      <div style={{ padding: '14px', color: '#64748b', fontSize: '0.95rem' }}>
+                        No interested buyers found
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
             )}
           </div>
         )}
