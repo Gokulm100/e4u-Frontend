@@ -102,6 +102,7 @@ export function AppProvider({ children }) {
     subCategory: item.subCategoryId?.name || item.subCategory || '',
     location: item.location?.name || item.location || '',
     views: item.views || 0,
+    reports: item.reportCounter || 0,
     posted: item.createdAt ? new Date(item.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : '',
     createdAt: item.createdAt || item.posted || '',
     description: item.description || '',

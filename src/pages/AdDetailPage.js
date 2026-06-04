@@ -13,6 +13,8 @@ import { ArrowLeft, MapPin, Eye, Clock, Tag, User, Send, Shield, Flag, MessageCi
 import { useApp } from '../context/AppContext';
 import AiAnalytics from '../components/AiAnalytics';
 import SimilarAds from '../components/SimilarAds';
+import ReportAdModal from '../components/ReportAdModal';
+import GenuinityMeter from '../components/GenuinityMeter';
 
 const FALLBACK = 'https://images.pexels.com/photos/10703759/pexels-photo-10703759.jpeg';
 
@@ -307,10 +309,20 @@ export default function AdDetailPage() {
   const { pageExtra, navigate, user, apiFetch, showToast } = useApp();
   const listing = pageExtra.listing;
   const returnTo = pageExtra.returnTo || 'home';
+  const [reportOpen, setReportOpen] = useState(false);
 
   if (!listing) return null;
 
   const isOwner = user?._id && (user._id === listing.sellerId || user._id === listing.seller?._id);
+
+  const openReport = () => {
+    if (!user) {
+      showToast('Please sign in to report this ad.', 'error');
+      navigate('profile');
+      return;
+    }
+    setReportOpen(true);
+  };
 
   return (
     <div className="detail-page">
@@ -338,6 +350,7 @@ export default function AdDetailPage() {
               <div className="detail-meta-item"><Eye size={14} /> {listing.views} views</div>
               <div className="detail-meta-item"><Clock size={14} /> {listing.posted}</div>
             </div>
+            <GenuinityMeter views={listing.views} reports={listing.reports} embedded />
           </div>
 
           <div className="detail-section">
@@ -365,7 +378,7 @@ export default function AdDetailPage() {
                   <Shield size={16} />
                   <span className="detail-safety-title">Safety Tips</span>
                 </div>
-                <button type="button" className="detail-safety-report" onClick={() => showToast('Report submitted. We will review this ad.', 'success')}>
+                <button type="button" className="detail-safety-report" onClick={openReport}>
                   <Flag size={12} /> Report Ad
                 </button>
               </div>
@@ -417,6 +430,10 @@ export default function AdDetailPage() {
           )}
         </div>
       </div>
+
+      {reportOpen && (
+        <ReportAdModal adId={listing.id} onClose={() => setReportOpen(false)} />
+      )}
     </div>
   );
 }

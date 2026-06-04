@@ -2890,6 +2890,50 @@ body {
 .modal-cancel { padding: 13px; border-radius: var(--radius-md); background: var(--bg); border: none; font-weight: 700; cursor: pointer; }
 .modal-confirm { padding: 13px; border-radius: var(--radius-md); background: var(--error); border: none; font-weight: 700; color: #fff; cursor: pointer; }
 .modal-confirm:hover { opacity: 0.9; }
+.modal-cancel:disabled, .modal-confirm:disabled { opacity: 0.55; cursor: not-allowed; }
+
+/* ── REPORT AD MODAL ── */
+.report-modal { position: relative; text-align: left; max-width: 440px; }
+.report-modal-close { position: absolute; top: 16px; right: 16px; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border: none; background: var(--bg); border-radius: 50%; cursor: pointer; color: var(--muted); }
+.report-modal-close:hover { background: var(--border, #e5e7eb); }
+.report-modal-icon { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: rgba(239,68,68,0.12); color: var(--error); margin-bottom: 14px; }
+.report-modal .modal-title { text-align: left; }
+.report-modal .modal-sub { text-align: left; margin-bottom: 18px; }
+.report-modal-state { display: flex; align-items: center; justify-content: center; padding: 24px 0; font-size: 14px; color: var(--muted); margin-bottom: 18px; }
+.report-modal-error { color: var(--error); }
+.report-reason-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 22px; max-height: 320px; overflow-y: auto; }
+.report-reason-item { display: flex; align-items: flex-start; gap: 12px; padding: 12px 14px; border: 1px solid var(--border, #e5e7eb); border-radius: var(--radius-md); cursor: pointer; transition: border-color 0.15s, background 0.15s; }
+.report-reason-item:hover { border-color: var(--primary, #2563eb); }
+.report-reason-item.selected { border-color: var(--primary, #2563eb); background: rgba(37,99,235,0.06); }
+.report-reason-item input { margin-top: 3px; accent-color: var(--primary, #2563eb); cursor: pointer; }
+.report-reason-text { display: flex; flex-direction: column; gap: 2px; }
+.report-reason-title { font-size: 14px; font-weight: 700; color: var(--text, #111827); }
+.report-reason-desc { font-size: 12px; color: var(--muted); }
+
+/* ── GENUINENESS METER ── */
+.genuinity-card { background: var(--white); border: 1px solid var(--border, #e5e7eb); border-radius: var(--radius-lg, 16px); padding: 16px 18px; margin-bottom: 20px; }
+.genuinity-embed { padding-top: 16px; border-top: 1px solid var(--border, #e5e7eb); }
+.genuinity-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.genuinity-title-row { display: flex; align-items: center; gap: 8px; color: var(--text, #111827); }
+.genuinity-title { font-size: 14px; font-weight: 700; }
+.genuinity-badge { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.4px; padding: 4px 10px; border-radius: 999px; }
+.genuinity-badge.high { background: rgba(22,163,74,0.12); color: #16a34a; }
+.genuinity-badge.good { background: rgba(132,204,22,0.15); color: #65a30d; }
+.genuinity-badge.caution { background: rgba(245,158,11,0.15); color: #d97706; }
+.genuinity-badge.low { background: rgba(239,68,68,0.12); color: #ef4444; }
+.genuinity-bar { height: 10px; border-radius: 999px; background: var(--bg, #f1f5f9); overflow: hidden; }
+.genuinity-fill { height: 100%; border-radius: 999px; transition: width 0.5s ease; }
+.genuinity-fill.high { background: #16a34a; }
+.genuinity-fill.good { background: #84cc16; }
+.genuinity-fill.caution { background: #f59e0b; }
+.genuinity-fill.low { background: #ef4444; }
+.genuinity-meta { display: flex; align-items: baseline; gap: 10px; margin-top: 10px; }
+.genuinity-score { font-size: 18px; font-weight: 800; }
+.genuinity-score.high { color: #16a34a; }
+.genuinity-score.good { color: #65a30d; }
+.genuinity-score.caution { color: #d97706; }
+.genuinity-score.low { color: #ef4444; }
+.genuinity-sub { font-size: 12px; color: var(--muted); }
 
 /* ── PAGE TITLE ── */
 .page-title { font-family: 'Sora', sans-serif; font-size: 22px; font-weight: 800; margin-bottom: 20px; }
