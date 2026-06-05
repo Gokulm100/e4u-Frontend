@@ -46,7 +46,10 @@ function scoreFromValue(value) {
   const parsed = parseMetricNumber(value);
   if (parsed) {
     const cap = parsed.max ?? Math.max(parsed.num * 1.15, parsed.num);
-    return Math.min(100, Math.max(8, (parsed.num / cap) * 100));
+    if (!Number.isFinite(cap) || cap <= 0) return 8;
+    const score = (parsed.num / cap) * 100;
+    if (!Number.isFinite(score)) return 8;
+    return Math.min(100, Math.max(8, score));
   }
   const lower = String(value).toLowerCase();
   if (/excellent|outstanding|high|strong|great|good|fast/.test(lower)) return 88;
@@ -58,10 +61,10 @@ function scoreFromValue(value) {
 }
 
 function getMetricStatus(score) {
-  if (score >= 75) return { label: 'Strong', tone: 'strong' };
-  if (score >= 50) return { label: 'Good', tone: 'good' };
-  if (score >= 30) return { label: 'Fair', tone: 'fair' };
-  return { label: 'Needs attention', tone: 'low' };
+  if (score >= 75) return { label: 'Strong', tone: 'strong', color: '#10b981' };
+  if (score >= 50) return { label: 'Good', tone: 'good', color: '#378cf6' };
+  if (score >= 30) return { label: 'Fair', tone: 'fair', color: '#f59e0b' };
+  return { label: 'Needs attention', tone: 'low', color: '#ef4444' };
 }
 
 function getOverallMessage(score) {
@@ -94,15 +97,14 @@ function buildGlanceMetrics(insights) {
   });
 }
 
-function OverallScoreRing({ score, accent }) {
+function OverallScoreRing({ score, color }) {
   const pct = Math.min(100, Math.max(0, score));
-  const status = getMetricStatus(pct);
   const r = 42;
   const c = 2 * Math.PI * r;
   const offset = c - (pct / 100) * c;
 
   return (
-    <div className="aa-glance-ring" role="img" aria-label={`Overall performance: ${status.label}`}>
+    <div className="aa-glance-ring" role="img" aria-label={`Overall score ${score} out of 100`}>
       <svg viewBox="0 0 100 100" className="aa-glance-ring-svg">
         <circle cx="50" cy="50" r={r} className="aa-glance-ring-bg" />
         <circle
@@ -110,13 +112,14 @@ function OverallScoreRing({ score, accent }) {
           cy="50"
           r={r}
           className="aa-glance-ring-fill"
-          stroke={accent}
+          stroke={color}
           strokeDasharray={c}
           strokeDashoffset={offset}
         />
       </svg>
       <div className="aa-glance-ring-center">
-        <span className={`aa-ring-status-icon aa-glance-status--${status.tone}`} aria-hidden />
+        <span className="aa-glance-ring-score" style={{ color }}>{score}</span>
+        <span className="aa-glance-ring-label">OVERALL</span>
       </div>
     </div>
   );
@@ -222,40 +225,47 @@ function MetricGlanceCard({ metric, onClick, active }) {
 
 function AtAGlancePanel({ insights, suggestions }) {
   const metrics = buildGlanceMetrics(insights);
-  const overallScore = metrics.length
-    ? Math.round(metrics.reduce((sum, m) => sum + m.score, 0) / metrics.length)
+  const validScores = metrics.map((m) => m.score).filter((s) => Number.isFinite(s));
+  const overallScore = validScores.length
+    ? Math.round(validScores.reduce((sum, s) => sum + s, 0) / validScores.length)
     : 0;
   const overallStatus = getMetricStatus(overallScore);
   const headline = insights[0];
+  const tint = overallStatus.color;
 
   return (
-    <div className="aa-highlight aa-glance">
-      <div className="aa-glance-head">
-        <span className="aa-highlight-label">At a glance</span>
-        <p className="aa-glance-intro">A quick visual snapshot of how your listing is doing.</p>
+    <div className="aa-highlight aa-glance" style={{ '--aa-tint': tint }}>
+      <div className="aa-glance-top">
+        <span className="aa-glance-label">
+          <span className="aa-glance-spark" aria-hidden>✦</span> At a glance
+        </span>
+        <span className={`aa-glance-overall-badge aa-glance-status--${overallStatus.tone}`}>
+          {overallStatus.label}
+        </span>
       </div>
 
-      <div className="aa-glance-summary">
-        <OverallScoreRing score={overallScore} accent={CARD_ACCENTS[0]} />
-        <div className="aa-glance-summary-text">
-          <span className={`aa-glance-overall-badge aa-glance-status--${overallStatus.tone}`}>
-            {overallStatus.label}
-          </span>
-          <p className="aa-glance-summary-msg">{getOverallMessage(overallScore)}</p>
-          {headline && (
-            <div className="aa-glance-spotlight">
-              <span className="aa-glance-spotlight-label">Top highlight</span>
-              <span className="aa-glance-spotlight-value">{headline.value}</span>
-              <span className="aa-glance-spotlight-title">{headline.title}</span>
-            </div>
-          )}
-        </div>
+      <div className="aa-glance-hero">
+        <OverallScoreRing score={overallScore} color={tint} />
+        <p className="aa-glance-summary-msg">{getOverallMessage(overallScore)}</p>
       </div>
+
+      {headline && (
+        <div className="aa-glance-spotlight">
+          <span className="aa-glance-spotlight-icon" aria-hidden>
+            <Award size={16} strokeWidth={2.25} />
+          </span>
+          <div className="aa-glance-spotlight-text">
+            <span className="aa-glance-spotlight-label">Top highlight</span>
+            <span className="aa-glance-spotlight-title">{headline.title}</span>
+          </div>
+          <span className="aa-glance-spotlight-value">{headline.value}</span>
+        </div>
+      )}
 
       <p className="aa-highlight-meta">
         {suggestions.length > 0
-          ? `Open Metrics to explore each score · ${suggestions.length} tip${suggestions.length > 1 ? 's' : ''} to improve your ad`
-          : 'Open the Metrics tab below to explore each score in detail'}
+          ? `Explore each score below · ${suggestions.length} tip${suggestions.length > 1 ? 's' : ''} to improve your ad`
+          : 'Explore each score in the Metrics tab below'}
       </p>
     </div>
   );
@@ -493,13 +503,20 @@ export default function AiAnalytics({ ad, listing, apiFetch: apiFetchProp }) {
     return (
       <div className="detail-section aa-analytics">
         <AnalyticsHeader />
-        <div className="ai-loading aa-loading-block">
-          <div className="spinner" style={{ width: 22, height: 22 }} />
-          <span>Analyzing your listing…</span>
+        <div className="aa-analyze">
+          <div className="aa-analyze-orb-wrap">
+            <span className="aa-analyze-glow" aria-hidden />
+            <span className="aa-analyze-glow aa-analyze-glow--inner" aria-hidden />
+            <span className="aa-analyze-orb" aria-hidden>✦</span>
+          </div>
+          <p className="aa-analyze-title">Analyzing your listing</p>
+          <p className="aa-analyze-sub">Scanning pricing, demand and market signals…</p>
+          <div className="aa-analyze-skeleton" aria-hidden>
+            <span className="aa-skel-line" style={{ width: '100%' }} />
+            <span className="aa-skel-line" style={{ width: '84%' }} />
+            <span className="aa-skel-line" style={{ width: '66%' }} />
+          </div>
         </div>
-        <p className="aa-muted aa-loading-hint">
-          Checking market trends and optimization opportunities.
-        </p>
       </div>
     );
   }
