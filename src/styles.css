@@ -2566,15 +2566,6 @@ body {
 }
 .chat-preview.unread { color: #475569; font-weight: 600; }
 .chat-preview-you { color: #64748b; font-weight: 600; }
-.ad-thumb {
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
-  object-fit: cover;
-  background: #f1f5f9;
-  flex-shrink: 0;
-  border: 1px solid #e8eef5;
-}
 
 .messages-chat-panel {
   min-width: 0;

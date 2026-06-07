@@ -32,12 +32,10 @@ function ChatRow({ item, isBuying, user, onClick, isSelected }) {
     ? item.lastMessage
     : (item.lastMessage?.message || '');
   const adTitle = item.item || item.adTitle || item.adId?.title || item.ad?.title || '';
-  const adImage = item.adId?.images?.[0] || item.ad?.images?.[0] || item.adImages?.[0] || null;
   const lastMsgFrom = item.lastMessage?.from?._id || item.lastMessage?.from || item.lastMessageFrom;
   const isMe = lastMsgFrom && user?._id && String(lastMsgFrom) === String(user._id);
   const isUnread = item.isSeen === false && !isMe;
   const lastMsgTime = getLastMessageTime(item);
-
   const buyerId = item.buyerId || item.buyer?._id || (isBuying ? user._id : null);
   const sellerId = item.sellerId || item.seller?._id || (!isBuying ? user._id : null);
   const adId = item.adId?._id || item.adId || item.ad?._id || item._id;
@@ -64,7 +62,6 @@ function ChatRow({ item, isBuying, user, onClick, isSelected }) {
           {lastMsg || 'No messages yet'}
         </p>
       </div>
-      {adImage && <img className="ad-thumb" src={adImage} alt="" />}
     </div>
   );
 }
@@ -283,7 +280,13 @@ export default function MessagesPage() {
       const senderId = selectedChat.isSeller ? info.buyerId : info.sellerId;
       await apiFetch('/api/ads/markMessagesAsSeen', {
         method: 'POST',
-        body: JSON.stringify({ adId: info.adId, reader: user._id, sender: senderId }),
+        body: JSON.stringify({
+          adId: info.adId,
+          reader: user._id,
+          sender: senderId,
+          buyerId: info.buyerId,
+          sellerId: info.sellerId,
+        }),
       });
       fetchMessageCount();
     } catch { /* ignore */ }
@@ -326,7 +329,13 @@ export default function MessagesPage() {
             const senderId = sel.isSeller ? info.buyerId : info.sellerId;
             apiFetch('/api/ads/markMessagesAsSeen', {
               method: 'POST',
-              body: JSON.stringify({ adId: info.adId, reader: user._id, sender: senderId }),
+              body: JSON.stringify({
+                adId: info.adId,
+                reader: user._id,
+                sender: senderId,
+                buyerId: info.buyerId,
+                sellerId: info.sellerId,
+              }),
             }).then(() => fetchMessageCount()).catch(() => {});
           }
         } else {

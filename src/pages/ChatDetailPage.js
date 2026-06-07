@@ -75,7 +75,13 @@ export default function ChatDetailPage() {
       const senderId = isSeller ? buyerId : sellerId;
       await apiFetch('/api/ads/markMessagesAsSeen', {
         method: 'POST',
-        body: JSON.stringify({ adId, reader: user._id, sender: senderId }),
+        body: JSON.stringify({
+          adId,
+          reader: user._id,
+          sender: senderId,
+          buyerId,
+          sellerId,
+        }),
       });
       fetchMessageCount();
     } catch { /* ignore */ }
