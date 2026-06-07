@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { PlusCircle } from 'lucide-react';
 import { useApp } from '../context/AppContext';
+import MarkSoldModal from '../components/MarkSoldModal';
+import ReviewModal from '../components/ReviewModal';
 
 const FALLBACK = 'https://images.pexels.com/photos/10703759/pexels-photo-10703759.jpeg';
 
@@ -8,6 +10,8 @@ export default function MyAdsPage() {
   const { user, apiFetch, navigate, showToast, showModal, mapListing, hasConsented } = useApp();
   const [ads, setAds] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [soldModalAd, setSoldModalAd] = useState(null);
+  const [reviewTarget, setReviewTarget] = useState(null);
 
   const load = async () => {
     if (!user) {
@@ -66,24 +70,14 @@ export default function MyAdsPage() {
       } catch { showToast('Failed to enable ad.', 'error'); }
     });
   };
-  const handleMarkSold = (ad) => {
-    showModal('Mark as Sold', `Mark "${ad.title}" as sold?`, '✅', async () => {
-      try {
-        const token = localStorage.getItem('authToken');
-        await apiFetch(`/api/ads/markAsSold/${ad.id}`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-          },
-          body: JSON.stringify({ adId: ad.id })
-        });
-        showToast('Marked as sold!', 'success');
-        load();
-      } catch { showToast('Failed to update status.', 'error'); }
-    });
-  };
 
+  const handleSoldComplete = (target) => {
+    showToast('Marked as sold!', 'success');
+    setAds((prev) => prev.map((a) =>
+      a.id === target.adId ? { ...a, isSold: true, status: 'sold' } : a
+    ));
+    setReviewTarget(target);
+  };
 
   if (!user) {
     return (
@@ -101,7 +95,6 @@ export default function MyAdsPage() {
     );
   }
 
-  // Show translucent overlay if user is logged in but hasConsented is false
   if (user && hasConsented === false) {
     return (
       <div className="messages-page-overlay-wrap">
@@ -146,7 +139,6 @@ export default function MyAdsPage() {
           className="my-ad-row"
           style={{ cursor: 'pointer' }}
           onClick={e => {
-            // Prevent navigation if an action button is clicked
             if (
               e.target.closest('.my-ad-actions') ||
               e.target.classList.contains('edit-btn') ||
@@ -166,22 +158,54 @@ export default function MyAdsPage() {
             <div className="my-ad-price">₹{Number(ad.price).toLocaleString('en-IN')}</div>
             <div className="my-ad-meta">{ad.location} · {ad.posted}</div>
             <div style={{ marginTop: 6 }}>
-              <span className={`ad-status-badge ${ad.isActive === false ? 'inactive' : 'active'}`}>
-                {ad.isActive === false ? 'inactive' : 'Active'}
-              </span>
+              {ad.isSold ? (
+                <span className="ad-status-badge inactive">Sold</span>
+              ) : (
+                <span className={`ad-status-badge ${ad.isActive === false ? 'inactive' : 'active'}`}>
+                  {ad.isActive === false ? 'inactive' : 'Active'}
+                </span>
+              )}
             </div>
           </div>
           <div className="my-ad-actions">
-            <button className="edit-btn" onClick={e => { e.stopPropagation(); navigate('post', { ad }); }}>Edit</button>
-            {ad.isActive === true ? <button className="delete-btn" onClick={e => { e.stopPropagation(); handleDelete(ad); }}>Disable</button> : <button className="edit-btn" style={{ background: '#f0fdf4', borderColor: '#bbf7d0', color: 'var(--success)' }} onClick={e => { e.stopPropagation(); handleEnable(ad); }}>Enable</button>}
-            {ad.status !== 'sold' && (
-              <button className="edit-btn" style={{ background: '#e6ecf4', borderColor: '#90bcee', color: 'var(--primary)' }} onClick={e => { e.stopPropagation(); handleMarkSold(ad); }}>
-                Mark Sold
-              </button>
+            {!ad.isSold && (
+              <>
+                <button className="edit-btn" onClick={e => { e.stopPropagation(); navigate('post', { ad }); }}>Edit</button>
+                {ad.isActive === true ? (
+                  <button className="delete-btn" onClick={e => { e.stopPropagation(); handleDelete(ad); }}>Disable</button>
+                ) : (
+                  <button className="edit-btn" style={{ background: '#f0fdf4', borderColor: '#bbf7d0', color: 'var(--success)' }} onClick={e => { e.stopPropagation(); handleEnable(ad); }}>Enable</button>
+                )}
+                <button
+                  className="edit-btn"
+                  style={{ background: '#e6ecf4', borderColor: '#90bcee', color: 'var(--primary)' }}
+                  onClick={e => { e.stopPropagation(); setSoldModalAd(ad); }}
+                >
+                  Mark Sold
+                </button>
+              </>
             )}
           </div>
         </div>
       ))}
+
+      <MarkSoldModal
+        ad={soldModalAd}
+        open={!!soldModalAd}
+        onClose={() => setSoldModalAd(null)}
+        onSold={handleSoldComplete}
+      />
+
+      {reviewTarget && (
+        <ReviewModal
+          adId={reviewTarget.adId}
+          adTitle={reviewTarget.adTitle}
+          revieweeName={reviewTarget.revieweeName}
+          revieweePic={reviewTarget.revieweePic}
+          onClose={() => setReviewTarget(null)}
+          onSubmitted={() => showToast('Thank you! Your review helps keep Dealr safe.', 'success')}
+        />
+      )}
     </div>
   );
 }

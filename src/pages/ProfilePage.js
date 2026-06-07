@@ -1,6 +1,7 @@
-import React, { useEffect, useRef } from 'react';
-import { CheckCircle,LogOut } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { CheckCircle,LogOut, Star } from 'lucide-react';
 import { useApp } from '../context/AppContext';
+import ReviewModal from '../components/ReviewModal';
 
 const API = 'https://e4u-backend.onrender.com';
 const GOOGLE_CLIENT_ID = '556452370430-fd5caae668lq9468hbseas0kr3o1a01g.apps.googleusercontent.com';
@@ -80,7 +81,22 @@ function LoginWall({ onGoogleSignIn }) {
 
 
 export default function ProfilePage() {
-  const { user, login, logout, navigate, showToast, showModal, setHasConsented } = useApp();
+  const { user, login, logout, navigate, showToast, showModal, setHasConsented, apiFetch } = useApp();
+  const [pendingReviews, setPendingReviews] = useState([]);
+  const [activeReview, setActiveReview] = useState(null);
+
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    async function loadPending() {
+      try {
+        const data = await apiFetch('/api/reviews/pending');
+        if (!cancelled) setPendingReviews(data.pending || []);
+      } catch { /* ignore */ }
+    }
+    loadPending();
+    return () => { cancelled = true; };
+  }, [user, apiFetch]);
 
   // Google Sign-In callback
   const handleGoogleSignIn = async (response) => {
@@ -143,6 +159,28 @@ export default function ProfilePage() {
         </div>
       </div>
 
+      {pendingReviews.length > 0 && (
+        <>
+          <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--muted)', marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+            Pending Reviews
+          </div>
+          <div className="actions-card" style={{ marginBottom: 20 }}>
+            {pendingReviews.map((item) => (
+              <div key={item.adId} className="action-row" onClick={() => setActiveReview(item)}>
+                <div className="action-icon" style={{ background: '#fffbeb' }}>
+                  <Star size={16} color="#f59e0b" fill="#f59e0b" />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div className="action-text">{item.adTitle}</div>
+                  <div style={{ fontSize: 12, color: 'var(--muted)' }}>Rate {item.revieweeName}</div>
+                </div>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--border)" strokeWidth="2"><polyline points="9 18 15 12 9 6" /></svg>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+
       <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--muted)', marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
         Quick Actions
       </div>
@@ -161,6 +199,20 @@ export default function ProfilePage() {
         <LogOut size={18} color="var(--error)" /> Logout
       </button>
       <div className="version-text">Dealr v1.0.0</div>
+
+      {activeReview && (
+        <ReviewModal
+          adId={activeReview.adId}
+          adTitle={activeReview.adTitle}
+          revieweeName={activeReview.revieweeName}
+          revieweePic={activeReview.revieweePic}
+          onClose={() => setActiveReview(null)}
+          onSubmitted={() => {
+            setPendingReviews((prev) => prev.filter((r) => r.adId !== activeReview.adId));
+            setActiveReview(null);
+          }}
+        />
+      )}
     </div>
   );
 }

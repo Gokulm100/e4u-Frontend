@@ -71,6 +71,9 @@ export function AppProvider({ children }) {
       const prevIsDetail = prevPage === 'detail' || prevPage === 'ad-detail';
       nextExtra.returnTo = prevIsDetail ? 'home' : prevPage;
     }
+    if (page === 'seller-profile' && !nextExtra.returnTo) {
+      nextExtra.returnTo = prevPage;
+    }
     currentPageRef.current = page;
     setCurrentPage(page);
     setPageExtra(nextExtra);
@@ -109,7 +112,16 @@ export function AppProvider({ children }) {
     seller: item.seller?.name || item.sellerName || 'Unknown',
     sellerPic: item.seller?.profilePic || item.sellerPic || null,
     sellerId: item.seller?._id || item.sellerId || '',
-    status: item.status || 'active',
+    sellerRatingAvg: item.seller?.ratingAvg || 0,
+    sellerReviewCount: item.seller?.reviewCount || 0,
+    sellerCompletedSales: item.seller?.completedSales || 0,
+    sellerTrustScore: item.seller?.trustScore ?? 50,
+    sellerBadges: item.seller?.badges || [],
+    sellerSince: item.seller?.createdAt
+      ? new Date(item.seller.createdAt).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' })
+      : '',
+    isSold: item.isSold === true,
+    status: item.isSold ? 'sold' : (item.status || 'active'),
     isActive:item.isActive == false ? false : true,
   });
 

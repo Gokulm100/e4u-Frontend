@@ -10,6 +10,7 @@ import {
   appendIncomingMessage,
   normalizeId,
 } from '../utils/chatSocket';
+import SellerTrustLine from '../components/SellerTrustLine';
 import { emitJoin } from '../utils/socket';
 
 function FraudBanner({ fraud, onClose }) {
@@ -45,6 +46,7 @@ export default function ChatDetailPage() {
   const [input, setInput] = useState('');
   const [fraud, setFraud] = useState(null);
   const [showFraud, setShowFraud] = useState(true);
+  const [counterparty, setCounterparty] = useState(null);
   const msgsRef = useRef(null);
   const chatInfoRef = useRef(chatInfo);
   const fetchMsgsRef = useRef(null);
@@ -57,6 +59,7 @@ export default function ChatDetailPage() {
     try {
       const data = await apiFetch(`/api/ads/chat?adId=${adId}&buyerId=${buyerId}&sellerId=${sellerId}`);
       if (data.fraudCheck) { setFraud(data.fraudCheck); setShowFraud(true); }
+      if (data.counterparty) setCounterparty(data.counterparty);
       const msgs = Array.isArray(data) ? data : (Array.isArray(data.chats) ? data.chats : []);
       setMessages(prev => (silent ? mergeWithPending(msgs, prev) : msgs));
     } catch { /* ignore */ }
@@ -158,6 +161,16 @@ export default function ChatDetailPage() {
         <div className="chat-header-info">
           <div className="detail-header-title">{otherName}</div>
           {adTitle && <div className="chat-header-subtitle">{adTitle}</div>}
+          {counterparty && (
+            <SellerTrustLine
+              ratingAvg={counterparty.ratingAvg}
+              reviewCount={counterparty.reviewCount}
+              completedSales={counterparty.completedSales}
+              badges={counterparty.badges}
+              trustScore={counterparty.trustScore}
+              size="sm"
+            />
+          )}
         </div>
       </div>
 

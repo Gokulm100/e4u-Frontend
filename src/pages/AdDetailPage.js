@@ -9,12 +9,15 @@ import {
   normalizeId,
 } from '../utils/chatSocket';
 import { emitJoin } from '../utils/socket';
-import { ArrowLeft, MapPin, Eye, Clock, Tag, User, Send, Shield, Flag, MessageCircle } from 'lucide-react';
+import { ArrowLeft, MapPin, Eye, Clock, Tag, User, Send, Shield, Flag, MessageCircle, ChevronRight } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import AiAnalytics from '../components/AiAnalytics';
 import SimilarAds from '../components/SimilarAds';
 import ReportAdModal from '../components/ReportAdModal';
 import GenuinityMeter from '../components/GenuinityMeter';
+import SellerTrustLine from '../components/SellerTrustLine';
+import ReviewModal from '../components/ReviewModal';
+import OwnerAdActions from '../components/OwnerAdActions';
 
 const FALLBACK = 'https://images.pexels.com/photos/10703759/pexels-photo-10703759.jpeg';
 
@@ -307,9 +310,30 @@ function DetailChatBox({ listing, user, apiFetch, showToast, navigate }) {
 
 export default function AdDetailPage() {
   const { pageExtra, navigate, user, apiFetch, showToast } = useApp();
-  const listing = pageExtra.listing;
+  const listingFromNav = pageExtra.listing;
   const returnTo = pageExtra.returnTo || 'home';
+  const adReturnTo = pageExtra.adReturnTo || returnTo;
+  const [listing, setListing] = useState(listingFromNav);
   const [reportOpen, setReportOpen] = useState(false);
+  const [reviewOpen, setReviewOpen] = useState(false);
+  const [reviewStatus, setReviewStatus] = useState(null);
+
+  useEffect(() => {
+    setListing(listingFromNav);
+  }, [listingFromNav]);
+
+  useEffect(() => {
+    if (!user || !listing?.id) return;
+    let cancelled = false;
+    async function loadReviewStatus() {
+      try {
+        const data = await apiFetch(`/api/reviews/status/${listing.id}`);
+        if (!cancelled) setReviewStatus(data);
+      } catch { /* ignore */ }
+    }
+    loadReviewStatus();
+    return () => { cancelled = true; };
+  }, [user, listing?.id, apiFetch]);
 
   if (!listing) return null;
 
@@ -322,6 +346,19 @@ export default function AdDetailPage() {
       return;
     }
     setReportOpen(true);
+  };
+
+  const openSellerProfile = () => {
+    if (!listing.sellerId) return;
+    navigate('seller-profile', {
+      sellerId: listing.sellerId,
+      sellerName: listing.seller,
+      sellerPic: listing.sellerPic,
+      sellerSince: listing.sellerSince,
+      listing,
+      adReturnTo: returnTo === 'seller-profile' ? adReturnTo : returnTo,
+      returnTo: 'ad-detail',
+    });
   };
 
   return (
@@ -337,7 +374,10 @@ export default function AdDetailPage() {
           <ImageCarousel images={listing.images} />
 
           <div className="detail-section">
-            <div className="detail-price">₹{Number(listing.price).toLocaleString('en-IN')}</div>
+            <div className="detail-price-row">
+              <div className="detail-price">₹{Number(listing.price).toLocaleString('en-IN')}</div>
+              {listing.isSold && <span className="detail-sold-badge">SOLD</span>}
+            </div>
             <div className="detail-title">{listing.title}</div>
             <div className="detail-tags">
               <div className="detail-tag"><Tag size={12} /> {listing.category}</div>
@@ -398,7 +438,23 @@ export default function AdDetailPage() {
                     {listing.sellerSince && (
                       <div className="detail-safety-seller-since">Member since {listing.sellerSince}</div>
                     )}
+                    <SellerTrustLine
+                      ratingAvg={listing.sellerRatingAvg}
+                      reviewCount={listing.sellerReviewCount}
+                      completedSales={listing.sellerCompletedSales}
+                      badges={listing.sellerBadges}
+                      trustScore={listing.sellerTrustScore}
+                      size="sm"
+                    />
                   </div>
+                  <button
+                    type="button"
+                    className="detail-safety-profile-btn"
+                    onClick={openSellerProfile}
+                  >
+                    Profile
+                    <ChevronRight size={14} />
+                  </button>
                 </div>
               </div>
             </div>
@@ -406,6 +462,7 @@ export default function AdDetailPage() {
 
           {isOwner ? (
             <>
+              <OwnerAdActions ad={listing} onAdUpdated={setListing} />
               <PriceInsights listing={listing} apiFetch={apiFetch} />
               <div className="seller-card">
                 {listing.sellerPic
@@ -419,6 +476,15 @@ export default function AdDetailPage() {
             </>
           ) : (
             <>
+              {reviewStatus?.canReview && (
+                <button
+                  type="button"
+                  className="detail-review-prompt"
+                  onClick={() => setReviewOpen(true)}
+                >
+                  ★ Rate your experience with {reviewStatus.reviewee?.name}
+                </button>
+              )}
               <DetailChatBox
                 listing={listing}
                 user={user}
@@ -433,6 +499,17 @@ export default function AdDetailPage() {
 
       {reportOpen && (
         <ReportAdModal adId={listing.id} onClose={() => setReportOpen(false)} />
+      )}
+
+      {reviewOpen && reviewStatus?.reviewee && (
+        <ReviewModal
+          adId={listing.id}
+          adTitle={listing.title}
+          revieweeName={reviewStatus.reviewee.name}
+          revieweePic={reviewStatus.reviewee.profilePic}
+          onClose={() => setReviewOpen(false)}
+          onSubmitted={() => setReviewStatus((prev) => ({ ...prev, canReview: false, alreadyReviewed: true }))}
+        />
       )}
     </div>
   );

@@ -13,6 +13,7 @@ import MyAdsPage from './pages/MyAdsPage';
 import ProfilePage from './pages/ProfilePage';
 import ConsentPage from './pages/ConsentPage';
 import AdminPage from './pages/AdminPage';
+import SellerProfilePage from './pages/SellerProfilePage';
 
 function PageRouter() {
   const { currentPage } = useApp();
@@ -28,6 +29,7 @@ function PageRouter() {
     profile: <ProfilePage />,
     consent: <ConsentPage />,
     admin: <AdminPage />,
+    'seller-profile': <SellerProfilePage />,
   };
 
   return pages[currentPage] || <HomePage />;
