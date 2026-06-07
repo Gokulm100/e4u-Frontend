@@ -2782,6 +2782,54 @@ body {
   margin: 0;
   flex-shrink: 0;
 }
+.chat-trust-caution {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 0 16px 8px;
+  padding: 12px 14px;
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  border-radius: var(--radius-md);
+  flex-shrink: 0;
+}
+.chat-trust-caution-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #ffedd5;
+  color: #c2410c;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.chat-trust-caution-body { flex: 1; min-width: 0; }
+.chat-trust-caution-title {
+  font-size: 12px;
+  font-weight: 800;
+  color: #9a3412;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 2px;
+}
+.chat-trust-caution-reason {
+  font-size: 13px;
+  line-height: 1.45;
+  color: #7c2d12;
+  font-weight: 500;
+}
+.chat-trust-caution-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--muted);
+  padding: 2px;
+  flex-shrink: 0;
+}
+.chat-trust-caution-close:hover { color: #9a3412; }
+.messages-chat-panel .chat-trust-caution { margin: 0 0 8px; }
+.chat-header-bar + .chat-trust-caution { margin-top: 0; margin-bottom: 0; border-radius: 0; border-left: none; border-right: none; }
 .fraud-banner-head {
   display: flex;
   align-items: center;

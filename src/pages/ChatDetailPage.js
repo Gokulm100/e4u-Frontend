@@ -10,7 +10,8 @@ import {
   appendIncomingMessage,
   normalizeId,
 } from '../utils/chatSocket';
-import SellerTrustLine from '../components/SellerTrustLine';
+import ChatTrustCaution from '../components/ChatTrustCaution';
+import { getChatTrustCautionFromProfile } from '../utils/chatTrustCaution';
 import { emitJoin } from '../utils/socket';
 
 function FraudBanner({ fraud, onClose }) {
@@ -47,6 +48,7 @@ export default function ChatDetailPage() {
   const [fraud, setFraud] = useState(null);
   const [showFraud, setShowFraud] = useState(true);
   const [counterparty, setCounterparty] = useState(null);
+  const [showTrustCaution, setShowTrustCaution] = useState(true);
   const msgsRef = useRef(null);
   const chatInfoRef = useRef(chatInfo);
   const fetchMsgsRef = useRef(null);
@@ -78,6 +80,10 @@ export default function ChatDetailPage() {
       fetchMessageCount();
     } catch { /* ignore */ }
   };
+
+  useEffect(() => {
+    setShowTrustCaution(true);
+  }, [counterparty?._id, adId]);
 
   useEffect(() => {
     fetchMsgs();
@@ -153,6 +159,7 @@ export default function ChatDetailPage() {
   };
 
   let lastDate = null;
+  const trustCaution = getChatTrustCautionFromProfile(counterparty);
 
   return (
     <div>
@@ -161,18 +168,15 @@ export default function ChatDetailPage() {
         <div className="chat-header-info">
           <div className="detail-header-title">{otherName}</div>
           {adTitle && <div className="chat-header-subtitle">{adTitle}</div>}
-          {counterparty && (
-            <SellerTrustLine
-              ratingAvg={counterparty.ratingAvg}
-              reviewCount={counterparty.reviewCount}
-              completedSales={counterparty.completedSales}
-              badges={counterparty.badges}
-              trustScore={counterparty.trustScore}
-              size="sm"
-            />
-          )}
         </div>
       </div>
+
+      {showTrustCaution && trustCaution.show && (
+        <ChatTrustCaution
+          reason={trustCaution.reason}
+          onClose={() => setShowTrustCaution(false)}
+        />
+      )}
 
       <div className="chat-detail-layout">
         <div className="chat-detail-msgs" ref={msgsRef}>

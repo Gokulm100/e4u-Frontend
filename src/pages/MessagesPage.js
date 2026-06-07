@@ -12,6 +12,8 @@ import {
   normalizeId,
 } from '../utils/chatSocket';
 import { emitJoin } from '../utils/socket';
+import ChatTrustCaution from '../components/ChatTrustCaution';
+import { getChatTrustCautionFromProfile } from '../utils/chatTrustCaution';
 
 function getInitials(name) {
   if (!name || name === 'Seller' || name === 'Buyer') return '??';
@@ -30,7 +32,7 @@ function ChatRow({ item, isBuying, user, onClick, isSelected }) {
     ? item.lastMessage
     : (item.lastMessage?.message || '');
   const adTitle = item.item || item.adTitle || item.adId?.title || item.ad?.title || '';
-  const adImage = item.adId?.images?.[0] || item.ad?.images?.[0] || null;
+  const adImage = item.adId?.images?.[0] || item.ad?.images?.[0] || item.adImages?.[0] || null;
   const lastMsgFrom = item.lastMessage?.from?._id || item.lastMessage?.from || item.lastMessageFrom;
   const isMe = lastMsgFrom && user?._id && String(lastMsgFrom) === String(user._id);
   const isUnread = item.isSeen === false && !isMe;
@@ -161,6 +163,8 @@ export default function MessagesPage() {
   const [input, setInput] = useState('');
   const [fraud, setFraud] = useState(null);
   const [showFraud, setShowFraud] = useState(true);
+  const [counterparty, setCounterparty] = useState(null);
+  const [showTrustCaution, setShowTrustCaution] = useState(true);
   const [isMobileView, setIsMobileView] = useState(() => window.matchMedia('(max-width: 768px)').matches);
   const msgsRef = useRef(null);
   const selectedChatRef = useRef(selectedChat);
@@ -261,6 +265,9 @@ export default function MessagesPage() {
         setFraud(data.fraudCheck);
         setShowFraud(true);
       }
+      if (data.counterparty) {
+        setCounterparty(data.counterparty);
+      }
       const msgs = Array.isArray(data) ? data : (Array.isArray(data.chats) ? data.chats : []);
       setMessages(prev => (silent ? mergeWithPending(msgs, prev) : msgs));
     } catch { /* ignore */ }
@@ -284,10 +291,16 @@ export default function MessagesPage() {
 
   useEffect(() => {
     if (!selectedChat?.chatInfo) return;
+    setCounterparty(null);
+    setShowTrustCaution(true);
     fetchSelectedChat();
     markSelectedSeen();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedChat]);
+
+  useEffect(() => {
+    setShowTrustCaution(true);
+  }, [counterparty?._id]);
 
   useEffect(() => {
     if (!user?._id) return undefined;
@@ -491,6 +504,17 @@ export default function MessagesPage() {
                 </div>
               </div>
             </div>
+
+            {showTrustCaution && (() => {
+              const trustCaution = getChatTrustCautionFromProfile(counterparty);
+              if (!trustCaution.show) return null;
+              return (
+                <ChatTrustCaution
+                  reason={trustCaution.reason}
+                  onClose={() => setShowTrustCaution(false)}
+                />
+              );
+            })()}
 
             <div className="chat-detail-msgs" ref={msgsRef}>
               {chatLoading && (
