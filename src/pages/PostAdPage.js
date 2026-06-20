@@ -3,8 +3,14 @@ import { Camera, AlertCircle } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import AiTextArea from '../components/aiTextArea';
 
+const KERALA_DISTRICTS = [
+  'Thiruvananthapuram', 'Kollam', 'Pathanamthitta', 'Alappuzha', 'Kottayam',
+  'Idukki', 'Ernakulam', 'Thrissur', 'Palakkad', 'Malappuram',
+  'Kozhikode', 'Wayanad', 'Kannur', 'Kasaragod',
+];
+
 export default function PostAdPage() {
-  const { user, apiFetch, navigate, showToast, categories, locations, pageExtra, fetchListings } = useApp();
+  const { user, apiFetch, navigate, showToast, categories, locations, pageExtra, fetchListings, fetchLocations } = useApp();
   const editingAd = pageExtra.ad || null;
 
   const [title, setTitle] = useState(editingAd?.title || '');
@@ -17,6 +23,8 @@ export default function PostAdPage() {
   const [locationQuery, setLocationQuery] = useState(editingAd?.location || '');
   const [locationDropdown, setLocationDropdown] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState(null);
+  const [newLocation, setNewLocation] = useState(null); // structured form for an unlisted location
+  const [savingLocation, setSavingLocation] = useState(false);
   const [images, setImages] = useState([]);
   const [existingImages, setExistingImages] = useState(editingAd?.images || []);
   const [submitting, setSubmitting] = useState(false);
@@ -34,6 +42,56 @@ export default function PostAdPage() {
     if (!q) return null;
     const match = locations.find(l => l.name.toLowerCase() === q.toLowerCase());
     return match || { id: null, name: q };
+  };
+
+  // Distinct districts from existing data, merged with the full Kerala list.
+  const districtOptions = [...new Set(locations.map(l => l.district).filter(Boolean))].sort();
+  const districtChoices = [...new Set([...districtOptions, ...KERALA_DISTRICTS])].sort();
+
+  const queryMatchesExisting = locations.some(
+    l => l.name.toLowerCase() === locationQuery.trim().toLowerCase()
+  );
+
+  // Open the form to capture details for a brand-new location.
+  const openNewLocationForm = () => {
+    const q = locationQuery.trim();
+    const parts = q.split(',').map(s => s.trim()).filter(Boolean);
+    setLocationDropdown(false);
+    setNewLocation({
+      locality: parts[0] || q,
+      district: parts[1] || (districtOptions.length === 1 ? districtOptions[0] : ''),
+    });
+  };
+
+  const saveNewLocation = async () => {
+    const { locality, district } = newLocation || {};
+    if (!locality?.trim() || !district?.trim()) {
+      showToast('Please fill locality and district.', 'error');
+      return;
+    }
+    setSavingLocation(true);
+    try {
+      const token = localStorage.getItem('authToken');
+      const res = await apiFetch('/api/users/locations/add', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ locality: locality.trim(), district: district.trim() }),
+      });
+      const saved = res?.data;
+      const name = `${saved?.locality || locality.trim()}, ${saved?.city || district.trim()}`;
+      await fetchLocations();
+      setSelectedLocation({ id: saved?._id || null, name });
+      setLocationQuery(name);
+      setNewLocation(null);
+      showToast('Location added!', 'success');
+    } catch {
+      showToast('Could not add location. Please try again.', 'error');
+    } finally {
+      setSavingLocation(false);
+    }
   };
 
   useEffect(() => {
@@ -134,6 +192,12 @@ export default function PostAdPage() {
     if (!price) { showToast('Please enter a price.', 'error'); return; }
     const loc = resolveLocation();
     if (!loc?.name) { showToast('Please select a location.', 'error'); return; }
+    const isKnownLocation = !!selectedLocation?.id || queryMatchesExisting;
+    if (!isKnownLocation) {
+      showToast('New location — please add its details first.', 'error');
+      openNewLocationForm();
+      return;
+    }
     if (description.length < 150) { showToast('Description must be at least 150 characters.', 'error'); return; }
 
     setSubmitting(true);
@@ -161,6 +225,7 @@ export default function PostAdPage() {
       if (!res.ok) throw new Error('Failed');
       showToast(editingAd ? 'Ad updated!' : 'Ad posted successfully!', 'success');
       fetchListings(1, true);
+      fetchLocations();
       navigate('my-ads');
     } catch { showToast(`Failed to ${editingAd ? 'update' : 'post'} ad.`, 'error'); }
     finally { setSubmitting(false); }
@@ -234,16 +299,63 @@ export default function PostAdPage() {
                 }, 200);
               }}
             />
-            {locationDropdown && filteredLocations.length > 0 && (
+            {locationDropdown && (filteredLocations.length > 0 || (locationQuery.trim() && !queryMatchesExisting)) && (
               <div className="location-list">
                 {filteredLocations.map(loc => (
                   <div key={loc.id} className="location-item" onMouseDown={() => { setSelectedLocation(loc); setLocationQuery(loc.name); setLocationDropdown(false); }}>
                     {loc.name}
                   </div>
                 ))}
+                {locationQuery.trim() && !queryMatchesExisting && (
+                  <div
+                    className="location-item location-item-add"
+                    onMouseDown={(e) => { e.preventDefault(); openNewLocationForm(); }}
+                  >
+                    + Add &ldquo;{locationQuery.trim()}&rdquo; as a new location
+                  </div>
+                )}
               </div>
             )}
           </div>
+
+          {newLocation && (
+            <div className="new-location-tip">
+              <div className="new-location-tip-head">
+                <span className="new-location-tip-text">
+                  Which district is <strong>{newLocation.locality}</strong> in?
+                </span>
+                <button
+                  type="button"
+                  className="new-location-cancel"
+                  onClick={() => setNewLocation(null)}
+                  disabled={savingLocation}
+                  aria-label="Cancel"
+                >
+                  ✕
+                </button>
+              </div>
+              <div className="new-location-chips">
+                {districtChoices.map(d => (
+                  <button
+                    type="button"
+                    key={d}
+                    className={`new-location-chip${newLocation.district === d ? ' active' : ''}`}
+                    onClick={() => setNewLocation(p => ({ ...p, district: d }))}
+                  >
+                    {d}
+                  </button>
+                ))}
+              </div>
+              <button
+                type="button"
+                className="new-location-save full"
+                onClick={saveNewLocation}
+                disabled={savingLocation || !newLocation.district}
+              >
+                {savingLocation ? '…' : 'Add location'}
+              </button>
+            </div>
+          )}
 
           <label className="form-label">
             Description * <span className="char-count">({description.length}/150 min)</span>

@@ -869,6 +869,103 @@ body {
 @keyframes skel-shimmer { 100% { transform: translateX(100%); } }
 @media (prefers-reduced-motion: reduce) { .skel::after { animation: none; } }
 
+/* ── NEW LOCATION PROMPT ── */
+.location-item-add {
+  color: var(--primary);
+  font-weight: 700;
+  border-top: 1px solid #eef2f7;
+}
+.new-location-tip {
+  position: relative;
+  margin-top: 8px;
+  padding: 10px 12px;
+  background: #f3f8ff;
+  border: 1px solid #dce8f7;
+  border-radius: var(--radius-md);
+}
+.new-location-tip::before {
+  content: '';
+  position: absolute;
+  top: -6px;
+  left: 18px;
+  width: 10px;
+  height: 10px;
+  background: #f3f8ff;
+  border-left: 1px solid #dce8f7;
+  border-top: 1px solid #dce8f7;
+  transform: rotate(45deg);
+}
+.new-location-tip-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+.new-location-tip-text {
+  display: block;
+  font-size: 12.5px;
+  color: var(--text);
+}
+.new-location-tip-text strong { color: var(--primary); }
+.new-location-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 10px 0 12px;
+}
+.new-location-chip {
+  padding: 7px 12px;
+  border-radius: 999px;
+  background: #fff;
+  border: 1px solid #dce8f7;
+  color: var(--text);
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.new-location-chip:hover { border-color: var(--primary); }
+.new-location-chip.active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+}
+.new-location-save.full { width: 100%; }
+.new-location-save:disabled { opacity: 0.5; cursor: not-allowed; }
+.new-location-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.new-location-row .form-input { flex: 1; margin: 0; }
+.new-location-save {
+  flex-shrink: 0;
+  padding: 0 16px;
+  height: 40px;
+  border: none;
+  border-radius: var(--radius-md);
+  background: var(--primary);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.new-location-save:disabled { opacity: 0.6; cursor: default; }
+.new-location-cancel {
+  flex-shrink: 0;
+  width: 34px;
+  height: 40px;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font-size: 15px;
+  cursor: pointer;
+}
+@media (max-width: 768px) {
+  .new-location-row { flex-wrap: wrap; }
+  .new-location-row .form-input { flex: 1 1 100%; }
+}
+
 .skel-card {
   display: flex;
   flex-direction: column;

@@ -173,7 +173,14 @@ export function AppProvider({ children }) {
     try {
         const res = await apiFetch('/api/users/locations');
       const data = Array.isArray(res) ? res : (res.data || []);
-      if (Array.isArray(data)) setLocations(data.map(c => ({ id: c._id, name: c.locality+', '+c.city})));
+      if (Array.isArray(data)) setLocations(data.map(c => ({
+        id: c._id,
+        name: c.locality + ', ' + c.city,
+        locality: c.locality,
+        city: c.city,
+        district: c.district,
+        state: c.state,
+      })));
     } catch { /* ignore */ }
   }, []);
 
@@ -305,7 +312,7 @@ export function AppProvider({ children }) {
       listings, setListings, page, setPage, hasMore, loading,
       messageCount, fetchMessageCount,
       adminPendingCount, fetchAdminPendingCount,
-      locations,
+      locations, fetchLocations,
       apiFetch, mapListing,
       fetchListings,
       getSocket: () => getSocket(user?._id),
