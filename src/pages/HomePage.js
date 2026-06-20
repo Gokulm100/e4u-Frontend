@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useCallback } from 'react';
 import { Activity } from 'lucide-react';
 import AdCard from '../components/AdCard';
 import FilterBar from '../components/FilterBar';
+import { SkeletonAdCard } from '../components/Skeleton';
 import { useApp } from '../context/AppContext';
 
 export default function HomePage() {
@@ -41,10 +42,7 @@ export default function HomePage() {
 
       <div className="ads-grid">
         {loading && listings.length === 0 ? (
-          <div className="empty-state" style={{ gridColumn: '1/-1' }}>
-            <div className="spinner" />
-            <span className="empty-sub">Loading ads...</span>
-          </div>
+          Array.from({ length: 10 }).map((_, i) => <SkeletonAdCard key={`skel-${i}`} />)
         ) : listings.length === 0 ? (
           <div className="empty-state" style={{ gridColumn: '1/-1' }}>
             <Activity size={48} style={{ color: 'var(--border)' }} />

@@ -14,6 +14,7 @@ import {
 import { emitJoin } from '../utils/socket';
 import ChatTrustCaution from '../components/ChatTrustCaution';
 import { getChatTrustCautionFromProfile } from '../utils/chatTrustCaution';
+import { SkeletonChatRow, SkeletonConversation } from '../components/Skeleton';
 
 function getInitials(name) {
   if (!name || name === 'Seller' || name === 'Buyer') return '??';
@@ -458,7 +459,9 @@ export default function MessagesPage() {
         </div>
 
         {loading && (
-          <div className="empty-state"><div className="spinner" /></div>
+          <div className="chat-list">
+            {Array.from({ length: 6 }).map((_, i) => <SkeletonChatRow key={`skel-${i}`} />)}
+          </div>
         )}
 
         {!loading && list.length === 0 && (
@@ -526,9 +529,7 @@ export default function MessagesPage() {
             })()}
 
             <div className="chat-detail-msgs" ref={msgsRef}>
-              {chatLoading && (
-                <div className="empty-state"><div className="spinner" /></div>
-              )}
+              {chatLoading && <SkeletonConversation />}
               {!chatLoading && messages.length === 0 && (
                 <div className="messages-empty-chat">
                   <MessageCircle size={28} strokeWidth={1.75} />

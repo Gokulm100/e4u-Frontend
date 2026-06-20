@@ -851,6 +851,50 @@ body {
 .spinner { width: 36px; height: 36px; border: 3px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.7s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
+/* ── SKELETON LOADING ── */
+.skel {
+  position: relative;
+  overflow: hidden;
+  background: #e8edf3;
+  border-radius: 6px;
+}
+.skel::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6), transparent);
+  animation: skel-shimmer 1.4s ease-in-out infinite;
+}
+@keyframes skel-shimmer { 100% { transform: translateX(100%); } }
+@media (prefers-reduced-motion: reduce) { .skel::after { animation: none; } }
+
+.skel-card {
+  display: flex;
+  flex-direction: column;
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  border: 1px solid #e8eef5;
+  overflow: hidden;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+.skel-card-media { aspect-ratio: 4 / 3; border-radius: 0; }
+.skel-card-body { display: flex; flex-direction: column; gap: 8px; padding: 12px 14px 14px; }
+.skel-avatar { width: 48px; height: 48px; border-radius: 50%; }
+.skel-bubble {
+  border-radius: 16px 16px 16px 4px;
+  align-self: flex-start;
+  margin-bottom: 2px;
+}
+.skel-bubble.me {
+  align-self: flex-end;
+  border-radius: 16px 16px 4px 16px;
+  background: #dbe4ef;
+}
+@media (max-width: 768px) {
+  .skel-avatar { width: 44px; height: 44px; }
+}
+
 /* ── AD DETAIL ── */
 .detail-page { position: relative; }
 .detail-back-bar {

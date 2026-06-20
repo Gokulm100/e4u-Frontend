@@ -75,7 +75,7 @@ export const initSocket = (userId) => {
   socket = io(API_BASE_URL, {
     transports: ['websocket', 'polling'],
     autoConnect: true,
-    auth: { userId },
+    auth: { userId, token: localStorage.getItem('authToken') },
   });
 
   boundUserId = userId;

@@ -13,6 +13,7 @@ import {
 import ChatTrustCaution from '../components/ChatTrustCaution';
 import { getChatTrustCautionFromProfile } from '../utils/chatTrustCaution';
 import { emitJoin } from '../utils/socket';
+import { SkeletonConversation } from '../components/Skeleton';
 
 function FraudBanner({ fraud, onClose }) {
   if (!fraud?.fraudIndicators?.length) return null;
@@ -44,6 +45,7 @@ export default function ChatDetailPage() {
   const { pageExtra, navigate, user, apiFetch, showToast, fetchMessageCount, subscribeChatMessages } = useApp();
   const { chatInfo, otherName, isSeller } = pageExtra;
   const [messages, setMessages] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [input, setInput] = useState('');
   const [fraud, setFraud] = useState(null);
   const [showFraud, setShowFraud] = useState(true);
@@ -65,6 +67,7 @@ export default function ChatDetailPage() {
       const msgs = Array.isArray(data) ? data : (Array.isArray(data.chats) ? data.chats : []);
       setMessages(prev => (silent ? mergeWithPending(msgs, prev) : msgs));
     } catch { /* ignore */ }
+    finally { if (!silent) setLoading(false); }
   }, [adId, buyerId, sellerId, apiFetch]);
 
   fetchMsgsRef.current = fetchMsgs;
@@ -92,6 +95,7 @@ export default function ChatDetailPage() {
   }, [counterparty?._id, adId]);
 
   useEffect(() => {
+    setLoading(true);
     fetchMsgs();
     markSeen();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -186,7 +190,9 @@ export default function ChatDetailPage() {
 
       <div className="chat-detail-layout">
         <div className="chat-detail-msgs" ref={msgsRef}>
-          {messages.length === 0
+          {loading
+            ? <SkeletonConversation />
+            : messages.length === 0
             ? <div className="chat-empty-state">No messages yet. Say hi! 👋</div>
             : messages.map((m, i) => {
               const fromId = m.from?._id || m.from;

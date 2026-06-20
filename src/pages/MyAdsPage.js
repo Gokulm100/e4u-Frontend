@@ -3,6 +3,7 @@ import { PlusCircle } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import MarkSoldModal from '../components/MarkSoldModal';
 import ReviewModal from '../components/ReviewModal';
+import { SkeletonMyAdRow } from '../components/Skeleton';
 
 const FALLBACK = 'https://images.pexels.com/photos/10703759/pexels-photo-10703759.jpeg';
 
@@ -121,7 +122,7 @@ export default function MyAdsPage() {
         </button>
       </div>
 
-      {loading && <div className="empty-state"><div className="spinner" /></div>}
+      {loading && Array.from({ length: 5 }).map((_, i) => <SkeletonMyAdRow key={`skel-${i}`} />)}
 
       {!loading && ads.length === 0 && (
         <div className="empty-state">
