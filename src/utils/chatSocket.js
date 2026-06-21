@@ -22,8 +22,11 @@ export function parseChatPayload(payload) {
       ? root.message
       : (p.text || p.body || p.content || '');
 
+  const imageUrl = p.imageUrl || root.imageUrl || null;
+
   return {
     _id: p._id || root._id,
+    imageUrl,
     adId: normalizeId(
       p.adId || p.ad?._id || p.ad
       || root.adId || root.ad?._id || root.ad
@@ -49,6 +52,7 @@ export function payloadToMessage(parsed) {
   return {
     _id: parsed._id,
     message: parsed.message,
+    imageUrl: parsed.imageUrl || null,
     from: parsed.from,
     createdAt: parsed.createdAt,
   };
@@ -67,12 +71,13 @@ export function payloadMatchesAd(payload, adId) {
 }
 
 export function appendIncomingMessage(prev, incoming) {
-  if (!incoming?.message) return prev;
+  if (!incoming?.message && !incoming?.imageUrl) return prev;
   const fromId = normalizeId(incoming.from);
   const exists = prev.some(m => {
     if (incoming._id && m._id && m._id === incoming._id) return true;
     const mFrom = normalizeId(m.from?._id || m.from);
     return m.message === incoming.message
+      && (m.imageUrl || null) === (incoming.imageUrl || null)
       && mFrom === fromId
       && !m._optimisticId
       && Math.abs(new Date(m.createdAt) - new Date(incoming.createdAt)) < 10000;
@@ -92,7 +97,7 @@ export function patchConversationList(list, parsed, userId, isBuyingTab, fromMe)
     found = true;
     return {
       ...item,
-      lastMessage: { message: parsed.message, from: parsed.from, createdAt: parsed.createdAt },
+      lastMessage: { message: parsed.message, imageUrl: parsed.imageUrl || null, from: parsed.from, createdAt: parsed.createdAt },
       updatedAt: parsed.createdAt,
       isSeen: fromMe ? item.isSeen : false,
     };

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { ArrowLeft, Send } from 'lucide-react';
+import { ArrowLeft, Send, ImagePlus } from 'lucide-react';
 import { useApp } from '../context/AppContext';
+import { uploadChatImage } from '../utils/chatUpload';
 import { createOptimisticMessage, mergeWithPending, removeOptimistic } from '../utils/chatMessages';
 import {
   parseChatPayload,
@@ -51,7 +52,9 @@ export default function ChatDetailPage() {
   const [showFraud, setShowFraud] = useState(true);
   const [counterparty, setCounterparty] = useState(null);
   const [showTrustCaution, setShowTrustCaution] = useState(true);
+  const [viewerImage, setViewerImage] = useState(null);
   const msgsRef = useRef(null);
+  const fileInputRef = useRef(null);
   const chatInfoRef = useRef(chatInfo);
   const fetchMsgsRef = useRef(null);
   chatInfoRef.current = chatInfo;
@@ -108,7 +111,7 @@ export default function ChatDetailPage() {
       const info = chatInfoRef.current;
       if (!info?.adId) return;
       const parsed = parseChatPayload(payload);
-      if (!parsed.message) return;
+      if (!parsed.message && !parsed.imageUrl) return;
 
       const matchesThread = payloadMatchesChat(payload, info)
         || payloadMatchesAd(payload, info.adId);
@@ -156,6 +159,26 @@ export default function ChatDetailPage() {
       setMessages(prev => removeOptimistic(prev, optId));
       setInput(msg);
       showToast('Could not send message.', 'error');
+    }
+  };
+
+  const sendImage = async (file) => {
+    if (!file || !user?._id || !adId) return;
+    const localUrl = URL.createObjectURL(file);
+    const optimistic = createOptimisticMessage('', user._id, localUrl);
+    const optId = optimistic._optimisticId;
+    setMessages(prev => [...prev, optimistic]);
+    try {
+      await uploadChatImage({
+        adId,
+        from: isSeller ? sellerId : buyerId,
+        to: isSeller ? buyerId : sellerId,
+        file,
+      });
+      fetchMsgs(true);
+    } catch {
+      setMessages(prev => removeOptimistic(prev, optId));
+      showToast('Could not send photo.', 'error');
     }
   };
 
@@ -214,8 +237,16 @@ export default function ChatDetailPage() {
               return (
                 <React.Fragment key={m._id || m._optimisticId || i}>
                   {separator}
-                  <div className={`msg-bubble${isMe ? ' me' : ''}${m.pending ? ' pending' : ''}`}>
-                    <div className="msg-text">{m.message}</div>
+                  <div className={`msg-bubble${isMe ? ' me' : ''}${m.pending ? ' pending' : ''}${m.imageUrl ? ' has-image' : ''}`}>
+                    {m.imageUrl && (
+                      <img
+                        className="msg-image"
+                        src={m.imageUrl}
+                        alt="attachment"
+                        onClick={() => setViewerImage(m.imageUrl)}
+                      />
+                    )}
+                    {m.message && <div className="msg-text">{m.message}</div>}
                     {m.createdAt && (
                       <div className="msg-time">
                         {new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -230,6 +261,17 @@ export default function ChatDetailPage() {
         {showFraud && <FraudBanner fraud={fraud} onClose={() => setShowFraud(false)} />}
 
         <div className="chat-detail-input">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            style={{ display: 'none' }}
+            onChange={e => {
+              const file = e.target.files?.[0];
+              if (file) sendImage(file);
+              e.target.value = '';
+            }}
+          />
           <textarea
             className="form-input form-textarea"
             style={{ minHeight: 42, maxHeight: 100, padding: '10px 14px' }}
@@ -238,9 +280,24 @@ export default function ChatDetailPage() {
             onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } }}
             placeholder="Type a message..."
           />
+          <button
+            type="button"
+            className="chat-attach-btn"
+            onClick={() => fileInputRef.current?.click()}
+            aria-label="Attach photo"
+          >
+            <ImagePlus size={24} />
+          </button>
           <button className="send-btn" onClick={send} disabled={!input.trim()}><Send size={18} /></button>
         </div>
       </div>
+
+      {viewerImage && (
+        <div className="image-viewer-overlay" onClick={() => setViewerImage(null)}>
+          <button className="image-viewer-close" aria-label="Close">✕</button>
+          <img className="image-viewer-img" src={viewerImage} alt="attachment" onClick={e => e.stopPropagation()} />
+        </div>
+      )}
     </div>
   );
 }

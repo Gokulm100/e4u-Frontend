@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Send, MessageCircle, X, ShieldAlert } from 'lucide-react';
+import { Send, MessageCircle, X, ShieldAlert, ImagePlus } from 'lucide-react';
 import { useApp } from '../context/AppContext';
+import { uploadChatImage } from '../utils/chatUpload';
 import { createOptimisticMessage, mergeWithPending, removeOptimistic } from '../utils/chatMessages';
 import {
   parseChatPayload,
@@ -29,9 +30,10 @@ function ChatRow({ item, isBuying, user, onClick, isSelected }) {
   const otherPic = isBuying
     ? (item.sellerPic || item.seller?.profilePic)
     : (item.buyerPic || item.buyer?.profilePic);
+  const lastMsgObj = typeof item.lastMessage === 'object' ? item.lastMessage : null;
   const lastMsg = typeof item.lastMessage === 'string'
     ? item.lastMessage
-    : (item.lastMessage?.message || '');
+    : (item.lastMessage?.message || (lastMsgObj?.imageUrl ? '📷 Photo' : ''));
   const adTitle = item.item || item.adTitle || item.adId?.title || item.ad?.title || '';
   const lastMsgFrom = item.lastMessage?.from?._id || item.lastMessage?.from || item.lastMessageFrom;
   const isMe = lastMsgFrom && user?._id && String(lastMsgFrom) === String(user._id);
@@ -164,7 +166,9 @@ export default function MessagesPage() {
   const [counterparty, setCounterparty] = useState(null);
   const [showTrustCaution, setShowTrustCaution] = useState(true);
   const [isMobileView, setIsMobileView] = useState(() => window.matchMedia('(max-width: 768px)').matches);
+  const [viewerImage, setViewerImage] = useState(null);
   const msgsRef = useRef(null);
+  const fileInputRef = useRef(null);
   const selectedChatRef = useRef(selectedChat);
   const fetchSelectedChatRef = useRef(null);
   const reloadListsRef = useRef(null);
@@ -311,7 +315,7 @@ export default function MessagesPage() {
     emitJoin(user._id);
     return subscribeChatMessages((payload) => {
       const parsed = parseChatPayload(payload);
-      if (!parsed.message) return;
+      if (!parsed.message && !parsed.imageUrl) return;
 
       const fromMe = normalizeId(parsed.from) === normalizeId(user._id);
       const incoming = payloadToMessage(parsed);
@@ -407,6 +411,28 @@ export default function MessagesPage() {
       setMessages(prev => removeOptimistic(prev, optId));
       setInput(msg);
       showToast('Could not send message.', 'error');
+    }
+  };
+
+  const sendImage = async (file) => {
+    const info = selectedChat?.chatInfo;
+    if (!file || !info?.adId || !user?._id) return;
+    const localUrl = URL.createObjectURL(file);
+    const optimistic = createOptimisticMessage('', user._id, localUrl);
+    const optId = optimistic._optimisticId;
+    setMessages(prev => [...prev, optimistic]);
+    bumpListLastMessage(info, '📷 Photo', selectedChat.isSeller);
+    try {
+      await uploadChatImage({
+        adId: info.adId,
+        from: selectedChat.isSeller ? info.sellerId : info.buyerId,
+        to: selectedChat.isSeller ? info.buyerId : info.sellerId,
+        file,
+      });
+      fetchSelectedChat(true);
+    } catch {
+      setMessages(prev => removeOptimistic(prev, optId));
+      showToast('Could not send photo.', 'error');
     }
   };
 
@@ -556,8 +582,16 @@ export default function MessagesPage() {
                 return (
                   <React.Fragment key={m._id || m._optimisticId || i}>
                     {separator}
-                    <div className={`msg-bubble${isMe ? ' me' : ''}${m.pending ? ' pending' : ''}`}>
-                      <div className="msg-text">{m.message}</div>
+                    <div className={`msg-bubble${isMe ? ' me' : ''}${m.pending ? ' pending' : ''}${m.imageUrl ? ' has-image' : ''}`}>
+                      {m.imageUrl && (
+                        <img
+                          className="msg-image"
+                          src={m.imageUrl}
+                          alt="attachment"
+                          onClick={() => setViewerImage(m.imageUrl)}
+                        />
+                      )}
+                      {m.message && <div className="msg-text">{m.message}</div>}
                       {m.createdAt && (
                         <div className="msg-time">
                           {new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -572,6 +606,17 @@ export default function MessagesPage() {
             {showFraud && <FraudBanner fraud={fraud} onClose={() => setShowFraud(false)} />}
 
             <div className="chat-detail-input">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                style={{ display: 'none' }}
+                onChange={e => {
+                  const file = e.target.files?.[0];
+                  if (file) sendImage(file);
+                  e.target.value = '';
+                }}
+              />
               <textarea
                 className="messages-compose-input"
                 value={input}
@@ -580,6 +625,14 @@ export default function MessagesPage() {
                 placeholder="Write a message..."
                 rows={1}
               />
+              <button
+                type="button"
+                className="chat-attach-btn"
+                onClick={() => fileInputRef.current?.click()}
+                aria-label="Attach photo"
+              >
+                <ImagePlus size={24} />
+              </button>
               <button type="button" className="messages-send-btn" onClick={send} aria-label="Send message">
                 <Send size={18} />
               </button>
@@ -589,6 +642,13 @@ export default function MessagesPage() {
       </div>
       )}
       </div>
+
+      {viewerImage && (
+        <div className="image-viewer-overlay" onClick={() => setViewerImage(null)}>
+          <button className="image-viewer-close" aria-label="Close">✕</button>
+          <img className="image-viewer-img" src={viewerImage} alt="attachment" onClick={e => e.stopPropagation()} />
+        </div>
+      )}
     </div>
   );
 }

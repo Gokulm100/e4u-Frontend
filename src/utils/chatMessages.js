@@ -1,7 +1,8 @@
-export function createOptimisticMessage(message, userId) {
+export function createOptimisticMessage(message, userId, imageUrl = null) {
   const optId = `opt-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
   return {
     message,
+    imageUrl,
     from: userId,
     createdAt: new Date().toISOString(),
     _optimisticId: optId,
