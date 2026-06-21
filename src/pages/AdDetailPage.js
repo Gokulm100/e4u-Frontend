@@ -57,11 +57,25 @@ function AiSummary({ listing, apiFetch }) {
 
   useEffect(() => {
     let cancelled = false;
+
+    // If the ad already carries a stored summary, use it directly — no API call.
+    if (listing.aiSummary && Object.keys(listing.aiSummary).length > 0) {
+      setSummary(listing.aiSummary);
+      setState('done');
+      return () => { cancelled = true; };
+    }
+
     async function load() {
       try {
         const res = await apiFetch('/api/ads/summarizeAdUsingAi', {
           method: 'POST',
-          body: JSON.stringify({ adTitle: listing.title, category: listing.category, subCategory: listing.subCategory, description: listing.description }),
+          body: JSON.stringify({
+            adId: listing.id,
+            adTitle: listing.title,
+            category: listing.category,
+            subCategory: listing.subCategory,
+            description: listing.description,
+          }),
         });
         if (!cancelled) { setSummary(res.data); setState('done'); }
       } catch { if (!cancelled) setState('error'); }
