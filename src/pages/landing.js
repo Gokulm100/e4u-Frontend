@@ -372,7 +372,7 @@ const responsiveTagStyle = {
       script.onload = () => {
         // Now safe to call google.accounts.id.initialize
         google.accounts.id.initialize({
-          client_id: "556452370430-fd5caae668lq9468hbseas0kr3o1a01g.apps.googleusercontent.com",
+          client_id: "281405583072-n7rkibd2qc0afs76dve0kgbsi9p15jfk.apps.googleusercontent.com",
           callback: handleCredentialResponse,
         });
         // Desktop sign-in button
@@ -397,7 +397,7 @@ const responsiveTagStyle = {
     }
     // If script is already loaded, proceed as before
     google.accounts.id.initialize({
-      client_id: "556452370430-fd5caae668lq9468hbseas0kr3o1a01g.apps.googleusercontent.com",
+      client_id: "281405583072-n7rkibd2qc0afs76dve0kgbsi9p15jfk.apps.googleusercontent.com",
       callback: handleCredentialResponse,
     });
     const storedToken = localStorage.getItem("authToken");

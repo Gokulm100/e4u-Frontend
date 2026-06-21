@@ -4,7 +4,7 @@ import { useApp } from '../context/AppContext';
 import ReviewModal from '../components/ReviewModal';
 
 const API = 'https://e4u-backend.onrender.com';
-const GOOGLE_CLIENT_ID = '556452370430-fd5caae668lq9468hbseas0kr3o1a01g.apps.googleusercontent.com';
+const GOOGLE_CLIENT_ID = '281405583072-n7rkibd2qc0afs76dve0kgbsi9p15jfk.apps.googleusercontent.com';
 
 // function GoogleIcon() {
 //   return (
