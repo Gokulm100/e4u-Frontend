@@ -1,5 +1,15 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { CheckCircle,LogOut, Star } from 'lucide-react';
+import {
+  CheckCircle,
+  ChevronRight,
+  LayoutGrid,
+  LogOut,
+  MessageCircle,
+  PlusCircle,
+  Shield,
+  Sparkles,
+  Star,
+} from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import ReviewModal from '../components/ReviewModal';
 
@@ -65,12 +75,14 @@ function LoginWall({ onGoogleSignIn }) {
       <div  ref={googleBtnRef} style={{ margin: '16px 0' }} />
       <div className="feature-list">
         {[
-          { icon: '📢', text: 'Post & manage your ads easily' },
-          { icon: '💬', text: 'Chat directly with buyers & sellers' },
-          { icon: '✦', text: 'Get AI-powered insights on your listings' },
-        ].map(({ icon, text }) => (
+          { Icon: LayoutGrid, text: 'Post & manage your ads easily' },
+          { Icon: MessageCircle, text: 'Chat directly with buyers & sellers' },
+          { Icon: Sparkles, text: 'Get AI-powered insights on your listings' },
+        ].map(({ Icon, text }) => (
           <div key={text} className="feature-row">
-            <div className="feature-icon">{icon}</div>
+            <div className="feature-icon">
+              <Icon size={18} color="var(--primary)" strokeWidth={2} />
+            </div>
             <div className="feature-text">{text}</div>
           </div>
         ))}
@@ -128,20 +140,25 @@ export default function ProfilePage() {
   };
 
   const handleLogout = () => {
-    showModal('Confirm Logout', 'Are you sure you want to logout?', '🚪', () => {
+    showModal(
+      'Confirm Logout',
+      'Are you sure you want to logout?',
+      <LogOut size={22} color="var(--error)" strokeWidth={2} />,
+      () => {
       logout();
       navigate('home');
       showToast('Logged out.', 'success');
-    });
+    }
+    );
   };
 
   if (!user) return <LoginWall onGoogleSignIn={handleGoogleSignIn} />;
 
   const actions = [
-    { icon: '📢', bg: '#eff6ff', label: 'My Ads', page: 'my-ads' },
-    { icon: '💬', bg: '#f0fdf4', label: 'Messages', page: 'messages' },
-    { icon: '➕', bg: '#fff7ed', label: 'Post a New Ad', page: 'post' },
-    { icon: '🔒', bg: '#f5f3ff', label: 'Privacy & Terms', page: 'consent' },
+    { Icon: LayoutGrid, bg: '#eff6ff', color: 'var(--primary)', label: 'My Ads', page: 'my-ads' },
+    { Icon: MessageCircle, bg: '#f0fdf4', color: 'var(--success)', label: 'Messages', page: 'messages' },
+    { Icon: PlusCircle, bg: '#fff7ed', color: '#f97316', label: 'Post a New Ad', page: 'post' },
+    { Icon: Shield, bg: '#f5f3ff', color: '#8b5cf6', label: 'Privacy & Terms', page: 'consent' },
   ];
 
   return (
@@ -174,7 +191,7 @@ export default function ProfilePage() {
                   <div className="action-text">{item.adTitle}</div>
                   <div style={{ fontSize: 12, color: 'var(--muted)' }}>Rate {item.revieweeName}</div>
                 </div>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--border)" strokeWidth="2"><polyline points="9 18 15 12 9 6" /></svg>
+                <ChevronRight size={16} color="var(--border)" strokeWidth={2} />
               </div>
             ))}
           </div>
@@ -186,11 +203,13 @@ export default function ProfilePage() {
       </div>
 
       <div className="actions-card">
-        {actions.map(({ icon, bg, label, page }) => (
+        {actions.map(({ Icon, bg, color, label, page }) => (
           <div key={page} className="action-row" onClick={() => navigate(page)}>
-            <div className="action-icon" style={{ background: bg }}>{icon}</div>
+            <div className="action-icon" style={{ background: bg }}>
+              <Icon size={18} color={color} strokeWidth={2} />
+            </div>
             <div className="action-text">{label}</div>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--border)" strokeWidth="2"><polyline points="9 18 15 12 9 6" /></svg>
+            <ChevronRight size={16} color="var(--border)" strokeWidth={2} />
           </div>
         ))}
       </div>

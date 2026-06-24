@@ -3532,6 +3532,23 @@ body {
 
 /* ── MODAL ── */
 .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 200; display: flex; align-items: center; justify-content: center; }
+.modal-icon-badge {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background: #fff1f2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 12px;
+}
+.modal-icon-badge--emoji {
+  width: auto;
+  height: auto;
+  background: transparent;
+  font-size: 32px;
+  line-height: 1;
+}
 .modal { background: var(--white); border-radius: var(--radius-xl); padding: 28px; max-width: 400px; width: 90%; box-shadow: var(--shadow-md); text-align: center; }
 .modal-title { font-size: 18px; font-weight: 800; margin-bottom: 8px; }
 .modal-sub { font-size: 14px; color: var(--muted); margin-bottom: 24px; }

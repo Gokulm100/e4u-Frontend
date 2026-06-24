@@ -19,7 +19,9 @@ export function ModalDialog() {
   return (
     <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) closeModal(); }}>
       <div className="modal">
-        <div style={{ fontSize: 32, marginBottom: 12 }}>{modal.icon}</div>
+        <div className={`modal-icon-badge${typeof modal.icon === 'string' ? ' modal-icon-badge--emoji' : ''}`}>
+          {modal.icon}
+        </div>
         <div className="modal-title">{modal.title}</div>
         <div className="modal-sub">{modal.sub}</div>
         <div className="modal-btns">
