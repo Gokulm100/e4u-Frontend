@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Camera, AlertCircle } from 'lucide-react';
+import { Camera, AlertCircle, X, ChevronLeft, Check } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import AiTextArea from '../components/aiTextArea';
 
@@ -24,6 +24,8 @@ export default function PostAdPage() {
   const [locationDropdown, setLocationDropdown] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState(null);
   const [newLocation, setNewLocation] = useState(null); // structured form for an unlisted location
+  const [districtQuery, setDistrictQuery] = useState('');
+  const [districtDropdown, setDistrictDropdown] = useState(false);
   const [savingLocation, setSavingLocation] = useState(false);
   const [images, setImages] = useState([]);
   const [existingImages, setExistingImages] = useState(editingAd?.images || []);
@@ -48,25 +50,108 @@ export default function PostAdPage() {
   const districtOptions = [...new Set(locations.map(l => l.district).filter(Boolean))].sort();
   const districtChoices = [...new Set([...districtOptions, ...KERALA_DISTRICTS])].sort();
 
+  const getDistrictChoicesForCity = (cityName) => {
+    const city = String(cityName || '').trim().toLowerCase();
+    if (!city) return districtChoices;
+    const fromData = [...new Set(
+      locations
+        .filter(l =>
+          l.city?.toLowerCase() === city
+          || l.district?.toLowerCase() === city
+        )
+        .map(l => l.district)
+        .filter(Boolean),
+    )].sort();
+    if (fromData.length) return fromData;
+    return districtChoices;
+  };
+
   const queryMatchesExisting = locations.some(
     l => l.name.toLowerCase() === locationQuery.trim().toLowerCase()
   );
+
+  const suggestDistrictForCity = (cityName, currentDistrict = '') => {
+    const city = String(cityName || '').trim();
+    if (!city) return '';
+    const choices = getDistrictChoicesForCity(city);
+    if (currentDistrict && choices.includes(currentDistrict)) return currentDistrict;
+    const exactDistrict = KERALA_DISTRICTS.find(d => d.toLowerCase() === city.toLowerCase());
+    if (exactDistrict && choices.includes(exactDistrict)) return exactDistrict;
+    if (choices.length === 1) return choices[0];
+    return '';
+  };
+
+  const handleNewLocationCityChange = (city) => {
+    setNewLocation(p => ({ ...p, city }));
+  };
+
+  const districtChoicesForForm = newLocation?.city
+    ? getDistrictChoicesForCity(newLocation.city)
+    : [];
+
+  const filteredDistricts = districtChoicesForForm.filter(d =>
+    d.toLowerCase().includes(districtQuery.trim().toLowerCase()),
+  ).slice(0, 20);
+
+  const pickDistrict = (district) => {
+    setNewLocation(p => ({ ...p, district }));
+    setDistrictQuery(district);
+    setDistrictDropdown(false);
+  };
+
+  const handleDistrictQueryChange = (q) => {
+    setDistrictQuery(q);
+    setDistrictDropdown(q.trim().length > 0);
+    const match = districtChoicesForForm.find(
+      d => d.toLowerCase() === q.trim().toLowerCase(),
+    );
+    setNewLocation(p => ({ ...p, district: match || '' }));
+  };
+
+  const showDistrictList = districtDropdown
+    && districtQuery.trim().length > 0
+    && filteredDistricts.length > 0;
+
+  const resetDistrictSearch = () => {
+    setDistrictQuery('');
+    setDistrictDropdown(false);
+  };
+
+  const confirmCityStep = () => {
+    const city = newLocation?.city?.trim();
+    if (!city) {
+      showToast('Please enter a city.', 'error');
+      return;
+    }
+    const district = suggestDistrictForCity(city);
+    setNewLocation(p => ({ ...p, step: 'district', district }));
+    setDistrictQuery(district || '');
+    setDistrictDropdown(false);
+  };
+
+  const goBackToCityStep = () => {
+    setNewLocation(p => ({ ...p, step: 'city', district: '' }));
+    resetDistrictSearch();
+  };
 
   // Open the form to capture details for a brand-new location.
   const openNewLocationForm = () => {
     const q = locationQuery.trim();
     const parts = q.split(',').map(s => s.trim()).filter(Boolean);
     setLocationDropdown(false);
+    resetDistrictSearch();
     setNewLocation({
       locality: parts[0] || q,
-      district: parts[1] || (districtOptions.length === 1 ? districtOptions[0] : ''),
+      city: parts[1] || '',
+      district: '',
+      step: 'city',
     });
   };
 
   const saveNewLocation = async () => {
-    const { locality, district } = newLocation || {};
-    if (!locality?.trim() || !district?.trim()) {
-      showToast('Please fill locality and district.', 'error');
+    const { locality, district, city } = newLocation || {};
+    if (!locality?.trim() || !district?.trim() || !city?.trim()) {
+      showToast('Please enter city and district.', 'error');
       return;
     }
     setSavingLocation(true);
@@ -78,14 +163,19 @@ export default function PostAdPage() {
           'Content-Type': 'application/json',
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
-        body: JSON.stringify({ locality: locality.trim(), district: district.trim() }),
+        body: JSON.stringify({
+          locality: locality.trim(),
+          district: district.trim(),
+          city: city.trim(),
+        }),
       });
       const saved = res?.data;
-      const name = `${saved?.locality || locality.trim()}, ${saved?.city || district.trim()}`;
+      const name = `${saved?.locality || locality.trim()}, ${saved?.city || city.trim()}`;
       await fetchLocations();
       setSelectedLocation({ id: saved?._id || null, name });
       setLocationQuery(name);
       setNewLocation(null);
+      resetDistrictSearch();
       showToast('Location added!', 'success');
     } catch {
       showToast('Could not add location. Please try again.', 'error');
@@ -319,41 +409,123 @@ export default function PostAdPage() {
           </div>
 
           {newLocation && (
-            <div className="new-location-tip">
-              <div className="new-location-tip-head">
-                <span className="new-location-tip-text">
-                  Which district is <strong>{newLocation.locality}</strong> in?
-                </span>
+            <div className={`new-location-card${showDistrictList ? ' is-dropdown-open' : ''}`}>
+              <div className="new-location-top">
+                <div className="new-location-top-left">
+                  <p className="new-location-eyebrow">
+                    {newLocation.locality}
+                    {newLocation.step === 'district' && newLocation.city?.trim() && (
+                      <>
+                        <span className="new-location-breadcrumb-sep">&gt;</span>
+                        <span className="new-location-breadcrumb-city">{newLocation.city.trim()}</span>
+                      </>
+                    )}
+                  </p>
+                  <div className="new-location-dots" aria-hidden="true">
+                    <span className={`new-location-dot${newLocation.step === 'city' ? ' is-active' : ' is-done'}`} />
+                    <span className={`new-location-dot${newLocation.step === 'district' ? ' is-active' : ''}`} />
+                  </div>
+                </div>
                 <button
                   type="button"
-                  className="new-location-cancel"
-                  onClick={() => setNewLocation(null)}
+                  className="new-location-close"
+                  onClick={() => { setNewLocation(null); resetDistrictSearch(); }}
                   disabled={savingLocation}
                   aria-label="Cancel"
                 >
-                  ✕
+                  <X size={18} strokeWidth={1.5} />
                 </button>
               </div>
-              <div className="new-location-chips">
-                {districtChoices.map(d => (
-                  <button
-                    type="button"
-                    key={d}
-                    className={`new-location-chip${newLocation.district === d ? ' active' : ''}`}
-                    onClick={() => setNewLocation(p => ({ ...p, district: d }))}
-                  >
-                    {d}
-                  </button>
-                ))}
+
+              <div className={`new-location-slider${showDistrictList ? ' is-dropdown-open' : ''}`}>
+                <div className={`new-location-track${newLocation.step === 'district' ? ' is-district' : ''}`}>
+                  <div className="new-location-slide">
+                    <h4 className="new-location-question">What is the city?</h4>
+                    <div className="new-location-field-row">
+                      <input
+                        id="new-location-city"
+                        type="text"
+                        className="new-location-input"
+                        placeholder="e.g. Thiruvananthapuram"
+                        value={newLocation.city}
+                        onChange={(e) => handleNewLocationCityChange(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            confirmCityStep();
+                          }
+                        }}
+                        disabled={savingLocation}
+                        autoFocus
+                      />
+                      <button
+                        type="button"
+                        className="new-location-tick"
+                        onClick={confirmCityStep}
+                        disabled={savingLocation || !newLocation.city?.trim()}
+                        aria-label="Continue"
+                      >
+                        <Check size={17} strokeWidth={2.5} />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="new-location-slide">
+                    <button
+                      type="button"
+                      className="new-location-back"
+                      onClick={goBackToCityStep}
+                      disabled={savingLocation}
+                    >
+                      <ChevronLeft size={15} strokeWidth={2} />
+                      Back
+                    </button>
+                    <h4 className="new-location-question">What is the district?</h4>
+                    <div className="new-location-field-row">
+                      <div className="new-location-district-wrap">
+                        <input
+                          id="new-location-district"
+                          type="text"
+                          className="new-location-input"
+                          placeholder="Search district..."
+                          autoComplete="off"
+                          value={districtQuery}
+                          onChange={(e) => handleDistrictQueryChange(e.target.value)}
+                          onBlur={() => {
+                            setTimeout(() => setDistrictDropdown(false), 200);
+                          }}
+                          disabled={savingLocation}
+                        />
+                        {showDistrictList && (
+                          <div className="location-list new-location-district-list">
+                            {filteredDistricts.map(d => (
+                              <div
+                                key={d}
+                                className="location-item"
+                                onMouseDown={(e) => { e.preventDefault(); pickDistrict(d); }}
+                              >
+                                {d}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      <button
+                        type="button"
+                        className="new-location-tick"
+                        onClick={saveNewLocation}
+                        disabled={savingLocation || !newLocation.district}
+                        aria-label="Add location"
+                      >
+                        {savingLocation
+                          ? <span className="new-location-tick-loading">…</span>
+                          : <Check size={17} strokeWidth={2.5} />
+                        }
+                      </button>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <button
-                type="button"
-                className="new-location-save full"
-                onClick={saveNewLocation}
-                disabled={savingLocation || !newLocation.district}
-              >
-                {savingLocation ? '…' : 'Add location'}
-              </button>
             </div>
           )}
 
