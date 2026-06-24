@@ -66,7 +66,6 @@ export default function ConsentPage() {
     <div className="consent-layout">
       <div className="consent-header-card">
         <div className="consent-brand">
-          <div className="consent-logo">D</div>
           <div>
             <div className="consent-title">User Consent</div>
             <div className="consent-sub">Privacy Policy & Terms of Service</div>

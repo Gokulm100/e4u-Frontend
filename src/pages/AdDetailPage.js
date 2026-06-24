@@ -9,7 +9,7 @@ import {
   normalizeId,
 } from '../utils/chatSocket';
 import { emitJoin } from '../utils/socket';
-import { ArrowLeft, MapPin, Eye, Clock, Tag, User, Send, Shield, Flag, MessageCircle, ChevronRight } from 'lucide-react';
+import { ArrowLeft, MapPin, Eye, Clock, Tag, User, Send, Shield, Flag, MessageCircle, ChevronRight, Sparkles } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import AiAnalytics from '../components/AiAnalytics';
 import SimilarAds from '../components/SimilarAds';
@@ -86,18 +86,44 @@ function AiSummary({ listing, apiFetch }) {
 
   return (
     <div className="ai-summary-card">
+      <svg width="0" height="0" className="ai-summary-gradient-defs" aria-hidden>
+        <defs>
+          <linearGradient id="gemini-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#4285f4" />
+            <stop offset="45%" stopColor="#9b72cb" />
+            <stop offset="100%" stopColor="#d96570" />
+          </linearGradient>
+        </defs>
+      </svg>
       <div className="ai-header">
-        <span className="ai-icon">✦</span>
+        <Sparkles size={18} className="ai-icon-gemini" strokeWidth={2.25} color="url(#gemini-gradient)" aria-hidden />
         <span className="ai-header-text">AI Summary</span>
       </div>
-      {state === 'loading' && <div className="ai-loading"><div className="spinner" style={{ width: 18, height: 18 }} /><span>Analysing description…</span></div>}
-      {state === 'error' && <div className="ai-error">Failed to load AI summary.</div>}
-      {state === 'done' && summary && Object.entries(summary).map(([k, v]) => (
-        <div key={k} className="ai-row">
-          <div className="ai-key">{k}</div>
-          <div className="ai-val">{typeof v === 'object' ? Object.entries(v).map(([a, b]) => `${a}: ${b}`).join(' · ') : String(v)}</div>
+      {state === 'loading' && (
+        <div className="ai-loading">
+          <div className="spinner ai-summary-spinner" style={{ width: 18, height: 18 }} />
+          <span className="ai-loading-text">Analysing description…</span>
         </div>
-      ))}
+      )}
+      {state === 'error' && <div className="ai-error">Failed to load AI summary.</div>}
+      {state === 'done' && summary && (
+        <div className="ai-summary-rows">
+          {Object.entries(summary).map(([k, v], index) => (
+            <div
+              key={k}
+              className="ai-row ai-row--fade-in"
+              style={{ animationDelay: `${index * 70}ms` }}
+            >
+              <div className="ai-key">{k}</div>
+              <div className="ai-val">
+                {typeof v === 'object'
+                  ? Object.entries(v).map(([a, b]) => `${a}: ${b}`).join(' · ')
+                  : String(v)}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

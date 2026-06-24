@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Search, X, PlusCircle } from 'lucide-react';
 import { useApp } from '../context/AppContext';
+import DealrLogo from './DealrLogo';
 
 export default function Topbar() {
   const { user, navigate, setSearchQuery, setPage } = useApp();
@@ -22,10 +23,12 @@ export default function Topbar() {
 
   return (
     <header className="topbar">
-      <div className="topbar-logo" onClick={() => navigate('home')}>
-        <span className="logo-text">Dea<span>l</span>r</span>
-        <span className="logo-sub">Deal with the Right App!</span>
-      </div>
+      <DealrLogo
+        variant="light"
+        showTagline
+        onClick={() => navigate('home')}
+        className="topbar-brand"
+      />
 
       <div className="topbar-search">
         <Search size={16} style={{ color: 'rgba(255,255,255,0.7)', flexShrink: 0 }} />
