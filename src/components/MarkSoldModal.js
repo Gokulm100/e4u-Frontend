@@ -57,6 +57,8 @@ export default function MarkSoldModal({ ad, open, onClose, onSold }) {
         adTitle: ad.title,
         revieweeName: selected?.name || selected?.email || 'Buyer',
         revieweePic: selected?.profilePic || null,
+        counterpartyName: selected?.name || selected?.email || 'Buyer',
+        saleAmount: soldAmount.trim(),
       });
       onClose();
     } catch (err) {

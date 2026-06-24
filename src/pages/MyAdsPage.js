@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { PlusCircle } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import MarkSoldModal from '../components/MarkSoldModal';
+import PostSaleReminderModal from '../components/PostSaleReminderModal';
 import ReviewModal from '../components/ReviewModal';
 import { SkeletonMyAdRow } from '../components/Skeleton';
 
@@ -12,7 +13,9 @@ export default function MyAdsPage() {
   const [ads, setAds] = useState([]);
   const [loading, setLoading] = useState(true);
   const [soldModalAd, setSoldModalAd] = useState(null);
+  const [postSaleReminder, setPostSaleReminder] = useState(null);
   const [reviewTarget, setReviewTarget] = useState(null);
+  const [pendingReviews, setPendingReviews] = useState([]);
 
   const load = async () => {
     if (!user) {
@@ -36,6 +39,20 @@ export default function MyAdsPage() {
   };
 
   useEffect(() => { load(); }, [user]); // eslint-disable-line
+
+  useEffect(() => {
+    if (!user) {
+      setPendingReviews([]);
+      return;
+    }
+    let cancelled = false;
+    apiFetch('/api/reviews/pending')
+      .then((data) => {
+        if (!cancelled) setPendingReviews(data.pending || []);
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [user, apiFetch, postSaleReminder, reviewTarget]);
 
   const handleDelete = (ad) => {
     showModal('Disable Ad', `Disable "${ad.title}"? This cannot be undone.`, '🗑️', async () => {
@@ -73,11 +90,15 @@ export default function MyAdsPage() {
   };
 
   const handleSoldComplete = (target) => {
-    showToast('Marked as sold!', 'success');
     setAds((prev) => prev.map((a) =>
       a.id === target.adId ? { ...a, isSold: true, status: 'sold' } : a
     ));
-    setReviewTarget(target);
+    setPostSaleReminder(target);
+  };
+
+  const dismissPostSaleReminder = () => {
+    setPostSaleReminder(null);
+    showToast('You can leave a review anytime from Profile.', 'success');
   };
 
   if (!user) {
@@ -186,6 +207,27 @@ export default function MyAdsPage() {
                 </button>
               </>
             )}
+            {ad.isSold && (() => {
+              const pending = pendingReviews.find((item) => String(item.adId) === String(ad.id));
+              if (!pending) return null;
+              return (
+                <button
+                  type="button"
+                  className="my-ad-review-btn"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setReviewTarget({
+                      adId: pending.adId,
+                      adTitle: pending.adTitle,
+                      revieweeName: pending.revieweeName,
+                      revieweePic: pending.revieweePic,
+                    });
+                  }}
+                >
+                  ★ Rate {pending.revieweeName}
+                </button>
+              );
+            })()}
           </div>
         </div>
       ))}
@@ -197,6 +239,19 @@ export default function MyAdsPage() {
         onSold={handleSoldComplete}
       />
 
+      <PostSaleReminderModal
+        open={!!postSaleReminder}
+        onClose={dismissPostSaleReminder}
+        onRateNow={() => {
+          setReviewTarget(postSaleReminder);
+          setPostSaleReminder(null);
+        }}
+        adTitle={postSaleReminder?.adTitle}
+        revieweeName={postSaleReminder?.revieweeName}
+        counterpartyName={postSaleReminder?.counterpartyName}
+        saleAmount={postSaleReminder?.saleAmount}
+      />
+
       {reviewTarget && (
         <ReviewModal
           adId={reviewTarget.adId}
@@ -204,7 +259,10 @@ export default function MyAdsPage() {
           revieweeName={reviewTarget.revieweeName}
           revieweePic={reviewTarget.revieweePic}
           onClose={() => setReviewTarget(null)}
-          onSubmitted={() => showToast('Thank you! Your review helps keep Dealr safe.', 'success')}
+          onSubmitted={() => {
+            showToast('Thank you! Your review helps keep Dealr safe.', 'success');
+            setPendingReviews((prev) => prev.filter((item) => String(item.adId) !== String(reviewTarget.adId)));
+          }}
         />
       )}
     </div>

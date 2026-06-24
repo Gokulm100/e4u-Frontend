@@ -2,11 +2,13 @@ import React, { useState } from 'react';
 import { Edit, Eye, EyeOff, CheckCircle } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import MarkSoldModal from './MarkSoldModal';
+import PostSaleReminderModal from './PostSaleReminderModal';
 import ReviewModal from './ReviewModal';
 
 export default function OwnerAdActions({ ad, onAdUpdated }) {
   const { navigate, apiFetch, showToast, showModal } = useApp();
   const [soldOpen, setSoldOpen] = useState(false);
+  const [postSaleReminder, setPostSaleReminder] = useState(null);
   const [reviewTarget, setReviewTarget] = useState(null);
   const [busy, setBusy] = useState(false);
 
@@ -48,9 +50,13 @@ export default function OwnerAdActions({ ad, onAdUpdated }) {
   };
 
   const handleSold = (target) => {
-    showToast('Marked as sold!', 'success');
     onAdUpdated?.({ ...ad, isSold: true, status: 'sold' });
-    setReviewTarget(target);
+    setPostSaleReminder(target);
+  };
+
+  const dismissPostSaleReminder = () => {
+    setPostSaleReminder(null);
+    showToast('You can leave a review anytime from Profile.', 'success');
   };
 
   const isDisabled = ad.isActive === false;
@@ -93,6 +99,19 @@ export default function OwnerAdActions({ ad, onAdUpdated }) {
         open={soldOpen}
         onClose={() => setSoldOpen(false)}
         onSold={handleSold}
+      />
+
+      <PostSaleReminderModal
+        open={!!postSaleReminder}
+        onClose={dismissPostSaleReminder}
+        onRateNow={() => {
+          setReviewTarget(postSaleReminder);
+          setPostSaleReminder(null);
+        }}
+        adTitle={postSaleReminder?.adTitle}
+        revieweeName={postSaleReminder?.revieweeName}
+        counterpartyName={postSaleReminder?.counterpartyName}
+        saleAmount={postSaleReminder?.saleAmount}
       />
 
       {reviewTarget && (

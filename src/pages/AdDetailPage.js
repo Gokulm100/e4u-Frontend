@@ -425,6 +425,16 @@ export default function AdDetailPage() {
 
         {/* Aside column */}
         <div>
+          {reviewStatus?.canReview && (
+            <button
+              type="button"
+              className={`detail-review-prompt${isOwner ? ' detail-review-prompt--owner' : ''}`}
+              onClick={() => setReviewOpen(true)}
+            >
+              ★ Rate your experience with {reviewStatus.reviewee?.name}
+            </button>
+          )}
+
           {!isOwner && (
             <div className="detail-safety-card">
               <div className="detail-safety-header">
@@ -489,24 +499,13 @@ export default function AdDetailPage() {
               </div>
             </>
           ) : (
-            <>
-              {reviewStatus?.canReview && (
-                <button
-                  type="button"
-                  className="detail-review-prompt"
-                  onClick={() => setReviewOpen(true)}
-                >
-                  ★ Rate your experience with {reviewStatus.reviewee?.name}
-                </button>
-              )}
-              <DetailChatBox
-                listing={listing}
-                user={user}
-                apiFetch={apiFetch}
-                showToast={showToast}
-                navigate={navigate}
-              />
-            </>
+            <DetailChatBox
+              listing={listing}
+              user={user}
+              apiFetch={apiFetch}
+              showToast={showToast}
+              navigate={navigate}
+            />
           )}
         </div>
       </div>
