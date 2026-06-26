@@ -15,15 +15,11 @@ import {
   BarChart3,
 } from 'lucide-react';
 import {
-  GeminiGradientDefs,
-  useGeminiGradients,
   GeminiSparkles,
   GeminiGradientText,
-  GeminiCard,
+  AnalyticsCard,
   GeminiScoreBar,
   GeminiMetricMeter,
-  GeminiWaveAnimation,
-  GeminiAnalyzingVisual,
 } from './geminiBrand';
 
 const CARD_ACCENTS = ['#4285f4', '#9b72cb', '#10b981', '#f59e0b', '#ec4899', '#06b6d4'];
@@ -142,23 +138,12 @@ function LevelMeter({ score }) {
 function StatusPill({ tone, label }) {
   return (
     <span className={`aa-status-pill ${STATUS_CLASS[tone] || STATUS_CLASS.good}`}>
-      <span className="aa-status-dot" aria-hidden />
       {label}
     </span>
   );
 }
 
-function GlanceMetricChip({ title, value, status }) {
-  return (
-    <div className="aa-glance-chip">
-      <span className="aa-glance-chip-title">{title}</span>
-      <span className="aa-glance-chip-value">{value}</span>
-      <span className={`aa-glance-chip-badge ${STATUS_CLASS[status.tone]}`}>{status.label}</span>
-    </div>
-  );
-}
-
-function AtAGlancePanel({ insights, suggestions, grad }) {
+function AtAGlancePanel({ insights, suggestions }) {
   const metrics = buildGlanceMetrics(insights);
   const validScores = metrics.map((m) => m.score).filter((s) => Number.isFinite(s));
   const overallScore = validScores.length
@@ -168,57 +153,52 @@ function AtAGlancePanel({ insights, suggestions, grad }) {
   const previewMetrics = metrics.slice(0, 3);
 
   return (
-    <div className="aa-glance aa-glance--gemini">
-      <div className="aa-glance-accent" aria-hidden>
-        <svg width="100%" height="3" preserveAspectRatio="none" viewBox="0 0 100 3">
-          <rect width="100" height="3" fill={`url(#${grad.accent})`} />
-        </svg>
-      </div>
-
-      <div className="aa-glance-top">
-        <span className="aa-glance-label">
-          <GeminiSparkles gradId={grad.brand} size={14} />
-          <GeminiGradientText className="aa-glance-label-text">At a glance</GeminiGradientText>
+    <section className="aa-glance-panel" aria-label="At a glance summary">
+      <div className="aa-glance-panel-header">
+        <span className="aa-glance-panel-label">
+          <GeminiSparkles size={14} />
+          At a glance
         </span>
         <StatusPill tone={overallStatus.tone} label={overallStatus.label} />
       </div>
 
-      <div className="aa-glance-score-block">
-        <div className="aa-glance-score-row">
+      <div className="aa-glance-dashboard">
+        <div className="aa-glance-score-card">
           <GeminiGradientText className="aa-glance-score-num">{overallScore}</GeminiGradientText>
-          <div className="aa-glance-score-copy">
-            <span className="aa-glance-score-label">Overall score</span>
-            <p className="aa-glance-summary-msg">{getOverallMessage(overallScore)}</p>
-          </div>
+          <span className="aa-glance-score-caption">Overall score</span>
+          <GeminiScoreBar score={overallScore} />
         </div>
-        <GeminiScoreBar score={overallScore} />
+        <div className="aa-glance-summary">
+          <p className="aa-glance-summary-msg">{getOverallMessage(overallScore)}</p>
+        </div>
       </div>
 
       {previewMetrics.length > 0 && (
-        <div className="aa-glance-chips">
+        <div className="aa-glance-stats">
           {previewMetrics.map((metric, idx) => (
-            <GlanceMetricChip
-              key={`${metric.title}-${idx}`}
-              title={metric.title}
-              value={metric.value}
-              status={metric.status}
-            />
+            <div key={`${metric.title}-${idx}`} className="aa-glance-stat">
+              <span className="aa-glance-stat-label">{metric.title}</span>
+              <span className="aa-glance-stat-value">{metric.value}</span>
+              <span className={`aa-glance-status aa-glance-status--${metric.status.tone}`}>
+                {metric.status.label}
+              </span>
+            </div>
           ))}
         </div>
       )}
 
-      <p className="aa-highlight-meta">
+      <p className="aa-glance-footer">
         {suggestions.length > 0
-          ? `Tap metrics below for detail · ${suggestions.length} tip${suggestions.length > 1 ? 's' : ''} ready`
-          : 'Tap each metric below for the full breakdown'}
+          ? `Explore each metric below · ${suggestions.length} tip${suggestions.length > 1 ? 's' : ''} ready`
+          : 'Explore each metric below for the full breakdown'}
       </p>
-    </div>
+    </section>
   );
 }
 
 function GlanceLegend() {
   return (
-    <div className="aa-glance-legend aa-glance-legend--gemini" aria-label="Score legend">
+    <div className="aa-glance-legend" aria-label="Score legend">
       <span className="aa-glance-legend-item">
         <span className="aa-glance-legend-dot aa-glance-status--strong" /> Strong
       </span>
@@ -239,7 +219,6 @@ function MetricGlanceCard({ metric, onClick, active }) {
   const { Icon, title, value, accent, score, status } = metric;
   const className = [
     'aa-glance-card',
-    'aa-glance-card--gemini',
     onClick ? 'aa-glance-card--btn' : '',
     active ? 'active' : '',
   ].filter(Boolean).join(' ');
@@ -250,13 +229,17 @@ function MetricGlanceCard({ metric, onClick, active }) {
         <span className="aa-glance-card-icon" aria-hidden>
           <Icon size={18} strokeWidth={2.25} />
         </span>
-        <div className="aa-glance-card-title">{title}</div>
+        <div className="aa-glance-card-copy">
+          <div className="aa-glance-card-title">{title}</div>
+          <div className="aa-glance-card-value">{value}</div>
+        </div>
         <LevelMeter score={score} />
       </div>
-      <div className="aa-glance-card-value">{value}</div>
-      <span className={`aa-glance-status aa-glance-status--${status.tone}`}>
-        {status.label}
-      </span>
+      <div className="aa-glance-card-meta">
+        <span className={`aa-glance-status aa-glance-status--${status.tone}`}>
+          {status.label}
+        </span>
+      </div>
       <GeminiMetricMeter score={score} />
     </>
   );
@@ -283,9 +266,8 @@ function MetricGlanceCard({ metric, onClick, active }) {
   );
 }
 
-function AnalyzingState({ grad }) {
+function AnalyzingState() {
   const [stepIndex, setStepIndex] = useState(0);
-  const [visible, setVisible] = useState(true);
   const steps = [
     'Reviewing price signals',
     'Reading market demand',
@@ -294,32 +276,34 @@ function AnalyzingState({ grad }) {
 
   useEffect(() => {
     const copyTimer = setInterval(() => {
-      setVisible(false);
-      window.setTimeout(() => {
-        setStepIndex((idx) => (idx + 1) % steps.length);
-        setVisible(true);
-      }, 350);
+      setStepIndex((idx) => (idx + 1) % steps.length);
     }, 3200);
     return () => clearInterval(copyTimer);
   }, [steps.length]);
 
   return (
-    <div className="aa-analyze aa-analyze--gemini">
-      <GeminiAnalyzingVisual gradId={grad.brand} />
-      <GeminiGradientText as="h3" className="aa-analyze-title">Analyzing your listing</GeminiGradientText>
-      <p className={`aa-analyze-sub${visible ? ' aa-analyze-sub--visible' : ''}`}>
-        {steps[stepIndex]}
-      </p>
-      <GeminiWaveAnimation />
+    <div className="aa-analyze">
+      <div className="aa-analyze-icon-wrap" aria-hidden>
+        <GeminiSparkles size={28} />
+      </div>
+      <div className="aa-analyze-copy">
+        <GeminiGradientText as="h3" className="aa-analyze-title">
+          Analyzing your listing
+        </GeminiGradientText>
+        <p className="aa-analyze-sub" key={stepIndex}>{steps[stepIndex]}</p>
+        <div className="aa-analyze-progress" aria-hidden>
+          <span className="aa-analyze-progress-fill" />
+        </div>
+      </div>
     </div>
   );
 }
 
-function AnalyticsHeader({ onRefresh, showRefresh, grad }) {
+function AnalyticsHeader({ onRefresh, showRefresh }) {
   return (
     <div className="aa-header">
       <div className="ai-header">
-        <GeminiSparkles gradId={grad.brand} />
+        <GeminiSparkles />
         <GeminiGradientText className="ai-header-text">AI Analytics</GeminiGradientText>
       </div>
       {showRefresh && (
@@ -339,7 +323,7 @@ function AnalyticsHeader({ onRefresh, showRefresh, grad }) {
 
 function SegmentTabs({ segments, activeKey, onChange }) {
   return (
-    <div className="aa-tabs aa-tabs--gemini" role="tablist">
+    <div className="aa-tabs" role="tablist">
       {segments.map((seg) => {
         const active = activeKey === seg.key;
         return (
@@ -482,20 +466,10 @@ function TipsList({ suggestions }) {
   );
 }
 
-function AnalyticsShell({ grad, children }) {
-  return (
-    <GeminiCard>
-      <GeminiGradientDefs ids={grad} />
-      {children}
-    </GeminiCard>
-  );
-}
-
 export default function AiAnalytics({ ad, listing, apiFetch: apiFetchProp }) {
   const { apiFetch: ctxApiFetch } = useApp();
   const apiFetch = apiFetchProp || ctxApiFetch;
   const item = ad || listing;
-  const grad = useGeminiGradients('aa');
   const [loading, setLoading] = useState(false);
   const [generated, setGenerated] = useState(false);
   const [insights, setInsights] = useState([]);
@@ -530,8 +504,8 @@ export default function AiAnalytics({ ad, listing, apiFetch: apiFetchProp }) {
 
   if (!generated) {
     return (
-      <AnalyticsShell grad={grad}>
-        <AnalyticsHeader grad={grad} />
+      <AnalyticsCard>
+        <AnalyticsHeader />
         <p className="aa-lead">
           See how your listing compares and get smart suggestions to sell faster.
         </p>
@@ -545,27 +519,27 @@ export default function AiAnalytics({ ad, listing, apiFetch: apiFetchProp }) {
             </li>
           ))}
         </ul>
-        <button type="button" className="aa-generate-btn aa-generate-btn--gemini" onClick={handleGenerate}>
+        <button type="button" className="aa-generate-btn" onClick={handleGenerate}>
           <Sparkles size={16} strokeWidth={2.25} />
           Generate insights
         </button>
-      </AnalyticsShell>
+      </AnalyticsCard>
     );
   }
 
   if (loading) {
     return (
-      <AnalyticsShell grad={grad}>
-        <AnalyticsHeader grad={grad} />
-        <AnalyzingState grad={grad} />
-      </AnalyticsShell>
+      <AnalyticsCard>
+        <AnalyticsHeader />
+        <AnalyzingState />
+      </AnalyticsCard>
     );
   }
 
   if (error) {
     return (
-      <AnalyticsShell grad={grad}>
-        <AnalyticsHeader grad={grad} onRefresh={handleGenerate} showRefresh />
+      <AnalyticsCard>
+        <AnalyticsHeader onRefresh={handleGenerate} showRefresh />
         <div className="aa-error">
           <AlertCircle size={20} strokeWidth={2} />
           <div>
@@ -577,7 +551,7 @@ export default function AiAnalytics({ ad, listing, apiFetch: apiFetchProp }) {
           <RefreshCw size={16} strokeWidth={2.25} />
           Try again
         </button>
-      </AnalyticsShell>
+      </AnalyticsCard>
     );
   }
 
@@ -587,11 +561,11 @@ export default function AiAnalytics({ ad, listing, apiFetch: apiFetchProp }) {
   ];
 
   return (
-    <AnalyticsShell grad={grad}>
-      <AnalyticsHeader grad={grad} onRefresh={handleGenerate} showRefresh />
+    <AnalyticsCard>
+      <AnalyticsHeader onRefresh={handleGenerate} showRefresh />
 
       {insights.length > 0 && (
-        <AtAGlancePanel insights={insights} suggestions={suggestions} grad={grad} />
+        <AtAGlancePanel insights={insights} suggestions={suggestions} />
       )}
 
       <SegmentTabs segments={segments} activeKey={activeTab} onChange={setActiveTab} />
@@ -605,6 +579,6 @@ export default function AiAnalytics({ ad, listing, apiFetch: apiFetchProp }) {
           <p className="aa-muted">No tips for this listing right now.</p>
         )}
       </div>
-    </AnalyticsShell>
+    </AnalyticsCard>
   );
 }
