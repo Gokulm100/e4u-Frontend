@@ -1686,6 +1686,9 @@ body {
   position: relative;
   overflow: hidden;
 }
+.ai-summary-card.aa-analytics {
+  overflow: visible;
+}
 .ai-summary-gradient-defs { position: absolute; width: 0; height: 0; overflow: hidden; }
 .ai-header { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
 .ai-icon-gemini { color: #9b72cb; flex-shrink: 0; }
@@ -1791,7 +1794,7 @@ body {
 .aa-analytics {
   max-width: 100%;
   min-width: 0;
-  overflow-x: clip;
+  overflow: visible;
 }
 .aa-refresh {
   width: 36px;
@@ -2346,6 +2349,9 @@ body {
   margin-bottom: 16px;
   overflow: visible;
 }
+.aa-metrics-grid--popover-open {
+  padding-bottom: 8px;
+}
 .aa-metric-card-wrap {
   position: relative;
   min-width: 0;
@@ -2382,6 +2388,21 @@ body {
     transform: translateX(-50%) translateY(0);
   }
 }
+.aa-metric-popover--above {
+  top: auto;
+  bottom: calc(100% + 10px);
+  animation-name: aaPopoverInAbove;
+}
+@keyframes aaPopoverInAbove {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
 .aa-metric-popover-caret {
   position: absolute;
   top: -7px;
@@ -2394,6 +2415,15 @@ body {
   border-top: 1px solid color-mix(in srgb, var(--aa-accent, var(--primary)) 28%, #e2e8f0);
   transform: rotate(45deg);
   box-shadow: -2px -2px 4px rgba(15, 23, 42, 0.04);
+}
+.aa-metric-popover--above .aa-metric-popover-caret {
+  top: auto;
+  bottom: -7px;
+  border-left: none;
+  border-top: none;
+  border-right: 1px solid color-mix(in srgb, var(--aa-accent, var(--primary)) 28%, #e2e8f0);
+  border-bottom: 1px solid color-mix(in srgb, var(--aa-accent, var(--primary)) 28%, #e2e8f0);
+  box-shadow: 2px 2px 4px rgba(15, 23, 42, 0.04);
 }
 .aa-metric-popover .aa-metric-detail-value {
   background: color-mix(in srgb, var(--aa-accent, var(--primary)) 6%, transparent);
@@ -2410,10 +2440,23 @@ body {
     max-width: none;
     animation-name: aaPopoverInMobile;
   }
+  .aa-metric-popover--above {
+    animation-name: aaPopoverInMobileAbove;
+  }
   @keyframes aaPopoverInMobile {
     from {
       opacity: 0;
       transform: translateY(-6px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  @keyframes aaPopoverInMobileAbove {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
     }
     to {
       opacity: 1;

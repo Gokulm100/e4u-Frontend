@@ -359,10 +359,48 @@ function SegmentTabs({ segments, activeKey, onChange }) {
   );
 }
 
-function MetricDetailPopover({ insight, metric, style }) {
+function MetricDetailPopover({ insight, metric, style, anchorRef }) {
+  const popoverRef = useRef(null);
+  const [placement, setPlacement] = useState('below');
+
+  useEffect(() => {
+    const anchor = anchorRef?.current;
+    const popover = popoverRef.current;
+    if (!anchor || !popover) return undefined;
+
+    const updatePlacement = () => {
+      const anchorRect = anchor.getBoundingClientRect();
+      const popoverHeight = popover.offsetHeight || 200;
+      const margin = 14;
+      const spaceBelow = window.innerHeight - anchorRect.bottom - margin;
+      const spaceAbove = anchorRect.top - margin;
+
+      if (spaceBelow < popoverHeight && spaceAbove > spaceBelow) {
+        setPlacement('above');
+      } else {
+        setPlacement('below');
+      }
+    };
+
+    updatePlacement();
+    const observer = typeof ResizeObserver !== 'undefined'
+      ? new ResizeObserver(updatePlacement)
+      : null;
+    observer?.observe(popover);
+    window.addEventListener('resize', updatePlacement);
+    window.addEventListener('scroll', updatePlacement, true);
+
+    return () => {
+      observer?.disconnect();
+      window.removeEventListener('resize', updatePlacement);
+      window.removeEventListener('scroll', updatePlacement, true);
+    };
+  }, [anchorRef, insight]);
+
   return (
     <div
-      className="aa-metric-popover"
+      ref={popoverRef}
+      className={`aa-metric-popover aa-metric-popover--${placement}`}
       style={style}
       role="dialog"
       aria-label={`${insight.title} analysis`}
@@ -377,6 +415,31 @@ function MetricDetailPopover({ insight, metric, style }) {
       <div className="aa-metric-detail-title">{insight.title}</div>
       {!!insight.description && (
         <p className="aa-metric-detail-desc">{insight.description}</p>
+      )}
+    </div>
+  );
+}
+
+function MetricCardItem({ metric, insight, open, onToggle, accentIndex }) {
+  const wrapRef = useRef(null);
+
+  return (
+    <div
+      ref={wrapRef}
+      className={`aa-metric-card-wrap${open ? ' aa-metric-card-wrap--open' : ''}`}
+    >
+      <MetricGlanceCard
+        metric={metric}
+        active={open}
+        onClick={onToggle}
+      />
+      {open && insight && (
+        <MetricDetailPopover
+          insight={insight}
+          metric={metric}
+          style={accentStyle(accentIndex)}
+          anchorRef={wrapRef}
+        />
       )}
     </div>
   );
@@ -414,25 +477,19 @@ function MetricExplorer({ insights }) {
     <div className="aa-metrics">
       <p className="aa-glance-grid-label">Key metrics</p>
       <p className="aa-metrics-hint">Click a card to open its analysis. Click outside or press Esc to close.</p>
-      <div className="aa-glance-grid aa-metrics-grid" ref={gridRef}>
+      <div className={`aa-glance-grid aa-metrics-grid${selectedIdx !== null ? ' aa-metrics-grid--popover-open' : ''}`} ref={gridRef}>
         {metrics.map((metric, idx) => {
           const open = selectedIdx === idx;
           const insight = insights[idx];
           return (
-            <div key={`${metric.title}-${idx}`} className={`aa-metric-card-wrap${open ? ' aa-metric-card-wrap--open' : ''}`}>
-              <MetricGlanceCard
-                metric={metric}
-                active={open}
-                onClick={() => setSelectedIdx((prev) => (prev === idx ? null : idx))}
-              />
-              {open && insight && (
-                <MetricDetailPopover
-                  insight={insight}
-                  metric={metric}
-                  style={accentStyle(idx)}
-                />
-              )}
-            </div>
+            <MetricCardItem
+              key={`${metric.title}-${idx}`}
+              metric={metric}
+              insight={insight}
+              open={open}
+              accentIndex={idx}
+              onToggle={() => setSelectedIdx((prev) => (prev === idx ? null : idx))}
+            />
           );
         })}
       </div>
