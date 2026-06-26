@@ -143,6 +143,25 @@ function StatusPill({ tone, label }) {
   );
 }
 
+function GlancePreviewCard({ metric }) {
+  const { Icon, title, value, score, status, accent } = metric;
+  return (
+    <div className="aa-glance-preview-card" style={{ '--aa-preview-accent': accent }}>
+      <div className="aa-glance-preview-head">
+        <span className="aa-glance-preview-icon" aria-hidden>
+          <Icon size={16} strokeWidth={2.25} />
+        </span>
+        <span className={`aa-glance-preview-badge aa-glance-status aa-glance-status--${status.tone}`}>
+          {status.label}
+        </span>
+      </div>
+      <span className="aa-glance-preview-title">{title}</span>
+      <span className="aa-glance-preview-value">{value}</span>
+      <GeminiMetricMeter score={score} className="aa-glance-preview-meter" />
+    </div>
+  );
+}
+
 function AtAGlancePanel({ insights, suggestions }) {
   const metrics = buildGlanceMetrics(insights);
   const validScores = metrics.map((m) => m.score).filter((s) => Number.isFinite(s));
@@ -154,35 +173,31 @@ function AtAGlancePanel({ insights, suggestions }) {
 
   return (
     <section className="aa-glance-panel" aria-label="At a glance summary">
+      <div className="aa-glance-accent" aria-hidden />
+
       <div className="aa-glance-panel-header">
         <span className="aa-glance-panel-label">
-          <GeminiSparkles size={14} />
-          At a glance
+          <GeminiSparkles size={15} />
+          <GeminiGradientText className="aa-glance-panel-title">At a glance</GeminiGradientText>
         </span>
         <StatusPill tone={overallStatus.tone} label={overallStatus.label} />
       </div>
 
-      <div className="aa-glance-dashboard">
-        <div className="aa-glance-score-card">
+      <div className="aa-glance-hero">
+        <div className="aa-glance-score-cluster">
           <GeminiGradientText className="aa-glance-score-num">{overallScore}</GeminiGradientText>
           <span className="aa-glance-score-caption">Overall score</span>
-          <GeminiScoreBar score={overallScore} />
         </div>
-        <div className="aa-glance-summary">
+        <div className="aa-glance-hero-copy">
           <p className="aa-glance-summary-msg">{getOverallMessage(overallScore)}</p>
+          <GeminiScoreBar score={overallScore} className="aa-glance-hero-bar" />
         </div>
       </div>
 
       {previewMetrics.length > 0 && (
-        <div className="aa-glance-stats">
+        <div className="aa-glance-preview">
           {previewMetrics.map((metric, idx) => (
-            <div key={`${metric.title}-${idx}`} className="aa-glance-stat">
-              <span className="aa-glance-stat-label">{metric.title}</span>
-              <span className="aa-glance-stat-value">{metric.value}</span>
-              <span className={`aa-glance-status aa-glance-status--${metric.status.tone}`}>
-                {metric.status.label}
-              </span>
-            </div>
+            <GlancePreviewCard key={`${metric.title}-${idx}`} metric={metric} />
           ))}
         </div>
       )}
