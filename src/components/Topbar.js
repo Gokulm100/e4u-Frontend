@@ -25,6 +25,7 @@ export default function Topbar() {
     <header className="topbar">
       <DealrLogo
         variant="light"
+        size="title"
         showTagline
         onClick={() => navigate('home')}
         className="topbar-brand"
