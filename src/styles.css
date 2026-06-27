@@ -2928,24 +2928,21 @@ body {
   min-height: 180px;
 }
 .detail-chat-panel .messages-send-btn {
-  background: var(--primary);
-  box-shadow: 0 4px 12px rgba(55, 140, 246, 0.3);
+  box-shadow: 0 4px 14px rgba(55, 140, 246, 0.28);
 }
 .detail-chat-panel .messages-send-btn:hover {
   background: var(--primary-dark, #2563eb);
 }
 .detail-chat-panel .messages-send-btn:disabled {
-  background: #cbd5e1;
+  background: #e2e8f0;
+  color: #94a3b8;
   box-shadow: none;
   cursor: not-allowed;
 }
-/* Legacy bubble classes (chat detail page still uses .send-btn in header) */
+/* Legacy bubble classes */
 .bubble { max-width: 70%; border-radius: var(--radius-lg); padding: 9px 14px; background: #f0f4ff; align-self: flex-start; }
 .bubble.me { background: var(--accent); align-self: flex-end; color: #fff; }
 .bubble-text { font-size: 14px; line-height: 1.5; }
-.send-btn { background: var(--accent); border: none; border-radius: var(--radius-md); width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #fff; transition: background 0.15s; }
-.send-btn:hover { background: var(--primary); }
-.send-btn:disabled { background: var(--border); cursor: not-allowed; }
 
 /* ── PROFILE ── */
 .user-card { background: var(--white); border-radius: var(--radius-lg); padding: 20px; box-shadow: var(--shadow-md); display: flex; align-items: center; gap: 16px; margin-bottom: 20px; }
@@ -3377,9 +3374,10 @@ body {
   background: var(--white);
   box-shadow: 0 0 0 3px rgba(55, 140, 246, 0.12);
 }
-.messages-send-btn {
-  width: 42px;
-  height: 42px;
+.messages-send-btn,
+.send-btn {
+  width: 40px;
+  height: 40px;
   flex-shrink: 0;
   border: none;
   border-radius: 50%;
@@ -3389,11 +3387,29 @@ body {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: background 0.15s, transform 0.15s;
-  box-shadow: 0 4px 12px rgba(55, 140, 246, 0.3);
+  transition: background 0.15s, transform 0.12s, box-shadow 0.15s, opacity 0.15s;
+  box-shadow: 0 4px 14px rgba(55, 140, 246, 0.28);
 }
-.messages-send-btn:hover { background: var(--primary-dark); }
-.messages-send-btn:active { transform: scale(0.96); }
+.messages-send-btn svg,
+.send-btn svg {
+  display: block;
+  margin-top: -1px;
+}
+.messages-send-btn:hover:not(:disabled),
+.send-btn:hover:not(:disabled) {
+  background: var(--primary-dark);
+}
+.messages-send-btn:active:not(:disabled),
+.send-btn:active:not(:disabled) {
+  transform: scale(0.94);
+}
+.messages-send-btn:disabled,
+.send-btn:disabled {
+  background: #e2e8f0;
+  color: #94a3b8;
+  box-shadow: none;
+  cursor: not-allowed;
+}
 
 /* Chat photo attachment */
 .chat-attach-btn {

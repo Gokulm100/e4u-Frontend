@@ -10,7 +10,7 @@ import {
 } from '../utils/chatSocket';
 import { emitJoin } from '../utils/socket';
 import { confirmAndReportUser } from '../utils/reportUser';
-import { ArrowLeft, MapPin, Eye, Clock, Tag, User, Send, Shield, Flag, MessageCircle, ChevronRight, Sparkles } from 'lucide-react';
+import { ArrowLeft, MapPin, Eye, Clock, Tag, User, Send, Shield, Flag, MessageCircle, ChevronRight, Sparkles, ArrowUp } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import AiAnalytics from '../components/AiAnalytics';
 import SimilarAds from '../components/SimilarAds';
@@ -362,7 +362,7 @@ function DetailChatBox({ listing, user, apiFetch, showToast, navigate }) {
           disabled={!input.trim()}
           aria-label="Send message"
         >
-          <Send size={18} />
+          <ArrowUp size={20} strokeWidth={2.5} />
         </button>
       </div>
     </div>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { ArrowLeft, Send, ImagePlus, Flag } from 'lucide-react';
+import { ArrowLeft, Send, ImagePlus, Flag, ArrowUp } from 'lucide-react';
 import { confirmAndReportUser } from '../utils/reportUser';
 import { useApp } from '../context/AppContext';
 import { uploadChatImage } from '../utils/chatUpload';
@@ -320,7 +320,9 @@ export default function ChatDetailPage() {
           >
             <ImagePlus size={24} />
           </button>
-          <button className="send-btn" onClick={send} disabled={!input.trim()}><Send size={18} /></button>
+          <button type="button" className="messages-send-btn" onClick={send} disabled={!input.trim()} aria-label="Send message">
+            <ArrowUp size={20} strokeWidth={2.5} />
+          </button>
         </div>
       </div>
 
