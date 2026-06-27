@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { ArrowLeft, Send, ImagePlus } from 'lucide-react';
+import { ArrowLeft, Send, ImagePlus, Flag } from 'lucide-react';
+import { confirmAndReportUser } from '../utils/reportUser';
 import { useApp } from '../context/AppContext';
 import { uploadChatImage } from '../utils/chatUpload';
 import { createOptimisticMessage, mergeWithPending, removeOptimistic } from '../utils/chatMessages';
@@ -16,7 +17,7 @@ import { getChatTrustCautionFromProfile } from '../utils/chatTrustCaution';
 import { emitJoin } from '../utils/socket';
 import { SkeletonConversation } from '../components/Skeleton';
 
-function FraudBanner({ fraud, onClose }) {
+function FraudBanner({ fraud, onClose, onReportUser }) {
   if (!fraud?.fraudIndicators?.length) return null;
   return (
     <div className="fraud-banner">
@@ -37,6 +38,11 @@ function FraudBanner({ fraud, onClose }) {
           <div className="fraud-rec-label">Recommendation:</div>
           <div className="fraud-rec-text">{fraud.recommendations}</div>
         </div>
+      )}
+      {fraud.type !== 'SAFE' && onReportUser && (
+        <button type="button" className="fraud-report-btn" onClick={onReportUser}>
+          Report user
+        </button>
       )}
     </div>
   );
@@ -182,6 +188,17 @@ export default function ChatDetailPage() {
     }
   };
 
+  const handleReportUser = () => {
+    confirmAndReportUser({
+      apiFetch,
+      showToast,
+      buyerId,
+      sellerId,
+      isSeller,
+      targetName: otherName,
+    });
+  };
+
   const formatDate = (dateStr) => {
     const d = new Date(dateStr);
     const now = new Date();
@@ -202,6 +219,15 @@ export default function ChatDetailPage() {
           <div className="detail-header-title">{otherName}</div>
           {adTitle && <div className="chat-header-subtitle">{adTitle}</div>}
         </div>
+        <button
+          type="button"
+          className="chat-header-report-btn"
+          onClick={handleReportUser}
+          aria-label="Report user"
+          title="Report user"
+        >
+          <Flag size={18} />
+        </button>
       </div>
 
       {showTrustCaution && trustCaution.show && (
@@ -258,7 +284,13 @@ export default function ChatDetailPage() {
             })}
         </div>
 
-        {showFraud && <FraudBanner fraud={fraud} onClose={() => setShowFraud(false)} />}
+        {showFraud && (
+          <FraudBanner
+            fraud={fraud}
+            onClose={() => setShowFraud(false)}
+            onReportUser={handleReportUser}
+          />
+        )}
 
         <div className="chat-detail-input">
           <input

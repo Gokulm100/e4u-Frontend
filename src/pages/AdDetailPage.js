@@ -9,6 +9,7 @@ import {
   normalizeId,
 } from '../utils/chatSocket';
 import { emitJoin } from '../utils/socket';
+import { confirmAndReportUser } from '../utils/reportUser';
 import { ArrowLeft, MapPin, Eye, Clock, Tag, User, Send, Shield, Flag, MessageCircle, ChevronRight, Sparkles } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import AiAnalytics from '../components/AiAnalytics';
@@ -231,6 +232,17 @@ function DetailChatBox({ listing, user, apiFetch, showToast, navigate }) {
     }
   };
 
+  const handleReportUser = () => {
+    confirmAndReportUser({
+      apiFetch,
+      showToast,
+      buyerId: user?._id,
+      sellerId: listing.sellerId,
+      isSeller: false,
+      targetName: sellerName,
+    });
+  };
+
   useEffect(() => {
     if (msgsRef.current) msgsRef.current.scrollTop = msgsRef.current.scrollHeight;
   }, [messages]);
@@ -282,6 +294,15 @@ function DetailChatBox({ listing, user, apiFetch, showToast, navigate }) {
             )}
           </div>
         </div>
+        <button
+          type="button"
+          className="messages-chat-report-btn"
+          onClick={handleReportUser}
+          aria-label="Report user"
+          title="Report user"
+        >
+          <Flag size={16} />
+        </button>
       </div>
 
       <div className="chat-detail-msgs detail-chat-msgs" ref={msgsRef}>
