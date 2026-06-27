@@ -1,5 +1,5 @@
 import React from 'react';
-import { Star, X, CheckCircle2 } from 'lucide-react';
+import { Star, X, Sparkles } from 'lucide-react';
 
 export default function PostSaleReminderModal({
   open,
@@ -20,22 +20,19 @@ export default function PostSaleReminderModal({
   return (
     <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       <div className="modal post-sale-modal" role="dialog" aria-labelledby="post-sale-title">
-        <div className="post-sale-backdrop" aria-hidden>
-          <span className="post-sale-confetti post-sale-confetti--1" />
-          <span className="post-sale-confetti post-sale-confetti--2" />
-          <span className="post-sale-confetti post-sale-confetti--3" />
-          <span className="post-sale-confetti post-sale-confetti--4" />
-          <span className="post-sale-confetti post-sale-confetti--5" />
-          <span className="post-sale-confetti post-sale-confetti--6" />
-        </div>
+        <div className="post-sale-backdrop" aria-hidden />
 
         <button type="button" className="post-sale-close" onClick={onClose} aria-label="Close">
           <X size={18} />
         </button>
 
         <div className="post-sale-hero">
-          <div className="post-sale-success-badge" aria-hidden>
-            <CheckCircle2 size={28} strokeWidth={2} />
+          <div className="post-sale-hero-mark" aria-hidden>
+            <span className="post-sale-hero-glow" />
+            <span className="post-sale-hero-ring" />
+            <span className="post-sale-hero-icon">
+              <Sparkles size={22} strokeWidth={2} />
+            </span>
           </div>
           <h2 id="post-sale-title" className="post-sale-title">Sale complete</h2>
           <p className="post-sale-lead">Your listing is marked sold. Nice work closing the deal.</p>
