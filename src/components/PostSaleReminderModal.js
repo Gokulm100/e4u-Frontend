@@ -1,5 +1,5 @@
 import React from 'react';
-import { Star, X } from 'lucide-react';
+import { Star, X, CheckCircle2 } from 'lucide-react';
 
 export default function PostSaleReminderModal({
   open,
@@ -12,57 +12,79 @@ export default function PostSaleReminderModal({
 }) {
   if (!open) return null;
 
+  const buyerName = counterpartyName || revieweeName || 'Buyer';
   const formattedAmount = saleAmount
     ? `₹${Number(String(saleAmount).replace(/,/g, '')).toLocaleString('en-IN')}`
     : null;
 
   return (
     <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="modal report-modal post-sale-reminder-modal">
-        <button type="button" className="report-modal-close" onClick={onClose} aria-label="Close">
+      <div className="modal post-sale-modal" role="dialog" aria-labelledby="post-sale-title">
+        <div className="post-sale-backdrop" aria-hidden>
+          <span className="post-sale-confetti post-sale-confetti--1" />
+          <span className="post-sale-confetti post-sale-confetti--2" />
+          <span className="post-sale-confetti post-sale-confetti--3" />
+          <span className="post-sale-confetti post-sale-confetti--4" />
+          <span className="post-sale-confetti post-sale-confetti--5" />
+          <span className="post-sale-confetti post-sale-confetti--6" />
+        </div>
+
+        <button type="button" className="post-sale-close" onClick={onClose} aria-label="Close">
           <X size={18} />
         </button>
 
-        <div className="post-sale-reminder-icon">🎉</div>
-        <div className="modal-title">Sale complete!</div>
-        <div className="modal-sub post-sale-reminder-sub">
-          {formattedAmount ? (
-            <>
-              <strong>{adTitle}</strong> was marked as sold to{' '}
-              <strong>{counterpartyName || revieweeName}</strong> for {formattedAmount}.
-            </>
-          ) : (
-            <>
-              <strong>{adTitle}</strong> was marked as sold to{' '}
-              <strong>{counterpartyName || revieweeName}</strong>.
-            </>
+        <div className="post-sale-hero">
+          <div className="post-sale-success-badge" aria-hidden>
+            <CheckCircle2 size={28} strokeWidth={2} />
+          </div>
+          <h2 id="post-sale-title" className="post-sale-title">Sale complete</h2>
+          <p className="post-sale-lead">Your listing is marked sold. Nice work closing the deal.</p>
+        </div>
+
+        <div className="post-sale-summary">
+          <div className="post-sale-summary-row">
+            <span className="post-sale-summary-label">Listing</span>
+            <span className="post-sale-summary-value" title={adTitle}>{adTitle}</span>
+          </div>
+          <div className="post-sale-summary-row">
+            <span className="post-sale-summary-label">Buyer</span>
+            <span className="post-sale-summary-value">{buyerName}</span>
+          </div>
+          {formattedAmount && (
+            <div className="post-sale-summary-row post-sale-summary-row--amount">
+              <span className="post-sale-summary-label">Sale amount</span>
+              <span className="post-sale-summary-amount">{formattedAmount}</span>
+            </div>
           )}
         </div>
 
-        <div className="post-sale-reminder-card">
-          <div className="post-sale-reminder-card-title">
-            <Star size={16} fill="#f59e0b" color="#f59e0b" />
-            Rate {revieweeName}
+        <div className="post-sale-review-block">
+          <div className="post-sale-review-head">
+            <div className="post-sale-review-icon" aria-hidden>
+              <Star size={18} fill="currentColor" strokeWidth={0} />
+            </div>
+            <div>
+              <p className="post-sale-review-title">Rate your experience</p>
+              <p className="post-sale-review-copy">
+                How was your deal with <strong>{revieweeName || buyerName}</strong>? Your review helps keep Dealr safe for everyone.
+              </p>
+            </div>
           </div>
-          <p className="post-sale-reminder-card-text">
-            Your feedback helps build trust on Dealr and helps other users make safer decisions.
-          </p>
+          {counterpartyName && (
+            <p className="post-sale-review-note">
+              We also invited {counterpartyName} to share their experience.
+            </p>
+          )}
         </div>
 
-        {counterpartyName && (
-          <p className="post-sale-reminder-note">
-            We also asked {counterpartyName} to review their experience.
-          </p>
-        )}
-
-        <button type="button" className="review-submit-btn" onClick={onRateNow}>
-          Rate now
+        <button type="button" className="post-sale-review-btn" onClick={onRateNow}>
+          Leave a review
         </button>
-        <button type="button" className="post-sale-reminder-later" onClick={onClose}>
-          Remind me later
+        <button type="button" className="post-sale-later-btn" onClick={onClose}>
+          Maybe later
         </button>
-        <p className="post-sale-reminder-footnote">
-          You can leave a review anytime from Profile → Pending Reviews.
+        <p className="post-sale-footnote">
+          You can review anytime from Profile → Pending reviews.
         </p>
       </div>
     </div>
