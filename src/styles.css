@@ -84,12 +84,19 @@ body {
   text-align: left;
 }
 .dealr-logo--clickable { cursor: pointer; }
-.dealr-logo--clickable:hover .dealr-mark-img { transform: translateY(-1px); }
+.dealr-logo--clickable:hover .dealr-mark-wrap { transform: translateY(-1px); }
+.dealr-mark-wrap {
+  display: inline-flex;
+  flex-shrink: 0;
+  transition: transform 0.15s ease;
+}
 .dealr-mark-img {
   display: block;
-  flex-shrink: 0;
-  border-radius: 22%;
-  transition: transform 0.15s ease;
+  width: 100%;
+  height: 100%;
+  border: none;
+  outline: none;
+  box-shadow: none;
 }
 .dealr-logo-copy {
   display: flex;
