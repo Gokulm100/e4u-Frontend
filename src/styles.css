@@ -84,11 +84,11 @@ body {
   text-align: left;
 }
 .dealr-logo--clickable { cursor: pointer; }
-.dealr-logo--clickable:hover .dealr-mark-svg { transform: translateY(-1px); }
-.dealr-mark-svg {
+.dealr-logo--clickable:hover .dealr-mark-img { transform: translateY(-1px); }
+.dealr-mark-img {
   display: block;
   flex-shrink: 0;
-  filter: drop-shadow(0 3px 8px rgba(29, 78, 216, 0.22));
+  border-radius: 22%;
   transition: transform 0.15s ease;
 }
 .dealr-logo-copy {

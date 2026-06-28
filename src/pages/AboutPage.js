@@ -7,7 +7,7 @@ export default function AboutPage() {
   return (
     <div className="info-page">
       <div className="info-hero">
-        <DealrLogo variant="dark" size="sm" showMark showTagline tagline={TAGLINE} />
+        <DealrLogo variant="dark" size="md" showMark showTagline tagline={TAGLINE} />
         <h1 className="info-title">About us</h1>
         <p className="info-lead">{ABOUT_INTRO}</p>
       </div>
