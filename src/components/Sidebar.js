@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, MessageCircle, PlusCircle, Volume2, User, Lock, Shield } from 'lucide-react';
+import { Home, MessageCircle, PlusCircle, Volume2, User, Lock, Shield, Info, Mail } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 
 const navItems = [
@@ -45,6 +45,18 @@ export default function Sidebar() {
         )}
       </div>
       <div className="sidebar-footer">
+        <button
+          className={`nav-item${currentPage === 'about' ? ' active' : ''}`}
+          onClick={() => navigate('about')}
+        >
+          <Info size={18} /> About us
+        </button>
+        <button
+          className={`nav-item${currentPage === 'contact' ? ' active' : ''}`}
+          onClick={() => navigate('contact')}
+        >
+          <Mail size={18} /> Contact us
+        </button>
         <button
           className={`nav-item${currentPage === 'consent' ? ' active' : ''}`}
           onClick={() => navigate('consent')}

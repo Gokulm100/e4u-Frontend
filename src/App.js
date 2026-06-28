@@ -12,6 +12,8 @@ import PostAdPage from './pages/PostAdPage';
 import MyAdsPage from './pages/MyAdsPage';
 import ProfilePage from './pages/ProfilePage';
 import ConsentPage from './pages/ConsentPage';
+import AboutPage from './pages/AboutPage';
+import ContactPage from './pages/ContactPage';
 import AdminPage from './pages/AdminPage';
 import SellerProfilePage from './pages/SellerProfilePage';
 
@@ -28,6 +30,8 @@ function PageRouter() {
     'my-ads': <MyAdsPage />,
     profile: <ProfilePage />,
     consent: <ConsentPage />,
+    about: <AboutPage />,
+    contact: <ContactPage />,
     admin: <AdminPage />,
     'seller-profile': <SellerProfilePage />,
   };

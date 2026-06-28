@@ -27,7 +27,7 @@ const GOOGLE_CLIENT_ID = '281405583072-n7rkibd2qc0afs76dve0kgbsi9p15jfk.apps.goo
 //   );
 // }
 
-function LoginWall({ onGoogleSignIn }) {
+function LoginWall({ onGoogleSignIn, onNavigate }) {
   const googleBtnRef = useRef(null);
 
   useEffect(() => {
@@ -80,6 +80,10 @@ function LoginWall({ onGoogleSignIn }) {
             <div className="feature-text">{text}</div>
           </div>
         ))}
+      </div>
+      <div className="profile-info-links">
+        <button type="button" className="profile-info-link" onClick={() => onNavigate('about')}>About us</button>
+        <button type="button" className="profile-info-link" onClick={() => onNavigate('contact')}>Contact us</button>
       </div>
     </div>
   );
@@ -146,7 +150,7 @@ export default function ProfilePage() {
     );
   };
 
-  if (!user) return <LoginWall onGoogleSignIn={handleGoogleSignIn} />;
+  if (!user) return <LoginWall onGoogleSignIn={handleGoogleSignIn} onNavigate={navigate} />;
 
   const actions = [
     { Icon: LayoutGrid, bg: '#eff6ff', color: 'var(--primary)', label: 'My Ads', page: 'my-ads' },
@@ -206,6 +210,11 @@ export default function ProfilePage() {
             <ChevronRight size={16} color="var(--border)" strokeWidth={2} />
           </div>
         ))}
+      </div>
+
+      <div className="profile-info-links">
+        <button type="button" className="profile-info-link" onClick={() => navigate('about')}>About us</button>
+        <button type="button" className="profile-info-link" onClick={() => navigate('contact')}>Contact us</button>
       </div>
 
       <button className="logout-btn" onClick={handleLogout}>
