@@ -18,7 +18,6 @@ import {
   GeminiSparkles,
   GeminiGradientText,
   AnalyticsCard,
-  GeminiScoreBar,
   GeminiMetricMeter,
 } from './geminiBrand';
 
@@ -81,12 +80,6 @@ function getMetricStatus(score) {
   return { label: 'Needs work', tone: 'low', color: '#ef4444' };
 }
 
-function getOverallMessage(score) {
-  if (score >= 75) return 'Your listing is performing well overall.';
-  if (score >= 50) return 'Solid start — a few tweaks could help you sell faster.';
-  return 'There’s room to improve — check the tips below.';
-}
-
 function pickMetricIcon(title) {
   const t = String(title || '').toLowerCase();
   if (/price|cost|₹|rupee|value/.test(t)) return IndianRupee;
@@ -132,82 +125,6 @@ function LevelMeter({ score }) {
         />
       ))}
     </div>
-  );
-}
-
-function StatusPill({ tone, label }) {
-  return (
-    <span className={`aa-status-pill ${STATUS_CLASS[tone] || STATUS_CLASS.good}`}>
-      {label}
-    </span>
-  );
-}
-
-function GlancePreviewCard({ metric }) {
-  const { Icon, title, value, score, status, accent } = metric;
-  return (
-    <div className="aa-glance-preview-card" style={{ '--aa-preview-accent': accent }}>
-      <div className="aa-glance-preview-head">
-        <span className="aa-glance-preview-icon" aria-hidden>
-          <Icon size={16} strokeWidth={2.25} />
-        </span>
-        <span className={`aa-glance-preview-badge aa-glance-status aa-glance-status--${status.tone}`}>
-          {status.label}
-        </span>
-      </div>
-      <span className="aa-glance-preview-title">{title}</span>
-      <span className="aa-glance-preview-value">{value}</span>
-      <GeminiMetricMeter score={score} className="aa-glance-preview-meter" />
-    </div>
-  );
-}
-
-function AtAGlancePanel({ insights, suggestions }) {
-  const metrics = buildGlanceMetrics(insights);
-  const validScores = metrics.map((m) => m.score).filter((s) => Number.isFinite(s));
-  const overallScore = validScores.length
-    ? Math.round(validScores.reduce((sum, s) => sum + s, 0) / validScores.length)
-    : 0;
-  const overallStatus = getMetricStatus(overallScore);
-  const previewMetrics = metrics.slice(0, 3);
-
-  return (
-    <section className="aa-glance-panel" aria-label="At a glance summary">
-      <div className="aa-glance-accent" aria-hidden />
-
-      <div className="aa-glance-panel-header">
-        <span className="aa-glance-panel-label">
-          <GeminiSparkles size={15} />
-          <GeminiGradientText className="aa-glance-panel-title">At a glance</GeminiGradientText>
-        </span>
-        <StatusPill tone={overallStatus.tone} label={overallStatus.label} />
-      </div>
-
-      <div className="aa-glance-hero">
-        <div className="aa-glance-score-cluster">
-          <GeminiGradientText className="aa-glance-score-num">{overallScore}</GeminiGradientText>
-          <span className="aa-glance-score-caption">Overall score</span>
-        </div>
-        <div className="aa-glance-hero-copy">
-          <p className="aa-glance-summary-msg">{getOverallMessage(overallScore)}</p>
-          <GeminiScoreBar score={overallScore} className="aa-glance-hero-bar" />
-        </div>
-      </div>
-
-      {previewMetrics.length > 0 && (
-        <div className="aa-glance-preview">
-          {previewMetrics.map((metric, idx) => (
-            <GlancePreviewCard key={`${metric.title}-${idx}`} metric={metric} />
-          ))}
-        </div>
-      )}
-
-      <p className="aa-glance-footer">
-        {suggestions.length > 0
-          ? `Explore each metric below · ${suggestions.length} tip${suggestions.length > 1 ? 's' : ''} ready`
-          : 'Explore each metric below for the full breakdown'}
-      </p>
-    </section>
   );
 }
 
@@ -635,10 +552,6 @@ export default function AiAnalytics({ ad, listing, apiFetch: apiFetchProp }) {
   return (
     <AnalyticsCard>
       <AnalyticsHeader onRefresh={handleGenerate} showRefresh />
-
-      {insights.length > 0 && (
-        <AtAGlancePanel insights={insights} suggestions={suggestions} />
-      )}
 
       <SegmentTabs segments={segments} activeKey={activeTab} onChange={setActiveTab} />
 
